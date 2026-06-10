@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+venv/
+.env
+node_modules/
+data/vector_db/
+data/docs/
+*.db
+dist/
+_old/

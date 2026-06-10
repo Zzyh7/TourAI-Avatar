@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./backend:/app/backend
+      - ./.env:/app/.env
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000
+
+  # 前端由 Vite 开发服务器单独运行，或 nginx 部署
+  # visitor:
+  #   build: ./frontend/visitor
+  #   ports:
+  #     - "5173:5173"
+
+  # admin:
+  #   build: ./frontend/admin
+  #   ports:
+  #     - "5174:5174"
