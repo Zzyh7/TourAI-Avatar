@@ -10,6 +10,7 @@
     cd backend
     uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 """
+import os
 import time
 import uuid
 import json
@@ -25,7 +26,7 @@ from pydantic import BaseModel
 
 from config import CONFIG
 from database import init_db, get_db
-from models.schema import ScenicSpot
+from models.schema import ScenicSpot, Session as SessionModel
 from agents.planner import GuideAgent
 from services.tts.edge_tts import tts_service
 from admin.knowledge import router as knowledge_router
@@ -59,14 +60,25 @@ async def lifespan(app: FastAPI):
     print("[OK] RAG 知识库就绪")
 
     # 3. 尝试初始化 GuideAgent (DeepSeek + MCP + RAG)
+    # 设置 SKIP_MCP=1 环境变量可跳过 MCP 连接（测试时启动更快）
+    skip_mcp = os.environ.get("SKIP_MCP", "0") == "1"
     llm = CONFIG.create_llm()
     guide_agent = GuideAgent(llm, get_retriever())
-    try:
-        await guide_agent.build()
-        print("[OK] GuideAgent 就绪 (Agent + MCP + RAG)")
-    except Exception as e:
-        print(f"[WARN] MCP 不可用, 降级为纯 RAG + LLM: {e}")
+
+    if skip_mcp:
+        print("[INFO] SKIP_MCP=1, 跳过 MCP 连接, 使用纯 RAG + LLM 模式")
         guide_agent = None
+    else:
+        try:
+            # MCP 连接高德地图，设置 10 秒超时避免卡启动
+            await asyncio.wait_for(guide_agent.build(), timeout=10.0)
+            print("[OK] GuideAgent 就绪 (Agent + MCP + RAG)")
+        except asyncio.TimeoutError:
+            print("[WARN] MCP 连接超时 (10s), 降级为纯 RAG + LLM")
+            guide_agent = None
+        except Exception as e:
+            print(f"[WARN] MCP 不可用, 降级为纯 RAG + LLM: {e}")
+            guide_agent = None
 
     print("[READY] 服务启动完成")
     yield
