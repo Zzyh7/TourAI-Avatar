@@ -9,13 +9,19 @@ export interface ChatEvent {
 }
 
 /**
- * SSE 流式聊天（文本 + TTS 音频）
+ * SSE 流式聊天（文本 + TTS 音频）。
+ * 传入 signal 可中断请求（AbortController）。
  */
-export async function* streamChat(text: string, sessionId: string): AsyncGenerator<ChatEvent> {
+export async function* streamChat(
+  text: string,
+  sessionId: string,
+  signal?: AbortSignal,
+): AsyncGenerator<ChatEvent> {
   const resp = await fetch(`${BASE}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ text, session_id: sessionId }),
+    signal,
   });
 
   if (!resp.ok) {

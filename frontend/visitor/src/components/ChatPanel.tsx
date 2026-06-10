@@ -13,9 +13,10 @@ interface ChatPanelProps {
   onSend: (text: string) => void;
   disabled?: boolean;
   streamingText?: string;
+  onStop?: () => void;
 }
 
-export default function ChatPanel({ messages, onSend, disabled, streamingText }: ChatPanelProps) {
+export default function ChatPanel({ messages, onSend, disabled, streamingText, onStop }: ChatPanelProps) {
   const [input, setInput] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -98,20 +99,30 @@ export default function ChatPanel({ messages, onSend, disabled, streamingText }:
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="输入您的问题..."
+          placeholder={disabled ? '正在生成回答...' : '输入您的问题...'}
           disabled={disabled}
           style={styles.input}
         />
-        <button
-          onClick={handleSend}
-          disabled={disabled || !input.trim()}
-          style={{
-            ...styles.sendBtn,
-            opacity: disabled || !input.trim() ? 0.5 : 1,
-          }}
-        >
-          ➤
-        </button>
+        {disabled && onStop ? (
+          <button
+            onClick={onStop}
+            style={styles.stopBtn}
+            title="停止生成"
+          >
+            ⏹
+          </button>
+        ) : (
+          <button
+            onClick={handleSend}
+            disabled={disabled || !input.trim()}
+            style={{
+              ...styles.sendBtn,
+              opacity: disabled || !input.trim() ? 0.5 : 1,
+            }}
+          >
+            ➤
+          </button>
+        )}
       </div>
     </div>
   );
@@ -174,6 +185,20 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  stopBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: '50%',
+    border: 'none',
+    background: '#ff4d4f',
+    color: '#fff',
+    fontSize: 18,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    animation: 'pulse 1.5s infinite',
   },
   cursor: {
     animation: 'blink 0.8s infinite',

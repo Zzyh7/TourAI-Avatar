@@ -18,7 +18,7 @@ import asyncio
 from typing import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
@@ -58,6 +58,12 @@ async def lifespan(app: FastAPI):
     # 2. 初始化 RAG 知识库 (FAISS + BM25 + SQLite)
     init_rag()
     print("[OK] RAG 知识库就绪")
+
+    # 2.5 预热 TTS 连接，减少首次语音合成的延迟
+    try:
+        await asyncio.wait_for(tts_service.warm_up(), timeout=5.0)
+    except (asyncio.TimeoutError, Exception):
+        print("[WARN] TTS 预热未完成（不影响正常使用）")
 
     # 3. 尝试初始化 GuideAgent (DeepSeek + MCP + RAG)
     # 设置 SKIP_MCP=1 环境变量可跳过 MCP 连接（测试时启动更快）
@@ -155,12 +161,16 @@ def update_session_tag(session_id: str, data: SessionTagRequest, db: Session = D
 
 
 @app.post("/api/chat")
-async def chat(request: ChatRequest):
+async def chat(req: Request, chat_req: ChatRequest):
     """
     文本问答 + TTS 语音合成（SSE 流式）—— 支持语音+文本混合输入。
 
     前端通过 Web Speech API 将语音转为文本后调用此端点。
     后端使用 RAG 检索 + DeepSeek 生成回答，并通过 Edge-TTS 合成语音。
+
+    优化：TTS 合成与 LLM 生成并行进行，避免语音输出不连贯。
+
+    支持打断：客户端断开连接时自动取消 LLM 生成和 TTS 合成。
 
     返回 SSE 事件流:
       event: token  → 文本 token
@@ -168,40 +178,152 @@ async def chat(request: ChatRequest):
       event: tool   → 工具调用状态 (仅 Agent 模式)
       event: done   → 完成标记
     """
-    session_id = request.session_id or uuid.uuid4().hex[:12]
+    session_id = chat_req.session_id or uuid.uuid4().hex[:12]
     start_time = time.time()
 
     async def event_generator() -> AsyncIterator[str]:
         full_answer = ""
         sentence_buffer = ""
+        first_audio_sent = False
+        cancelled = False
+        # TTS 异步任务管理：并行合成，保序输出
+        pending_tts: list[dict] = []  # [{order, text, task}]
+        tts_order = 0
+        next_audio_order = 0
+
+        # 追踪所有 TTS 任务，用于取消时清理
+        _tts_tasks: list[asyncio.Task] = []
+
+        async def flush_ready_audio():
+            """输出所有已完成的、顺序正确的 TTS 音频"""
+            nonlocal next_audio_order
+            yielded = []
+            for i, item in enumerate(pending_tts):
+                if item["task"].done() and item["order"] == next_audio_order:
+                    try:
+                        audio_b64 = item["task"].result()
+                        if audio_b64:
+                            yielded.append(
+                                f"event: audio\ndata: {json.dumps({'base64': audio_b64, 'text': item['text']})}\n\n"
+                            )
+                    except Exception:
+                        pass
+                    next_audio_order += 1
+                else:
+                    break
+            # 清理已输出的项
+            for _ in yielded:
+                pending_tts.pop(0)
+            return yielded
+
+        def fire_tts(text: str):
+            """启动后台 TTS 任务，不阻塞当前流"""
+            nonlocal tts_order
+            if not text.strip():
+                return
+            task = asyncio.create_task(tts_service.synthesize(text.strip()))
+            _tts_tasks.append(task)
+            pending_tts.append({"order": tts_order, "text": text.strip(), "task": task})
+            tts_order += 1
+
+        def cancel_all_tts():
+            """取消所有未完成的 TTS 任务"""
+            for t in _tts_tasks:
+                if not t.done():
+                    t.cancel()
+
+        def maybe_split_first_chunk(text: str) -> tuple[str, str]:
+            """
+            首句快速分块：在逗号处切分以加快初始音频响应。
+            仅对第一次音频使用，后续使用完整句子以保证语调连贯。
+            """
+            nonlocal first_audio_sent
+            if first_audio_sent:
+                return text, ""
+            if any(punct in text for punct in "。！？\n"):
+                # 已经是完整句，不分块
+                return text, ""
+            first_phrase, remaining = tts_service.split_first_phrase(text, min_chars=12)
+            if remaining:
+                first_audio_sent = True
+            return first_phrase, remaining
+
+        async def handle_sentence_end():
+            """处理句子结束：启动 TTS + 检查并输出已完成音频"""
+            nonlocal sentence_buffer, first_audio_sent
+            if not sentence_buffer.strip():
+                return
+
+            # 首句快速分块
+            first_chunk, rest = maybe_split_first_chunk(sentence_buffer)
+            if first_chunk:
+                fire_tts(first_chunk)
+            sentence_buffer = rest if rest else ""
+
+            if not rest:
+                # 如果是完整句（非分块），标记首音已发
+                first_audio_sent = True
+
+            # 输出所有已完成且顺序正确的音频
+            for event_str in await flush_ready_audio():
+                yield event_str
+
+        async def check_disconnect() -> bool:
+            """检查客户端是否断开连接"""
+            nonlocal cancelled
+            if cancelled:
+                return True
+            try:
+                if await req.is_disconnected():
+                    cancelled = True
+                    return True
+            except Exception:
+                pass
+            return False
 
         try:
             if guide_agent is not None:
                 # === Agent 模式: GuideAgent (MCP工具 + RAG) ===
-                async for event in guide_agent.stream(request.text, session_id):
+                async for event in guide_agent.stream(chat_req.text, session_id):
+                    # 检查客户端是否断开
+                    if await check_disconnect():
+                        break
+
                     if event["type"] == "token":
                         token = event["data"]
                         full_answer += token
                         sentence_buffer += token
                         yield f"event: token\ndata: {json.dumps({'text': token})}\n\n"
+
                         if any(punct in token for punct in "。！？\n"):
-                            if sentence_buffer.strip():
-                                audio_b64 = await tts_service.synthesize(sentence_buffer)
-                                if audio_b64:
-                                    yield f"event: audio\ndata: {json.dumps({'base64': audio_b64, 'text': sentence_buffer.strip()})}\n\n"
-                            sentence_buffer = ""
+                            async for audio_event in handle_sentence_end():
+                                yield audio_event
+                        elif any(punct in token for punct in "，、,") and len(sentence_buffer) >= 12 and not first_audio_sent:
+                            # 首句逗号处分块，快速启动音频
+                            async for audio_event in handle_sentence_end():
+                                yield audio_event
+
                     elif event["type"] == "tool_start":
                         yield f"event: tool\ndata: {json.dumps({'status': 'start', 'label': event['data']['label']})}\n\n"
                     elif event["type"] == "done":
+                        # 处理末尾残句
                         if sentence_buffer.strip():
-                            audio_b64 = await tts_service.synthesize(sentence_buffer)
-                            if audio_b64:
-                                yield f"event: audio\ndata: {json.dumps({'base64': audio_b64, 'text': sentence_buffer.strip()})}\n\n"
+                            fire_tts(sentence_buffer)
+                            sentence_buffer = ""
+                        # 等待所有 TTS 任务完成
+                        if pending_tts:
+                            await asyncio.gather(*[item["task"] for item in pending_tts], return_exceptions=True)
+                        async for audio_event in flush_ready_audio():
+                            yield audio_event
                         break
+
+                    # 每个 token 后检查是否有音频就绪
+                    for event_str in await flush_ready_audio():
+                        yield event_str
             else:
                 # === Direct RAG + LLM 模式 ===
                 retriever = get_retriever()
-                rag_result = retriever.retrieve(request.text, top_k=5)
+                rag_result = retriever.retrieve(chat_req.text, top_k=5)
                 context = "\n---\n".join(
                     doc.page_content for doc in rag_result.get("docs", [])
                 ) if rag_result.get("docs") else "暂无相关资料"
@@ -210,33 +332,56 @@ async def chat(request: ChatRequest):
                 prompt = (
                     "你是一个专业的景区导览数字人，名叫小导。请基于【参考资料】回答问题。\n"
                     "如果参考资料不足以回答，请直接说「资料中没有相关信息」，不要编造。\n\n"
-                    f"【用户问题】：{request.text}\n\n"
+                    f"【用户问题】：{chat_req.text}\n\n"
                     f"【参考资料】：\n{context}"
                 )
-                # 流式输出 token
                 async for chunk in llm.astream(prompt):
+                    # 检查客户端是否断开
+                    if await check_disconnect():
+                        break
+
                     token = chunk.content if hasattr(chunk, 'content') else str(chunk)
                     if token:
                         full_answer += token
                         sentence_buffer += token
                         yield f"event: token\ndata: {json.dumps({'text': token})}\n\n"
+
                         if any(punct in token for punct in "。！？\n"):
-                            if sentence_buffer.strip():
-                                audio_b64 = await tts_service.synthesize(sentence_buffer)
-                                if audio_b64:
-                                    yield f"event: audio\ndata: {json.dumps({'base64': audio_b64, 'text': sentence_buffer.strip()})}\n\n"
-                            sentence_buffer = ""
+                            async for audio_event in handle_sentence_end():
+                                yield audio_event
+                        elif any(punct in token for punct in "，、,") and len(sentence_buffer) >= 12 and not first_audio_sent:
+                            async for audio_event in handle_sentence_end():
+                                yield audio_event
 
-                if sentence_buffer.strip():
-                    audio_b64 = await tts_service.synthesize(sentence_buffer)
-                    if audio_b64:
-                        yield f"event: audio\ndata: {json.dumps({'base64': audio_b64, 'text': sentence_buffer.strip()})}\n\n"
+                    # 每个 token 后检查是否有音频就绪
+                    for event_str in await flush_ready_audio():
+                        yield event_str
 
-            latency_ms = int((time.time() - start_time) * 1000)
-            yield f"event: done\ndata: {json.dumps({'latency_ms': latency_ms, 'session_id': session_id})}\n\n"
+                # 如果没有被取消，处理末尾残句
+                if not cancelled:
+                    if sentence_buffer.strip():
+                        fire_tts(sentence_buffer)
+                    # 等待所有 TTS 任务完成
+                    if pending_tts:
+                        await asyncio.gather(*[item["task"] for item in pending_tts], return_exceptions=True)
+                    async for audio_event in flush_ready_audio():
+                        yield audio_event
 
+            if not cancelled:
+                latency_ms = int((time.time() - start_time) * 1000)
+                yield f"event: done\ndata: {json.dumps({'latency_ms': latency_ms, 'session_id': session_id})}\n\n"
+
+        except asyncio.CancelledError:
+            # 客户端断开时，Starlette 取消生成器任务
+            cancelled = True
         except Exception as e:
-            yield f"event: error\ndata: {json.dumps({'error': str(e)})}\n\n"
+            if not cancelled:
+                yield f"event: error\ndata: {json.dumps({'error': str(e)})}\n\n"
+        finally:
+            # 清理：取消所有未完成的 TTS 任务
+            cancel_all_tts()
+            if _tts_tasks:
+                await asyncio.gather(*_tts_tasks, return_exceptions=True)
 
     return StreamingResponse(
         event_generator(),

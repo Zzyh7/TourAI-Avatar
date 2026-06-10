@@ -5,13 +5,17 @@ import asyncio
 import io
 import base64
 import re
+import logging
 from typing import AsyncIterator
 import edge_tts
 from config import CONFIG
 
+logger = logging.getLogger(__name__)
 
 # 中文分句正则
 _SENTENCE_END = re.compile(r"[。！？；\n]")
+# 短停顿标点（逗号等），用于首句快速分块
+_PHRASE_END = re.compile(r"[，、,]")
 
 
 class EdgeTTSService:
@@ -27,11 +31,29 @@ class EdgeTTSService:
         # 分句流式合成
         async for sentence, audio_b64 in tts.synthesize_stream("长文本..."):
             ...
+
+        # 流式原始字节（用于 SSE 渐进传输）
+        async for chunk_b64 in tts.synthesize_stream_bytes("..."):
+            ...
     """
 
     def __init__(self, voice: str = None, rate: str = None):
         self.voice = voice or CONFIG.tts_voice
         self.rate = rate or CONFIG.tts_rate
+        self._warmed_up = False
+
+    async def warm_up(self):
+        """预热 TTS 连接，减少首次调用延迟"""
+        if self._warmed_up:
+            return
+        try:
+            comm = edge_tts.Communicate(text="。", voice=self.voice, rate=self.rate)
+            async for _ in comm.stream():
+                pass
+            self._warmed_up = True
+            logger.info("Edge-TTS 预热完成")
+        except Exception as e:
+            logger.warning(f"Edge-TTS 预热失败（不影响正常使用）: {e}")
 
     async def synthesize(self, text: str, voice: str = None, rate: str = None) -> str:
         """
@@ -54,6 +76,27 @@ class EdgeTTSService:
                 audio_data.write(chunk["data"])
 
         return base64.b64encode(audio_data.getvalue()).decode("utf-8")
+
+    async def synthesize_stream_bytes(self, text: str, voice: str = None, rate: str = None) -> AsyncIterator[str]:
+        """
+        流式合成：逐音频块 yield base64 编码的数据，不等待整句完成。
+
+        每个 chunk 是独立的 base64 字符串，前端可以逐块拼接或使用 MediaSource 播放。
+
+        yield: base64 编码的原始音频数据块
+        """
+        if not text.strip():
+            return
+
+        communicate = edge_tts.Communicate(
+            text=text.strip(),
+            voice=voice or self.voice,
+            rate=rate or self.rate,
+        )
+
+        async for chunk in communicate.stream():
+            if chunk["type"] == "audio":
+                yield base64.b64encode(chunk["data"]).decode("utf-8")
 
     async def synthesize_stream(self, text: str, voice: str = None, rate: str = None) -> AsyncIterator[tuple[str, str]]:
         """
@@ -81,6 +124,33 @@ class EdgeTTSService:
         if current.strip():
             result.append(current.strip())
         return result if result else [text]
+
+    def split_first_phrase(self, text: str, min_chars: int = 15) -> tuple[str, str]:
+        """
+        从文本中切分出首短语用于快速首音。
+
+        优先在逗号处切分，其次在最短句末标点处切分。
+        如果文本太短则整体作为首短语。
+
+        返回: (first_phrase, remaining_text)
+        """
+        text = text.strip()
+        if len(text) <= min_chars:
+            return text, ""
+
+        # 先在逗号处找切分点
+        for match in _PHRASE_END.finditer(text):
+            end = match.end()
+            if end >= min_chars:
+                return text[:end].strip(), text[end:].strip()
+
+        # 兜底：在第一个句末标点处切分
+        for match in _SENTENCE_END.finditer(text):
+            end = match.end()
+            return text[:end].strip(), text[end:].strip()
+
+        # 无标点：整体返回
+        return text, ""
 
 
 # 模块级单例

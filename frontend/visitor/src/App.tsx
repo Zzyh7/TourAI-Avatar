@@ -34,7 +34,9 @@ export default function App() {
   const [selectedTag, setSelectedTag] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { enqueue, stop } = useAudioPlayer((text) => {
+  const abortRef = useRef<AbortController | null>(null);
+
+  const { enqueue, stop: stopAudio } = useAudioPlayer((text) => {
     setCurrentText(text);
     setIsSpeaking(true);
   });
@@ -44,19 +46,43 @@ export default function App() {
     createSession().then(setSessionId);
   }, []);
 
-  // 发送消息
+  // 打断当前生成：中止请求 + 停止音频
+  const abortGeneration = useCallback(() => {
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
+    stopAudio();
+    setLoading(false);
+    setStreamingText('');
+    setIsSpeaking(false);
+    setEmotion('neutral');
+  }, [stopAudio]);
+
+  // 发送消息（或打断当前）
   const handleSend = useCallback(async (text: string) => {
-    if (!text.trim() || loading) return;
+    if (!text.trim()) return;
+
+    // 如果正在生成，打断当前，开始新问题
+    if (loading) {
+      abortGeneration();
+      // 小延迟让 abort 生效，然后继续发送新问题
+      await new Promise(r => setTimeout(r, 50));
+    }
 
     setMessages(prev => [...prev, { role: 'user', content: text }]);
     setStreamingText('');
     setEmotion('thinking');
     setLoading(true);
 
+    // 创建新的 AbortController
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     let fullAnswer = '';
 
     try {
-      for await (const event of streamChat(text, sessionId)) {
+      for await (const event of streamChat(text, sessionId, controller.signal)) {
         switch (event.type) {
           case 'token':
             fullAnswer += event.data.text;
@@ -93,14 +119,21 @@ export default function App() {
         }
       }
     } catch (err: any) {
+      // AbortError 是用户主动打断，不需要显示错误
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return;
+      }
       setMessages(prev => [
         ...prev,
         { role: 'system', content: `连接失败：${err.message}` },
       ]);
     } finally {
       setLoading(false);
+      if (abortRef.current === controller) {
+        abortRef.current = null;
+      }
     }
-  }, [sessionId, loading, enqueue]);
+  }, [sessionId, loading, enqueue, abortGeneration]);
 
   // 语音识别结果
   const handleVoiceResult = useCallback((text: string) => {
@@ -158,6 +191,7 @@ export default function App() {
             onSend={handleSend}
             disabled={loading}
             streamingText={streamingText}
+            onStop={abortGeneration}
           />
         </div>
       </div>
