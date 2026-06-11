@@ -21,7 +21,7 @@ class Base(DeclarativeBase):
 
 def init_db():
     """创建所有表"""
-    from models.schema import Session, Conversation, Document, DigitalHumanConfig, ScenicSpot  # noqa
+    from models.schema import Session, Conversation, Document, DigitalHumanConfig, ScenicSpot, CommonDialogue  # noqa
     Base.metadata.create_all(bind=engine)
 
 

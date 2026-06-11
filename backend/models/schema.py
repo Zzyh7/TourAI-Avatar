@@ -76,3 +76,18 @@ class ScenicSpot(Base):
     category = Column(String(50), default="")            # 景点类别
     visit_duration = Column(Integer, default=60)         # 建议游览时间(分钟)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class CommonDialogue(Base):
+    """常用对话 —— 预设问答，命中后直接返回，不走 LLM 生成"""
+    __tablename__ = "common_dialogues"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    question = Column(Text, nullable=False)              # 触发问题
+    answer = Column(Text, nullable=False)                # 预设回答
+    keywords = Column(String(500), default="")           # 匹配关键词，逗号分隔
+    category = Column(String(50), default="一般")         # 分类标签
+    priority = Column(Integer, default=0)                # 优先级，越高越优先
+    enabled = Column(Integer, default=1)                 # 是否启用 0/1
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
