@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TravelAgent 功能测试面板</title>
+<style>
+  :root {
+    --bg: #f0f2f5;
+    --card: #fff;
+    --primary: #1677ff;
+    --primary-hover: #4096ff;
+    --text: #1f1f1f;
+    --text-secondary: #666;
+    --border: #e0e0e0;
+    --radius: 8px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    --success: #52c41a;
+    --warn: #faad14;
+    --danger: #ff4d4f;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ====== 顶部导航 ====== */
+  .topbar {
+    background: linear-gradient(135deg, #1677ff, #096dd9);
+    color: #fff;
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .topbar h1 { font-size: 18px; font-weight: 600; }
+  .health-dot {
+    display: inline-block; width: 8px; height: 8px;
+    border-radius: 50%; margin-right: 6px;
+  }
+  .health-dot.ok { background: #52c41a; box-shadow: 0 0 6px #52c41a; }
+  .health-dot.err { background: #ff4d4f; box-shadow: 0 0 6px #ff4d4f; }
+  .health-dot.checking { background: #faad14; animation: pulse 0.8s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .health-label { font-size: 13px; cursor: pointer; user-select: none; }
+
+  /* ====== Tab 标签页 ====== */
+  .tabs {
+    display: flex; gap: 0;
+    background: #fff; border-bottom: 1px solid var(--border);
+    padding: 0 24px; position: sticky; top: 0; z-index: 10;
+  }
+  .tab {
+    padding: 14px 24px; font-size: 14px; cursor: pointer;
+    border-bottom: 2px solid transparent; color: var(--text-secondary);
+    transition: all 0.2s; user-select: none;
+  }
+  .tab:hover { color: var(--primary); }
+  .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+
+  /* ====== 内容区 ====== */
+  .content { max-width: 900px; margin: 24px auto; padding: 0 24px; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card {
+    background: var(--card); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px;
+  }
+  .card h3 {
+    font-size: 15px; margin-bottom: 12px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border); color: var(--text);
+  }
+  .card h3 .badge {
+    font-size: 11px; padding: 2px 8px; border-radius: 10px;
+    margin-left: 8px; font-weight: 400;
+  }
+  .badge.get { background: #e6f7ff; color: #1677ff; }
+  .badge.post { background: #fff7e6; color: #d46b08; }
+  .badge.sse { background: #f6ffed; color: #389e0d; }
+
+  /* ====== 表单元素 ====== */
+  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; color: var(--text); }
+  input, textarea, select {
+    width: 100%; padding: 8px 12px; font-size: 14px;
+    border: 1px solid var(--border); border-radius: 6px;
+    outline: none; font-family: inherit; transition: border-color 0.2s;
+  }
+  input:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(22,119,255,0.15); }
+  textarea { resize: vertical; min-height: 60px; }
+  button {
+    padding: 8px 20px; font-size: 14px; border: none; border-radius: 6px;
+    cursor: pointer; font-weight: 500; transition: all 0.2s;
+  }
+  button.primary { background: var(--primary); color: #fff; }
+  button.primary:hover { background: var(--primary-hover); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-row { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
+
+  /* ====== 聊天面板 ====== */
+  .chat-window {
+    min-height: 350px; max-height: 500px; overflow-y: auto;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px; margin-bottom: 12px; background: #fafafa;
+  }
+  .msg { margin-bottom: 12px; display: flex; gap: 10px; }
+  .msg.user { flex-direction: row-reverse; }
+  .msg .bubble {
+    max-width: 80%; padding: 10px 14px; border-radius: 12px;
+    font-size: 14px; line-height: 1.6; word-break: break-word;
+  }
+  .msg.user .bubble { background: var(--primary); color: #fff; border-bottom-right-radius: 4px; }
+  .msg.assistant .bubble { background: #fff; border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+  .msg .meta { font-size: 11px; color: #999; margin-bottom: 2px; }
+  .typing-indicator { color: #999; font-size: 13px; padding: 8px 0; }
+  .tool-badge {
+    display: inline-block; font-size: 11px; padding: 2px 8px;
+    background: #fef7e0; color: #ad6800; border-radius: 10px; margin: 4px 0;
+  }
+  audio { margin-top: 8px; height: 32px; }
+
+  /* ====== 标签选择器 ====== */
+  .tag-chips { display: flex; gap: 10px; flex-wrap: wrap; }
+  .tag-chip {
+    padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border);
+    font-size: 13px; cursor: pointer; user-select: none; transition: all 0.2s;
+    background: #fff;
+  }
+  .tag-chip:hover { border-color: var(--primary); }
+  .tag-chip.selected { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+  /* ====== 结果区 ====== */
+  .result-box {
+    background: #fafafa; border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 14px; margin-top: 12px; font-size: 13px; white-space: pre-wrap;
+    max-height: 300px; overflow-y: auto; line-height: 1.6; display: none;
+  }
+  .result-box.show { display: block; }
+  .result-box pre {
+    font-family: 'Consolas', 'Monaco', monospace; font-size: 12px;
+    background: #f5f5f5; padding: 8px; border-radius: 4px; overflow-x: auto;
+  }
+  .spot-card {
+    background: #fff; border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px; margin-bottom: 8px;
+  }
+  .spot-card h4 { font-size: 14px; color: var(--primary); margin-bottom: 4px; }
+  .spot-card p { font-size: 13px; color: var(--text-secondary); }
+
+  /* ====== 文件上传 ====== */
+  .upload-area {
+    border: 2px dashed var(--border); border-radius: var(--radius);
+    padding: 30px; text-align: center; cursor: pointer; transition: border-color 0.2s;
+  }
+  .upload-area:hover { border-color: var(--primary); }
+  .upload-area.dragover { border-color: var(--primary); background: rgba(22,119,255,0.04); }
+  .preview-img { max-width: 100%; max-height: 200px; border-radius: 6px; margin-top: 10px; display: none; }
+
+  /* ====== Toast ====== */
+  .toast {
+    position: fixed; top: 20px; right: 20px; z-index: 9999;
+    padding: 10px 20px; border-radius: 6px; font-size: 13px;
+    color: #fff; opacity: 0; transform: translateY(-10px);
+    transition: all 0.3s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { background: #52c41a; }
+  .toast.error { background: #ff4d4f; }
+  .toast.info { background: #1677ff; }
+</style>
+</head>
+<body>
+
+<!-- 顶部 -->
+<div class="topbar">
+  <h1>🧭 TravelAgent 功能测试面板</h1>
+  <div onclick="checkHealth()" style="cursor:pointer;display:flex;align-items:center;">
+    <span id="healthDot" class="health-dot checking"></span>
+    <span class="health-label" id="healthLabel">检测中...</span>
+  </div>
+</div>
+
+<!-- Tab 标签 -->
+<div class="tabs">
+  <div class="tab active" data-tab="chat">💬 文本问答</div>
+  <div class="tab" data-tab="photo">📷 拍照识景</div>
+  <div class="tab" data-tab="recommend">🎯 个性化推荐</div>
+  <div class="tab" data-tab="nearby">📍 附近景点</div>
+  <div class="tab" data-tab="rag">📚 RAG 知识库</div>
+</div>
+
+<!-- 内容区 -->
+<div class="content">
+
+  <!-- ==================== 1. 文本问答 ==================== -->
+  <div class="panel active" id="panel-chat">
+    <div class="card">
+      <h3>智能问答 <span class="badge sse">SSE Stream</span></h3>
+      <div class="chat-window" id="chatWindow">
+        <div style="text-align:center;color:#999;padding:60px 0;">
+          👋 你好！我是景区导览数字人 <strong>小导</strong>，有什么可以帮你的？
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <input id="chatInput" placeholder="输入你的问题，例如：灵山大佛有什么历史典故？"
+               onkeydown="if(event.key==='Enter') sendChat()" />
+        <button class="primary" id="sendBtn" onclick="sendChat()">发送</button>
+        <button class="primary" id="stopBtn" onclick="stopStream()"
+                style="display:none;background:var(--danger);">⏹ 停止</button>
+      </div>
+      <div class="btn-row">
+        <span style="font-size:12px;color:#999;">快速提问:</span>
+        <button style="font-size:12px;padding:4px 10px;background:#f0f0f0;" onclick="quickAsk('景区有哪些推荐的游览路线？')">游览路线</button>
+        <button style="font-size:12px;padding:4px 10px;background:#f0f0f0;" onclick="quickAsk('这里的开放时间是什么时候？')">开放时间</button>
+        <button style="font-size:12px;padding:4px 10px;background:#f0f0f0;" onclick="quickAsk('给我讲一个关于这个景区的历史故事')">历史故事</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 2. 拍照识景 ==================== -->
+  <div class="panel" id="panel-photo">
+    <div class="card">
+      <h3>拍照识景（多模态识别） <span class="badge post">POST /api/photo-recognize</span></h3>
+      <p style="font-size:13px;color:#999;margin-bottom:12px;">
+        Qwen-VL 识别照片 → RAG 知识库增强 → DeepSeek 整合生成讲解
+      </p>
+      <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+        <div style="font-size:36px;">📷</div>
+        <div style="margin-top:8px;color:#666;">点击上传景点照片，或拖拽到此处</div>
+        <div style="font-size:12px;color:#999;margin-top:4px;">支持 JPG / PNG，最大 10MB</div>
+      </div>
+      <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="handleFileSelect(event)" />
+      <img id="previewImg" class="preview-img" />
+      <button class="primary" id="photoBtn" style="margin-top:12px;display:none;" onclick="sendPhoto()">
+        🔍 开始识别
+      </button>
+      <div class="result-box" id="photoResult"></div>
+    </div>
+  </div>
+
+  <!-- ==================== 3. 个性化推荐 ==================== -->
+  <div class="panel" id="panel-recommend">
+    <div class="card">
+      <h3>游客偏好标签 <span class="badge get">GET /api/recommend</span></h3>
+      <p style="font-size:13px;color:#999;margin-bottom:12px;">根据您的游客类型，推荐最合适的游览路线和讲解重点</p>
+      <div class="tag-chips" id="tagChips">
+        <div class="tag-chip selected" data-tag="家庭游">👨‍👩‍👧 家庭游</div>
+        <div class="tag-chip" data-tag="情侣游">💑 情侣游</div>
+        <div class="tag-chip" data-tag="文化深度游">🏛️ 文化深度游</div>
+        <div class="tag-chip" data-tag="休闲游">☕ 休闲游</div>
+      </div>
+      <button class="primary" style="margin-top:14px;" onclick="getRecommend()">🎯 获取推荐</button>
+      <div class="result-box" id="recommendResult"></div>
+    </div>
+  </div>
+
+  <!-- ==================== 4. 附近景点 ==================== -->
+  <div class="panel" id="panel-nearby">
+    <div class="card">
+      <h3>GPS 附近景点查询 <span class="badge get">GET /api/nearby-spots</span></h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr 80px;gap:10px;align-items:end;">
+        <div><label>纬度 (lat)</label><input id="latInput" value="31.4169" type="number" step="any" /></div>
+        <div><label>经度 (lng)</label><input id="lngInput" value="120.2503" type="number" step="any" /></div>
+        <div><label>半径(m)</label><input id="radiusInput" value="5000" type="number" /></div>
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:#999;">
+        预设坐标:
+        <a href="#" onclick="setGPS(31.4169,120.2503);return false;" style="color:var(--primary);">无锡灵山</a> ·
+        <a href="#" onclick="setGPS(39.9042,116.4074);return false;" style="color:var(--primary);">北京故宫</a> ·
+        <a href="#" onclick="setGPS(30.2741,120.1551);return false;" style="color:var(--primary);">杭州西湖</a>
+      </div>
+      <button class="primary" style="margin-top:12px;" onclick="getNearby()">📍 查询附近景点</button>
+      <div class="result-box" id="nearbyResult"></div>
+    </div>
+  </div>
+
+  <!-- ==================== 5. RAG 知识库 ==================== -->
+  <div class="panel" id="panel-rag">
+    <div class="card">
+      <h3>RAG 知识库查询 <span class="badge post">POST /api/rag/query</span></h3>
+      <p style="font-size:13px;color:#999;margin-bottom:12px;">直接检索 FAISS+BM25 混合知识库，不经过 LLM 生成</p>
+      <input id="ragQuery" placeholder="输入检索关键词..." />
+      <button class="primary" style="margin-top:10px;" onclick="ragSearch()">🔍 检索</button>
+      <div class="result-box" id="ragResult"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== 全局状态 ====================
+// 自动检测: 通过 vite 代理用相对路径, 直接打开文件则用 localhost
+const API_BASE = window.location.protocol === 'file:'
+  ? 'http://localhost:8000/api'
+  : '/api';
+let currentStreamAbort = null;
+
+// ==================== 工具函数 ====================
+function $(id) { return document.getElementById(id); }
+function toast(msg, type='info') {
+  const el = $('toast');
+  el.textContent = msg; el.className = `toast ${type} show`;
+  setTimeout(() => { el.className = 'toast'; }, 2500);
+}
+
+// ==================== 健康检查 ====================
+async function checkHealth() {
+  const dot = $('healthDot'), label = $('healthLabel');
+  dot.className = 'health-dot checking'; label.textContent = '检测中...';
+  try {
+    const res = await fetch(`${API_BASE}/health`);
+    const data = await res.json();
+    dot.className = 'health-dot ok';
+    label.textContent = `${data.service} v${data.version}`;
+  } catch(e) {
+    dot.className = 'health-dot err';
+    label.textContent = '后端未连接';
+  }
+}
+checkHealth();
+
+// ==================== Tab 切换 ====================
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(`panel-${tab.dataset.tab}`).classList.add('active');
+  });
+});
+
+// ==================== 1. 文本问答 (SSE) ====================
+
+// 音频自动播放队列（避免创建多个 <audio controls> 需要手动点击）
+const audioQueue = [];
+let audioPlaying = false;
+let currentAudioEl = null;  // 当前正在播放的 Audio 元素
+
+function queueAudio(base64) {
+  audioQueue.push(base64);
+  if (!audioPlaying) playNextAudio();
+}
+
+function playNextAudio() {
+  if (audioQueue.length === 0) {
+    audioPlaying = false;
+    currentAudioEl = null;
+    return;
+  }
+  audioPlaying = true;
+  const base64 = audioQueue.shift();
+  currentAudioEl = new Audio(`data:audio/mp3;base64,${base64}`);
+  currentAudioEl.onended = () => playNextAudio();
+  currentAudioEl.onerror = () => playNextAudio();
+  currentAudioEl.play().catch(() => playNextAudio());
+}
+
+function stopAudio() {
+  if (currentAudioEl) {
+    currentAudioEl.pause();
+    currentAudioEl = null;
+  }
+  audioQueue.length = 0;
+  audioPlaying = false;
+}
+
+function addMessage(role, content, meta) {
+  const win = $('chatWindow');
+  // 移除空状态
+  const empty = win.querySelector('div[style*="text-align:center"]');
+  if (empty) empty.remove();
+
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  let html = `<div class="bubble">`;
+  if (meta) html += `<div class="meta">${meta}</div>`;
+  html += content + `</div>`;
+  div.innerHTML = html;
+  win.appendChild(div);
+  win.scrollTop = win.scrollHeight;
+  return div; // 返回用于后续追加 token
+}
+
+function quickAsk(text) {
+  $('chatInput').value = text;
+  sendChat();
+}
+
+async function sendChat() {
+  const input = $('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  // 如果正在生成中，打断当前
+  if (currentStreamAbort) {
+    stopStream();
+    await new Promise(r => setTimeout(r, 50));
+  }
+
+  input.value = '';
+  const sendBtn = $('sendBtn');
+  const stopBtn = $('stopBtn');
+  sendBtn.style.display = 'none';
+  stopBtn.style.display = 'inline-block';
+
+  // 添加用户消息
+  addMessage('user', text, new Date().toLocaleTimeString());
+
+  // 添加助手占位
+  const assistantDiv = addMessage('assistant', '⏳ 思考中...', new Date().toLocaleTimeString());
+  const bubble = assistantDiv.querySelector('.bubble');
+
+  // 创建 AbortController
+  const controller = new AbortController();
+  currentStreamAbort = controller;
+
+  try {
+    let fullText = '';
+    const response = await fetch(`${API_BASE}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, session_id: '' }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      // 解析 SSE 事件
+      const lines = buffer.split('\n');
+      buffer = '';
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+            // 处理不同类型的上一行 event
+            const prevLine = lines[i - 1] || '';
+            if (prevLine.includes('event: token')) {
+              // token 追加
+              if (!fullText) bubble.innerHTML = '';
+              fullText += data.text;
+              bubble.innerHTML = fullText.replace(/\n/g, '<br>');
+            } else if (prevLine.includes('event: audio')) {
+              // TTS 音频 — 自动播放，无需手动点击
+              queueAudio(data.base64);
+            } else if (prevLine.includes('event: tool')) {
+              const toolBadge = `<span class="tool-badge">🔧 ${data.label}</span>`;
+              bubble.innerHTML += toolBadge;
+            } else if (prevLine.includes('event: done')) {
+              const latency = data.latency_ms ? ` (${data.latency_ms}ms)` : '';
+              assistantDiv.querySelector('.meta').textContent += latency;
+            } else if (prevLine.includes('event: error')) {
+              bubble.innerHTML = `<span style="color:red;">❌ 错误: ${data.error}</span>`;
+            }
+          } catch(e) { /* 解析失败忽略 */ }
+        }
+      }
+    }
+
+    if (!fullText && !bubble.innerHTML.includes('audio')) {
+      bubble.innerHTML = '（收到空响应）';
+    }
+
+  } catch(e) {
+    // AbortError 是用户主动打断，不显示错误
+    if (e.name === 'AbortError') {
+      if (bubble.innerHTML === '⏳ 思考中...') {
+        bubble.innerHTML = '⏹ 已停止';
+      }
+    } else {
+      bubble.innerHTML = `<span style="color:red;">❌ 请求失败: ${e.message}</span>`;
+    }
+  } finally {
+    sendBtn.style.display = 'inline-block';
+    stopBtn.style.display = 'none';
+    currentStreamAbort = null;
+  }
+}
+
+function stopStream() {
+  if (currentStreamAbort) {
+    currentStreamAbort.abort();
+    currentStreamAbort = null;
+  }
+  stopAudio();
+}
+
+// ==================== 2. 拍照识景 ====================
+let selectedFileBase64 = '';
+
+function handleFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { toast('文件大小不能超过 10MB', 'error'); return; }
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    selectedFileBase64 = e.target.result.split(',')[1]; // 去掉 data:xxx;base64, 前缀
+    const preview = $('previewImg');
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+    $('photoBtn').style.display = 'inline-block';
+    $('photoResult').classList.remove('show');
+    toast('图片已加载，点击"开始识别"', 'success');
+  };
+  reader.readAsDataURL(file);
+}
+
+// 拖拽上传
+const uploadArea = $('uploadArea');
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+uploadArea.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadArea.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    $('fileInput').files = dt.files;
+    handleFileSelect({ target: { files: dt.files } });
+  }
+});
+
+async function sendPhoto() {
+  if (!selectedFileBase64) { toast('请先选择图片', 'error'); return; }
+
+  const btn = $('photoBtn');
+  btn.disabled = true;
+  btn.textContent = '识别中...';
+
+  const resultBox = $('photoResult');
+  resultBox.classList.add('show');
+  resultBox.innerHTML = '<div style="color:#999;">⏳ Qwen-VL 正在识别照片 + RAG 知识库增强中...</div>';
+
+  try {
+    const res = await fetch(`${API_BASE}/photo-recognize`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: selectedFileBase64 }),
+    });
+    const data = await res.json();
+
+    if (data.error) {
+      resultBox.innerHTML = `<div style="color:var(--danger);">❌ ${data.error}</div>`;
+    } else {
+      resultBox.innerHTML = `
+        <div style="margin-bottom:8px;"><strong>🏷️ 景点名称:</strong> ${data.name}</div>
+        <div style="margin-bottom:8px;"><strong>📝 讲解内容:</strong></div>
+        <div style="background:#fff;padding:10px;border-radius:4px;line-height:1.8;">${data.description}</div>
+        ${data.enriched ? '<span style="color:var(--success);">✅ RAG 知识库增强已启用</span>' : '<span style="color:#999;">⚠️ 未启用 RAG 增强</span>'}
+        ${data.rag_sources?.length ? `<div style="margin-top:8px;font-size:12px;color:#999;">📚 来源: ${data.rag_sources.join(', ')}</div>` : ''}
+        <details style="margin-top:8px;"><summary style="cursor:pointer;color:#666;">查看 VL 原始识别结果</summary>
+          <pre>${data.vl_raw || '无'}</pre>
+        </details>
+      `;
+    }
+  } catch(e) {
+    resultBox.innerHTML = `<div style="color:var(--danger);">❌ 请求失败: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🔍 开始识别';
+  }
+}
+
+// ==================== 3. 个性化推荐 ====================
+// Tag 选择
+document.querySelectorAll('.tag-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    chip.classList.toggle('selected');
+  });
+});
+
+async function getRecommend() {
+  const selected = [...document.querySelectorAll('.tag-chip.selected')].map(c => c.dataset.tag).join(',');
+  const resultBox = $('recommendResult');
+  resultBox.classList.add('show');
+  resultBox.innerHTML = '<div style="color:#999;">⏳ 加载中...</div>';
+
+  try {
+    const res = await fetch(`${API_BASE}/recommend?tags=${encodeURIComponent(selected)}`);
+    const data = await res.json();
+    const route = data.routes?.[0] || {};
+    resultBox.innerHTML = `
+      <div style="margin-bottom:8px;"><strong>🏁 推荐路线:</strong> <span style="color:var(--primary);font-size:16px;">${route.label || '经典游览路线'}</span></div>
+      <div style="margin-bottom:8px;"><strong>🎯 讲解重点:</strong> ${route.focus || '全面介绍'}</div>
+      <div><strong>📍 推荐景点:</strong></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">
+        ${(route.spots || []).map(s => `<span style="background:#e6f7ff;color:#1677ff;padding:4px 10px;border-radius:12px;font-size:12px;">${s}</span>`).join('')}
+      </div>
+      <div style="margin-top:8px;font-size:12px;color:#999;">💬 ${data.message}</div>
+      <pre style="margin-top:12px;">${JSON.stringify(data, null, 2)}</pre>
+    `;
+  } catch(e) {
+    resultBox.innerHTML = `<div style="color:var(--danger);">❌ 请求失败: ${e.message}</div>`;
+  }
+}
+
+// ==================== 4. 附近景点 ====================
+function setGPS(lat, lng) {
+  $('latInput').value = lat;
+  $('lngInput').value = lng;
+}
+
+async function getNearby() {
+  const lat = $('latInput').value;
+  const lng = $('lngInput').value;
+  const radius = $('radiusInput').value;
+
+  const resultBox = $('nearbyResult');
+  resultBox.classList.add('show');
+  resultBox.innerHTML = '<div style="color:#999;">⏳ 查询中...</div>';
+
+  try {
+    const res = await fetch(`${API_BASE}/nearby-spots?lat=${lat}&lng=${lng}&radius=${radius}`);
+    const data = await res.json();
+
+    if (!data.spots?.length) {
+      resultBox.innerHTML = `<div style="color:#999;">😕 在 ${radius}m 范围内未找到景点</div>`;
+      return;
+    }
+
+    let html = `<div style="margin-bottom:8px;">📍 中心 (${lat}, ${lng}) · 半径 ${radius}m · 共 ${data.spots.length} 个景点</div>`;
+    data.spots.forEach(spot => {
+      html += `
+        <div class="spot-card">
+          <h4>${spot.name} <span style="font-weight:400;font-size:12px;color:#999;">${spot.distance_m}m</span></h4>
+          <p>${spot.description || '暂无描述'} · ${spot.category || ''} · 游览约${spot.visit_duration || '?'}分钟</p>
+        </div>
+      `;
+    });
+    html += `<pre style="margin-top:12px;">${JSON.stringify(data, null, 2)}</pre>`;
+    resultBox.innerHTML = html;
+  } catch(e) {
+    resultBox.innerHTML = `<div style="color:var(--danger);">❌ 请求失败: ${e.message}</div>`;
+  }
+}
+
+// ==================== 5. RAG 知识库查询 ====================
+async function ragSearch() {
+  const query = $('ragQuery').value.trim();
+  if (!query) { toast('请输入检索关键词', 'error'); return; }
+
+  const resultBox = $('ragResult');
+  resultBox.classList.add('show');
+  resultBox.innerHTML = '<div style="color:#999;">⏳ 检索中...</div>';
+
+  try {
+    const res = await fetch(`${API_BASE}/rag/query`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: query, top_k: 5 }),
+    });
+    const data = await res.json();
+
+    let html = `<div style="margin-bottom:8px;"><strong>🔍 检索:</strong> "${query}"</div>`;
+    if (data.answer) {
+      html += `<div style="background:#fff;padding:10px;border-radius:4px;line-height:1.8;margin-bottom:8px;">${data.answer}</div>`;
+      if (data.sources?.length) {
+        html += `<div style="font-size:12px;color:#999;">📚 来源: ${data.sources.join(', ')}</div>`;
+      }
+      if (data.from_faq) html += '<div style="color:var(--success);font-size:12px;">✅ 来自FAQ精确匹配</div>';
+      if (data.below_threshold) html += '<div style="color:var(--warn);font-size:12px;">⚠️ 置信度低于阈值</div>';
+    } else {
+      html += '<div style="color:#999;">无结果</div>';
+    }
+    html += `<pre style="margin-top:12px;">${JSON.stringify(data, null, 2)}</pre>`;
+    resultBox.innerHTML = html;
+  } catch(e) {
+    resultBox.innerHTML = `<div style="color:var(--danger);">❌ 请求失败: ${e.message}</div>`;
+  }
+}
+
+// ==================== 页面初始化 ====================
+$('chatInput').focus();
+</script>
+</body>
+</html>

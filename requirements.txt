@@ -1,0 +1,40 @@
+# ==================== 核心框架 ====================
+fastapi>=0.115.0
+uvicorn>=0.30.0
+python-multipart>=0.0.9
+
+# ==================== AI / Agent ====================
+langchain>=0.3.0
+langchain-core>=0.3.0
+langchain-openai>=0.2.0        # DeepSeek (OpenAI 兼容接口)
+langchain-community>=0.3.0      # ChatTongyi (多模态)
+langchain-mcp-adapters>=0.1.0   # MCP 客户端
+langchain-text-splitters>=0.3.0
+langchain-huggingface>=0.1.0    # BGE 嵌入模型
+
+# ==================== RAG 向量库 ====================
+faiss-cpu>=1.8.0
+sentence-transformers>=3.0.0
+
+# ==================== 语音合成 ====================
+edge-tts>=6.1.0
+
+# ==================== 数据库 ====================
+sqlalchemy>=2.0.0
+
+# ==================== 配置与环境 ====================
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+
+# ==================== 文档处理 ====================
+pypdf>=4.0.0
+docx2txt>=0.8
+python-docx>=1.1.0              # .docx 表格解析（结构化数据集）
+
+# ==================== RAG 增强 ====================
+rank-bm25>=0.2.2                # BM25 关键词检索
+jieba>=0.42.1                   # 中文分词（BM25 检索必需）
+numpy>=1.26.0                   # 数值计算（BM25 排序必需）
+
+# ==================== 可选 ====================
+dashscope>=1.20.0               # 通义千问-VL 多模态 (阿里百炼)
