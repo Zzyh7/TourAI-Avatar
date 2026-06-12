@@ -18,6 +18,7 @@ const DEFAULT_FORM: CommonDialogueCreate = {
   question: '',
   answer: '',
   keywords: '',
+  variants: '',
   category: '一般',
   priority: 0,
   enabled: 1,
@@ -79,6 +80,7 @@ export default function CommonDialogues() {
       question: d.question,
       answer: d.answer,
       keywords: d.keywords,
+      variants: (d as any).variants || '',
       category: d.category,
       priority: d.priority,
       enabled: d.enabled,
@@ -285,6 +287,15 @@ export default function CommonDialogues() {
                 value={form.keywords}
                 onChange={e => setForm({ ...form, keywords: e.target.value })}
                 placeholder="如：门票,价格,多少钱"
+              />
+            </div>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>相似提问变体（JSON数组，一行一个）</label>
+              <textarea
+                style={{ ...styles.textInput, minHeight: 80, resize: 'vertical', fontFamily: 'monospace', fontSize: 12 }}
+                value={form.variants}
+                onChange={e => setForm({ ...form, variants: e.target.value })}
+                placeholder={'["几点开门", "开放时间是什么", "景区什么时候开门"]'}
               />
             </div>
             <div style={styles.formRow}>

@@ -72,6 +72,7 @@ export interface CommonDialogueCreate {
   question: string;
   answer: string;
   keywords?: string;
+  variants?: string;
   category?: string;
   priority?: number;
   enabled?: number;
@@ -277,15 +278,18 @@ export interface DocumentItem {
   uploaded_at: string;
 }
 
+// 改用 RAG API
+const RAG_BASE = '/api/rag/admin';
+
 export async function getDocuments(): Promise<DocumentItem[]> {
-  const resp = await fetch(`${BASE}/knowledge/list`);
+  const resp = await fetch(`${RAG_BASE}/documents`);
   return resp.json();
 }
 
 export async function uploadDocument(file: File): Promise<any> {
   const formData = new FormData();
   formData.append('file', file);
-  const resp = await fetch(`${BASE}/knowledge/upload`, {
+  const resp = await fetch(`${RAG_BASE}/upload`, {
     method: 'POST',
     body: formData,
   });
@@ -293,7 +297,21 @@ export async function uploadDocument(file: File): Promise<any> {
 }
 
 export async function deleteDocument(docId: number): Promise<void> {
-  await fetch(`${BASE}/knowledge/${docId}`, { method: 'DELETE' });
+  await fetch(`${RAG_BASE}/documents/${docId}`, { method: 'DELETE' });
+}
+
+export async function getRAGHealth(): Promise<{ faq_count: number; status: string }> {
+  const resp = await fetch('/api/rag/health');
+  return resp.json();
+}
+
+export async function importFAQ(items: { question: string; answer: string }[]): Promise<any> {
+  const resp = await fetch(`${RAG_BASE}/faq/import`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items }),
+  });
+  return resp.json();
 }
 
 // ==================== 数字人配置 ====================
@@ -320,5 +338,129 @@ export async function updateDigitalHumanConfig(data: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
+  return resp.json();
+}
+
+// ==================== 数据分析 (Analytics) ====================
+
+const ANALYTICS_BASE = '/api/admin/analytics';
+
+export interface FullDashboard {
+  interaction: {
+    today: { sessions: number; conversations: number };
+    yesterday: { sessions: number; conversations: number };
+    week: { sessions: number; conversations: number };
+    month: { sessions: number; conversations: number };
+    hourly_distribution: { hour: number; count: number }[];
+    avg_conversations_per_session: number;
+    avg_daily_conversations: number;
+    repeat_visitors_week: number;
+  };
+  spot_popularity: {
+    ranking: { name: string; count: number }[];
+    top5: { name: string; count: number }[];
+    cold_spots: { name: string; count: number }[];
+  };
+  qa_quality: {
+    total_answers: number;
+    unable_to_answer: number;
+    unable_rate: number;
+    sentiment: { positive: number; neutral: number; negative: number };
+    satisfaction_rate: number;
+  };
+  time_comparison: {
+    today: { conversations: number; positive: number; sessions: number; rate: number };
+    yesterday: { conversations: number; positive: number; sessions: number; rate: number };
+    week_daily: { conversations: number; positive: number; sessions: number; rate: number }[];
+    this_week_total: number;
+    last_week_total: number;
+    week_change: number;
+  };
+  question_analysis: {
+    categories: { name: string; count: number }[];
+    top_questions: { question: string; count: number }[];
+    unable_questions: { question: string; count: number }[];
+  };
+  visitor_segmentation: {
+    segments: { label: string; count: number }[];
+    tag_distribution: { name: string; value: number }[];
+    preference_distribution?: { name: string; value: number }[];
+  };
+}
+
+export async function fetchFullDashboard(): Promise<FullDashboard> {
+  const resp = await fetch(`${ANALYTICS_BASE}/full-dashboard`);
+  return resp.json();
+}
+
+export interface SpotPopularityRes {
+  ranking: { name: string; count: number }[];
+  top5: { name: string; count: number }[];
+  cold_spots: { name: string; count: number }[];
+  total_queries: number;
+}
+
+export async function fetchSpotPopularity(): Promise<SpotPopularityRes> {
+  const resp = await fetch(`${ANALYTICS_BASE}/spot-popularity`);
+  return resp.json();
+}
+
+export interface TimeComparisonRes {
+  today: { conversations: number; positive: number; sessions: number; rate: number };
+  yesterday: { conversations: number; positive: number; sessions: number; rate: number };
+  week_daily: { conversations: number; positive: number; sessions: number; rate: number }[];
+  this_week_total: number;
+  last_week_total: number;
+  week_change: number;
+}
+
+export async function fetchTimeComparison(): Promise<TimeComparisonRes> {
+  const resp = await fetch(`${ANALYTICS_BASE}/time-comparison`);
+  return resp.json();
+}
+
+export interface QAQualityRes {
+  total_answers: number;
+  unable_to_answer: number;
+  unable_rate: number;
+  sentiment: { positive: number; neutral: number; negative: number };
+  satisfaction_rate: number;
+}
+
+export async function fetchQAQuality(): Promise<QAQualityRes> {
+  const resp = await fetch(`${ANALYTICS_BASE}/qa-quality`);
+  return resp.json();
+}
+
+export interface QuestionAnalysisRes {
+  categories: { name: string; count: number }[];
+  top_questions: { question: string; count: number }[];
+  unable_questions: { question: string; count: number }[];
+}
+
+export async function fetchQuestionAnalysis(): Promise<QuestionAnalysisRes> {
+  const resp = await fetch(`${ANALYTICS_BASE}/question-analysis`);
+  return resp.json();
+}
+
+export interface VisitorSegmentationRes {
+  segments: { label: string; count: number }[];
+  tag_distribution: { name: string; value: number }[];
+  preference_distribution?: { name: string; value: number }[];
+}
+
+export async function fetchVisitorSegmentation(): Promise<VisitorSegmentationRes> {
+  const resp = await fetch(`${ANALYTICS_BASE}/visitor-segmentation`);
+  return resp.json();
+}
+
+export interface NegativeAnalysisRes {
+  categories: { name: string; count: number }[];
+  samples: { question: string; sentiment: string; category: string }[];
+  suggestion: string;
+}
+
+export async function fetchNegativeAnalysis(): Promise<NegativeAnalysisRes> {
+  const resp = await fetch(`${ANALYTICS_BASE}/negative-analysis`);
   return resp.json();
 }

@@ -86,6 +86,7 @@ class CommonDialogue(Base):
     question = Column(Text, nullable=False)              # 触发问题
     answer = Column(Text, nullable=False)                # 预设回答
     keywords = Column(String(500), default="")           # 匹配关键词，逗号分隔
+    variants = Column(Text, default="")                  # JSON数组，相似提问变体
     category = Column(String(50), default="一般")         # 分类标签
     priority = Column(Integer, default=0)                # 优先级，越高越优先
     enabled = Column(Integer, default=1)                 # 是否启用 0/1

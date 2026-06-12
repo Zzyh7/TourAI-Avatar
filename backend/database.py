@@ -20,9 +20,21 @@ class Base(DeclarativeBase):
 
 
 def init_db():
-    """创建所有表"""
+    """创建所有表 + 自动迁移新增字段"""
     from models.schema import Session, Conversation, Document, DigitalHumanConfig, ScenicSpot, CommonDialogue  # noqa
     Base.metadata.create_all(bind=engine)
+
+    # 自动迁移：为已存在的表添加新列（SQLite 不支持 ALTER TABLE ADD COLUMN IF NOT EXISTS）
+    import sqlite3
+    conn = engine.raw_connection()
+    cursor = conn.cursor()
+    try:
+        # common_dialogues 新增 variants 字段
+        cursor.execute("ALTER TABLE common_dialogues ADD COLUMN variants TEXT DEFAULT ''")
+    except (sqlite3.OperationalError, Exception):
+        pass  # 列已存在，忽略
+    conn.commit()
+    conn.close()
 
 
 def get_db():

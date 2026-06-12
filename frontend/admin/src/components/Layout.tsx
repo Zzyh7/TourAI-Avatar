@@ -3,7 +3,7 @@
  */
 import { type ReactNode } from 'react';
 
-export type PageKey = 'dashboard' | 'dialogues' | 'sessions' | 'documents' | 'spots' | 'config';
+export type PageKey = 'dashboard' | 'spots-hot' | 'time-compare' | 'qa-analysis' | 'visitors' | 'negative' | 'dialogues' | 'sessions' | 'documents' | 'scenic-spots' | 'config';
 
 interface Props {
   active: PageKey;
@@ -12,11 +12,16 @@ interface Props {
 }
 
 const NAV_ITEMS: { key: PageKey; label: string; icon: string }[] = [
-  { key: 'dashboard', label: '数据概览', icon: '📊' },
-  { key: 'dialogues', label: '常用对话', icon: '💬' },
-  { key: 'sessions', label: '会话记录', icon: '📝' },
+  { key: 'dashboard', label: '数据大屏', icon: '📊' },
+  { key: 'spots-hot', label: '景点热度', icon: '🔥' },
+  { key: 'time-compare', label: '时间对比', icon: '📅' },
+  { key: 'qa-analysis', label: '问答分析', icon: '💬' },
+  { key: 'visitors', label: '游客分层', icon: '👥' },
+  { key: 'negative', label: '负面反馈', icon: '⚠️' },
+  { key: 'dialogues', label: '常用对话', icon: '📝' },
+  { key: 'sessions', label: '会话记录', icon: '📋' },
   { key: 'documents', label: '知识库', icon: '📚' },
-  { key: 'spots', label: '景点管理', icon: '📍' },
+  { key: 'scenic-spots', label: '景点管理', icon: '🏛️' },
   { key: 'config', label: '系统配置', icon: '⚙️' },
 ];
 
@@ -92,6 +97,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: 2,
+    overflow: 'auto',
   },
   navItem: {
     display: 'flex',

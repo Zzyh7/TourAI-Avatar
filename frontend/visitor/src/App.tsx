@@ -16,7 +16,6 @@ import ChatPanel from './components/ChatPanel';
 import VoiceButton from './components/VoiceButton';
 import RecommendationBar from './components/RecommendationBar';
 import PhotoRecognition from './components/PhotoRecognition';
-import AdminPanel from './components/AdminPanel';
 import { useAudioPlayer } from './hooks/useAudioPlayer';
 import { streamChat, createSession } from './services/api';
 
@@ -34,7 +33,6 @@ export default function App() {
   const [sessionId, setSessionId] = useState('');
   const [selectedTag, setSelectedTag] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   const abortRef = useRef<AbortController | null>(null);
   // 用 ref 追踪 streamingText，供 abortGeneration 读取最新值
@@ -206,37 +204,18 @@ export default function App() {
     <div style={styles.app}>
       {/* 标题栏 */}
       <header style={styles.header}>
-        <h1 style={styles.title}>{isAdmin ? '⚙️ 景区导览管理后台' : '🏛️ 景区导览AI数字人'}</h1>
+        <h1 style={styles.title}>🏛️ 景区导览AI数字人</h1>
         <div style={styles.headerRight}>
-          <button
-            onClick={() => setIsAdmin(!isAdmin)}
-            style={{
-              padding: '6px 16px', background: isAdmin ? '#ef5350' : '#1976d2', color: '#fff',
-              border: 'none', borderRadius: 6, fontSize: 13, cursor: 'pointer', fontWeight: 500,
-            }}
-          >
-            {isAdmin ? '👤 游客端' : '⚙️ 管理后台'}
-          </button>
-          {!isAdmin && (
-            <>
-              <PhotoRecognition disabled={loading} onResult={handlePhotoResult} />
-              <VoiceButton onResult={handleVoiceResult} disabled={loading} />
-            </>
-          )}
+          <PhotoRecognition disabled={loading} onResult={handlePhotoResult} />
+          <VoiceButton onResult={handleVoiceResult} disabled={loading} />
         </div>
       </header>
 
-      {isAdmin ? (
-        <div style={{ flex: 1, minHeight: 0 }}>
-          <AdminPanel />
-        </div>
-      ) : (
-        <>
-          {/* 推荐标签 */}
-          <RecommendationBar onSelect={handleTagSelect} selected={selectedTag} />
+      {/* 推荐标签 */}
+      <RecommendationBar onSelect={handleTagSelect} selected={selectedTag} />
 
-          {/* 主区域 */}
-          <div style={styles.main}>
+      {/* 主区域 */}
+      <div style={styles.main}>
         {/* 左侧：数字人 */}
         <div style={styles.leftPanel}>
           <DigitalHuman
@@ -257,8 +236,6 @@ export default function App() {
           />
         </div>
       </div>
-        </>
-      )}
     </div>
   );
 }

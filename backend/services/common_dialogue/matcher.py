@@ -88,28 +88,43 @@ class CommonDialogueService:
 
         return None
 
+    def _get_question_variants(self, d: CommonDialogue) -> list[str]:
+        """获取对话的所有匹配文本：主问题 + variants 中的相似提问"""
+        texts = [d.question]
+        if d.variants and d.variants.strip():
+            import json
+            try:
+                variants_list = json.loads(d.variants)
+                if isinstance(variants_list, list):
+                    texts.extend(v for v in variants_list if isinstance(v, str) and v.strip())
+            except (json.JSONDecodeError, TypeError):
+                pass
+        return texts
+
     def _match_exact(
         self, normalized: str, dialogues: list[CommonDialogue]
     ) -> CommonDialogue | None:
-        """精确匹配：标准化文本完全相同"""
+        """精确匹配：标准化文本完全相同（含 variants）"""
         for d in dialogues:
-            if self.normalize(d.question) == normalized:
-                return d
+            for text in self._get_question_variants(d):
+                if self.normalize(text) == normalized:
+                    return d
         return None
 
     def _match_fuzzy(
         self, normalized: str, dialogues: list[CommonDialogue]
     ) -> CommonDialogue | None:
-        """模糊匹配：difflib 序列相似度"""
+        """模糊匹配：difflib 序列相似度（含 variants）"""
         best_score = 0.0
         best_match: CommonDialogue | None = None
 
         for d in dialogues:
-            d_normalized = self.normalize(d.question)
-            score = difflib.SequenceMatcher(None, normalized, d_normalized).ratio()
-            if score >= self.FUZZY_THRESHOLD and score > best_score:
-                best_score = score
-                best_match = d
+            for text in self._get_question_variants(d):
+                d_normalized = self.normalize(text)
+                score = difflib.SequenceMatcher(None, normalized, d_normalized).ratio()
+                if score >= self.FUZZY_THRESHOLD and score > best_score:
+                    best_score = score
+                    best_match = d
 
         return best_match
 

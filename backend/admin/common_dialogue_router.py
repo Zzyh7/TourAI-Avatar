@@ -20,6 +20,7 @@ class CommonDialogueCreate(BaseModel):
     question: str = Field(..., description="触发问题")
     answer: str = Field(..., description="预设回答")
     keywords: str = ""                              # 逗号分隔关键词
+    variants: str = ""                              # JSON数组，相似提问变体
     category: str = "一般"
     priority: int = 0
     enabled: int = 1
@@ -29,6 +30,7 @@ class CommonDialogueUpdate(BaseModel):
     question: Optional[str] = None
     answer: Optional[str] = None
     keywords: Optional[str] = None
+    variants: Optional[str] = None
     category: Optional[str] = None
     priority: Optional[int] = None
     enabled: Optional[int] = None
@@ -86,6 +88,7 @@ def create_dialogue(data: CommonDialogueCreate, db: Session = Depends(get_db)):
         question=data.question,
         answer=data.answer,
         keywords=data.keywords,
+        variants=data.variants,
         category=data.category,
         priority=data.priority,
         enabled=data.enabled,
@@ -151,6 +154,7 @@ def batch_import(data: CommonDialogueBatchImport, db: Session = Depends(get_db))
             question=item.question,
             answer=item.answer,
             keywords=item.keywords,
+            variants=getattr(item, 'variants', ''),
             category=item.category,
             priority=item.priority,
             enabled=item.enabled,
