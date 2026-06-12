@@ -3,9 +3,10 @@
 """
 import os
 from dataclasses import dataclass, field
-from dotenv import load_dotenv
+from dotenv import load_dotenv, find_dotenv
 
-load_dotenv()
+# 优先从项目根目录加载 .env (兼容从 backend/ 或项目根启动)
+load_dotenv(find_dotenv(usecwd=True))
 
 
 @dataclass

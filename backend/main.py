@@ -17,22 +17,29 @@ import json
 import asyncio
 from typing import AsyncIterator
 from contextlib import asynccontextmanager
+from datetime import datetime
 
-from fastapi import FastAPI, Depends, Request
+from fastapi import FastAPI, Depends, Request, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, JSONResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from config import CONFIG
-from database import init_db, get_db
-from models.schema import ScenicSpot, Session as SessionModel
+from database import init_db, get_db, SessionLocal
+from models.schema import ScenicSpot, Session as SessionModel, Conversation
 from agents.planner import GuideAgent
 from services.tts.edge_tts import tts_service
+from services.sentiment.analyzer import SentimentAnalyzer
 from admin.knowledge import router as knowledge_router
 from admin.config_router import router as config_router
 from admin.stats import router as stats_router
+from admin.common_dialogue_router import router as common_dialogue_router
+from admin.scenic_spots_router import router as scenic_spots_router
+from admin.data_router import router as data_router
 from rag_system import rag_router, init_rag, get_retriever
+from services.common_dialogue import CommonDialogueService
+from services.stt import transcribe
 
 
 # ==================== 全局服务实例 ====================
@@ -113,6 +120,9 @@ app.add_middleware(
 app.include_router(knowledge_router)
 app.include_router(config_router)
 app.include_router(stats_router)
+app.include_router(common_dialogue_router)
+app.include_router(scenic_spots_router)
+app.include_router(data_router)
 
 # 注册 RAG 增强知识库路由 (独立 /api/rag/query + /api/rag/admin/upload/faq)
 app.include_router(rag_router, prefix="/api/rag")
@@ -125,6 +135,57 @@ class ChatRequest(BaseModel):
     session_id: str = ""
 
 
+# ==================== 对话日志 & 情感分析 ====================
+
+async def _log_conversation(
+    session_id: str,
+    user_text: str,
+    assistant_text: str,
+    latency_ms: int,
+):
+    """
+    保存对话记录并调用 LLM 进行情感分析。
+    情感分析设置超时，避免阻塞主流程。
+    """
+    sentiment = "中性"
+    try:
+        llm = CONFIG.create_llm()
+        analyzer = SentimentAnalyzer(llm)
+        # 设置 3 秒超时，避免情感分析拖慢响应
+        sentiment = await asyncio.wait_for(analyzer.analyze(user_text), timeout=3.0)
+    except (asyncio.TimeoutError, Exception):
+        # 超时或失败时使用简单的关键词判断作为降级
+        positive_words = ["好", "美", "赞", "喜欢", "开心", "棒", "不错", "谢谢", "厉害", "方便"]
+        negative_words = ["差", "烂", "失望", "生气", "垃圾", "坑", "骗", "糟糕", "烦", "慢"]
+        text = user_text
+        pos_count = sum(1 for w in positive_words if w in text)
+        neg_count = sum(1 for w in negative_words if w in text)
+        if pos_count > neg_count:
+            sentiment = "正面"
+        elif neg_count > pos_count:
+            sentiment = "负面"
+        # else remain "中性"
+
+    db = SessionLocal()
+    try:
+        now = datetime.utcnow()
+        # 保存用户消息
+        db.add(Conversation(
+            session_id=session_id, role="user", content=user_text,
+            sentiment=sentiment, latency_ms=latency_ms, created_at=now,
+        ))
+        # 保存助手回复
+        db.add(Conversation(
+            session_id=session_id, role="assistant", content=assistant_text,
+            sentiment=sentiment, latency_ms=latency_ms, created_at=now,
+        ))
+        db.commit()
+        print(f"[LOG] 对话已记录 [{sentiment}] {session_id}: {user_text[:30]}...")
+    except Exception as e:
+        db.rollback()
+        print(f"[WARN] 对话记录失败: {e}")
+    finally:
+        db.close()
 class PhotoRequest(BaseModel):
     image: str               # base64 编码的图片
     lat: float | None = None
@@ -282,6 +343,51 @@ async def chat(req: Request, chat_req: ChatRequest):
             return False
 
         try:
+            # === 常用对话匹配：命中则直接返回预设回答，不走 LLM ===
+            cd_matched = None
+            try:
+                from database import SessionLocal
+                cd_db = SessionLocal()
+                try:
+                    cd_service = CommonDialogueService()
+                    cd_matched = cd_service.match(chat_req.text, cd_db)
+                finally:
+                    cd_db.close()
+            except Exception as e:
+                print(f"[CD] 常用对话匹配出错: {e}")
+
+            if cd_matched:
+                # 预设回答直接逐字输出 + TTS
+                for char in cd_matched.answer:
+                    if await check_disconnect():
+                        break
+                    full_answer += char
+                    sentence_buffer += char
+                    yield f"event: token\ndata: {json.dumps({'text': char})}\n\n"
+
+                    if any(punct in char for punct in "。！？\n"):
+                        async for audio_event in handle_sentence_end():
+                            yield audio_event
+                    elif any(punct in char for punct in "，、,") and len(sentence_buffer) >= 12 and not first_audio_sent:
+                        async for audio_event in handle_sentence_end():
+                            yield audio_event
+
+                    for event_str in await flush_ready_audio():
+                        yield event_str
+
+                if not cancelled:
+                    # 处理末尾残句
+                    if sentence_buffer.strip():
+                        fire_tts(sentence_buffer)
+                    if pending_tts:
+                        await asyncio.gather(*[item["task"] for item in pending_tts], return_exceptions=True)
+                    for audio_event in await flush_ready_audio():
+                        yield audio_event
+
+                    latency_ms = int((time.time() - start_time) * 1000)
+                    yield f"event: done\ndata: {json.dumps({'latency_ms': latency_ms, 'session_id': session_id, 'source': 'common_dialogue'})}\n\n"
+                return
+
             if guide_agent is not None:
                 # === Agent 模式: GuideAgent (MCP工具 + RAG) ===
                 async for event in guide_agent.stream(chat_req.text, session_id):
@@ -313,7 +419,7 @@ async def chat(req: Request, chat_req: ChatRequest):
                         # 等待所有 TTS 任务完成
                         if pending_tts:
                             await asyncio.gather(*[item["task"] for item in pending_tts], return_exceptions=True)
-                        async for audio_event in flush_ready_audio():
+                        for audio_event in await flush_ready_audio():
                             yield audio_event
                         break
 
@@ -364,11 +470,13 @@ async def chat(req: Request, chat_req: ChatRequest):
                     # 等待所有 TTS 任务完成
                     if pending_tts:
                         await asyncio.gather(*[item["task"] for item in pending_tts], return_exceptions=True)
-                    async for audio_event in flush_ready_audio():
+                    for audio_event in await flush_ready_audio():
                         yield audio_event
 
             if not cancelled:
                 latency_ms = int((time.time() - start_time) * 1000)
+                # 保存对话记录 + 情感分析（带超时，不影响done事件）
+                await _log_conversation(session_id, chat_req.text, full_answer, latency_ms)
                 yield f"event: done\ndata: {json.dumps({'latency_ms': latency_ms, 'session_id': session_id})}\n\n"
 
         except asyncio.CancelledError:
@@ -605,6 +713,35 @@ async def nearby_spots(
 
     nearby.sort(key=lambda x: x["distance_m"])
     return {"spots": nearby, "center": {"lat": lat, "lng": lng}, "radius": radius}
+
+
+# ==================== 语音识别 (STT) ====================
+
+@app.post("/api/stt")
+async def speech_to_text(audio: UploadFile = File(...), mime_type: str = Form(default="audio/wav")):
+    """
+    语音转文字 —— 使用 DashScope Paraformer。
+    前端录制音频后上传，返回识别的文字。
+
+    参数:
+      - audio: 音频文件 (multipart/form-data)
+      - mime_type: 音频 MIME 类型 (如 audio/wav, audio/webm)
+
+    返回:
+      {"text": "识别的文字内容", "success": true}
+    """
+    try:
+        audio_data = await audio.read()
+        if not audio_data or len(audio_data) < 100:
+            return JSONResponse({"text": "", "success": False, "error": "音频数据为空"}, status_code=400)
+
+        # 优先使用上传文件的 content_type
+        actual_mime = audio.content_type or mime_type
+        text = transcribe(audio_data, actual_mime)
+        return {"text": text, "success": bool(text)}
+
+    except Exception as e:
+        return JSONResponse({"text": "", "success": False, "error": str(e)}, status_code=500)
 
 
 # ==================== 健康检查 ====================
