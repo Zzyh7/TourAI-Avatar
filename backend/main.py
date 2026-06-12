@@ -34,6 +34,7 @@ from services.sentiment.analyzer import SentimentAnalyzer
 from admin.knowledge import router as knowledge_router
 from admin.config_router import router as config_router
 from admin.stats import router as stats_router
+from admin.analytics import router as analytics_router
 from rag_system import rag_router, init_rag, get_retriever
 
 
@@ -115,6 +116,7 @@ app.add_middleware(
 app.include_router(knowledge_router)
 app.include_router(config_router)
 app.include_router(stats_router)
+app.include_router(analytics_router)
 
 # 注册 RAG 增强知识库路由 (独立 /api/rag/query + /api/rag/admin/upload/faq)
 app.include_router(rag_router, prefix="/api/rag")
