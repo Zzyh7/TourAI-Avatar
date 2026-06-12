@@ -8,3 +8,11 @@ data/docs/
 *.db
 dist/
 _old/
+*.db-shm
+*.db-wal
+# pywin32 DLLs (should not be checked into repo)
+pythoncom312.dll
+pywintypes312.dll
+# OS files
+.DS_Store
+Thumbs.db
