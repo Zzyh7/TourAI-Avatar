@@ -17,6 +17,7 @@ import json
 import asyncio
 from typing import AsyncIterator
 from contextlib import asynccontextmanager
+from datetime import datetime
 
 from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,10 +26,11 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
 from config import CONFIG
-from database import init_db, get_db
-from models.schema import ScenicSpot, Session as SessionModel
+from database import init_db, get_db, SessionLocal
+from models.schema import ScenicSpot, Session as SessionModel, Conversation
 from agents.planner import GuideAgent
 from services.tts.edge_tts import tts_service
+from services.sentiment.analyzer import SentimentAnalyzer
 from admin.knowledge import router as knowledge_router
 from admin.config_router import router as config_router
 from admin.stats import router as stats_router
@@ -123,6 +125,59 @@ app.include_router(rag_router, prefix="/api/rag")
 class ChatRequest(BaseModel):
     text: str
     session_id: str = ""
+
+
+# ==================== 对话日志 & 情感分析 ====================
+
+async def _log_conversation(
+    session_id: str,
+    user_text: str,
+    assistant_text: str,
+    latency_ms: int,
+):
+    """
+    保存对话记录并调用 LLM 进行情感分析。
+    情感分析设置超时，避免阻塞主流程。
+    """
+    sentiment = "中性"
+    try:
+        llm = CONFIG.create_llm()
+        analyzer = SentimentAnalyzer(llm)
+        # 设置 3 秒超时，避免情感分析拖慢响应
+        sentiment = await asyncio.wait_for(analyzer.analyze(user_text), timeout=3.0)
+    except (asyncio.TimeoutError, Exception):
+        # 超时或失败时使用简单的关键词判断作为降级
+        positive_words = ["好", "美", "赞", "喜欢", "开心", "棒", "不错", "谢谢", "厉害", "方便"]
+        negative_words = ["差", "烂", "失望", "生气", "垃圾", "坑", "骗", "糟糕", "烦", "慢"]
+        text = user_text
+        pos_count = sum(1 for w in positive_words if w in text)
+        neg_count = sum(1 for w in negative_words if w in text)
+        if pos_count > neg_count:
+            sentiment = "正面"
+        elif neg_count > pos_count:
+            sentiment = "负面"
+        # else remain "中性"
+
+    db = SessionLocal()
+    try:
+        now = datetime.utcnow()
+        # 保存用户消息
+        db.add(Conversation(
+            session_id=session_id, role="user", content=user_text,
+            sentiment=sentiment, latency_ms=latency_ms, created_at=now,
+        ))
+        # 保存助手回复
+        db.add(Conversation(
+            session_id=session_id, role="assistant", content=assistant_text,
+            sentiment=sentiment, latency_ms=latency_ms, created_at=now,
+        ))
+        db.commit()
+        print(f"[LOG] 对话已记录 [{sentiment}] {session_id}: {user_text[:30]}...")
+    except Exception as e:
+        db.rollback()
+        print(f"[WARN] 对话记录失败: {e}")
+    finally:
+        db.close()
 
 
 class PhotoRequest(BaseModel):
@@ -313,7 +368,7 @@ async def chat(req: Request, chat_req: ChatRequest):
                         # 等待所有 TTS 任务完成
                         if pending_tts:
                             await asyncio.gather(*[item["task"] for item in pending_tts], return_exceptions=True)
-                        async for audio_event in flush_ready_audio():
+                        for audio_event in await flush_ready_audio():
                             yield audio_event
                         break
 
@@ -364,11 +419,13 @@ async def chat(req: Request, chat_req: ChatRequest):
                     # 等待所有 TTS 任务完成
                     if pending_tts:
                         await asyncio.gather(*[item["task"] for item in pending_tts], return_exceptions=True)
-                    async for audio_event in flush_ready_audio():
+                    for audio_event in await flush_ready_audio():
                         yield audio_event
 
             if not cancelled:
                 latency_ms = int((time.time() - start_time) * 1000)
+                # 保存对话记录 + 情感分析（带超时，不影响done事件）
+                await _log_conversation(session_id, chat_req.text, full_answer, latency_ms)
                 yield f"event: done\ndata: {json.dumps({'latency_ms': latency_ms, 'session_id': session_id})}\n\n"
 
         except asyncio.CancelledError:
