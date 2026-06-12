@@ -1,9 +1,14 @@
 """
 MCP 客户端管理器 —— 单例模式，全局共享高德地图 MCP 连接。
 """
-from langchain_mcp_adapters.client import MultiServerMCPClient
+from typing import Optional
 from langchain_core.tools import BaseTool
 from config import CONFIG
+
+try:
+    from langchain_mcp_adapters.client import MultiServerMCPClient
+except ImportError:
+    MultiServerMCPClient = None
 
 
 class McpClientManager:
@@ -32,12 +37,14 @@ class McpClientManager:
     def __init__(self):
         if self._initialized:
             return
-        self._client: MultiServerMCPClient | None = None
+        self._client: Optional["MultiServerMCPClient"] = None
         self._tools_cache: dict[str, list[BaseTool]] = {}
         self._initialized = True
 
-    async def _get_client(self) -> MultiServerMCPClient:
+    async def _get_client(self) -> Optional["MultiServerMCPClient"]:
         """懒加载 MCP 客户端"""
+        if MultiServerMCPClient is None:
+            return None
         if self._client is None:
             self._client = MultiServerMCPClient({
                 "amap": {
@@ -51,7 +58,10 @@ class McpClientManager:
         """获取 MCP 服务器暴露的全部工具"""
         if "all" not in self._tools_cache:
             client = await self._get_client()
-            self._tools_cache["all"] = await client.get_tools()
+            if client is None:
+                self._tools_cache["all"] = []
+            else:
+                self._tools_cache["all"] = await client.get_tools()
         return self._tools_cache["all"]
 
     async def get_tools_for(self, domain: str) -> list[BaseTool]:

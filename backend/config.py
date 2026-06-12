@@ -59,7 +59,7 @@ class Config:
     retrieval_top_k: int = 5    # 检索返回片段数
 
     # ==================== 数据库 ====================
-    database_url: str = "sqlite:///data/travel_agent.db"
+    database_url: str = "sqlite:///D:/TourAI-Avatar/data/travel_agent.db"
 
     # ==================== 自动校验 ====================
     def __post_init__(self):

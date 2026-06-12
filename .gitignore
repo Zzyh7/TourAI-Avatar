@@ -6,5 +6,13 @@ node_modules/
 data/vector_db/
 data/docs/
 *.db
+*.db-shm
+*.db-wal
 dist/
 _old/
+# pywin32 DLLs (should not be checked into repo)
+pythoncom312.dll
+pywintypes312.dll
+# OS files
+.DS_Store
+Thumbs.db
