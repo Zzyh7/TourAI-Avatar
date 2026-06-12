@@ -11,7 +11,7 @@
  *
  * 改造为真实 Live2D 时替换此组件即可，接口保持不变。
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 
 interface DigitalHumanProps {
   isSpeaking: boolean;
@@ -19,7 +19,7 @@ interface DigitalHumanProps {
   emotion?: 'neutral' | 'happy' | 'thinking';
 }
 
-export default function DigitalHuman({ isSpeaking, currentText, emotion = 'neutral' }: DigitalHumanProps) {
+export default memo(function DigitalHuman({ isSpeaking, currentText, emotion = 'neutral' }: DigitalHumanProps) {
   const [mouthPhase, setMouthPhase] = useState(0);
 
   // 说话时口型循环动画
@@ -104,7 +104,7 @@ export default function DigitalHuman({ isSpeaking, currentText, emotion = 'neutr
       `}</style>
     </div>
   );
-}
+});
 
 const styles: Record<string, React.CSSProperties> = {
   container: {

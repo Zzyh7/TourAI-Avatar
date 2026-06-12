@@ -35,6 +35,10 @@ export default function App() {
   const [loading, setLoading] = useState(false);
 
   const abortRef = useRef<AbortController | null>(null);
+  // 用 ref 追踪 streamingText，供 abortGeneration 读取最新值
+  const streamingTextRef = useRef('');
+  // generation 计数器：打断时递增，旧流中的 audio/token 事件会被丢弃，避免语音残留
+  const generationRef = useRef(0);
 
   const { enqueue, stop: stopAudio } = useAudioPlayer((text) => {
     setCurrentText(text);
@@ -46,17 +50,34 @@ export default function App() {
     createSession().then(setSessionId);
   }, []);
 
-  // 打断当前生成：中止请求 + 停止音频
-  const abortGeneration = useCallback(() => {
+  // 同步 streamingText 到 ref
+  useEffect(() => {
+    streamingTextRef.current = streamingText;
+  }, [streamingText]);
+
+  // 打断当前生成：中止请求 + 停止音频，保存部分回复
+  const abortGeneration = useCallback((savePartial = true) => {
+    // 递增 generation，让旧流中尚未处理的 audio/token 事件全部丢弃
+    generationRef.current += 1;
     if (abortRef.current) {
       abortRef.current.abort();
       abortRef.current = null;
     }
     stopAudio();
-    setLoading(false);
+    // 保存已生成的部分回复到聊天记录，避免内容丢失（类似 ChatGPT 的打断行为）
+    if (savePartial) {
+      const partial = streamingTextRef.current;
+      if (partial.trim()) {
+        setMessages(prev => [
+          ...prev,
+          { role: 'assistant', content: partial },
+        ]);
+      }
+    }
     setStreamingText('');
     setIsSpeaking(false);
     setEmotion('neutral');
+    setLoading(false);
   }, [stopAudio]);
 
   // 发送消息（或打断当前）
@@ -79,19 +100,39 @@ export default function App() {
     const controller = new AbortController();
     abortRef.current = controller;
 
+    // 记录当前 generation，流循环中每次检查，被打断后旧事件自动丢弃
+    const gen = generationRef.current;
+
     let fullAnswer = '';
+    let lastUiUpdate = 0;  // 节流用：上次UI更新时间戳
+    let firstToken = true; // 首个 token 标记，只做一次 emotion 过渡
 
     try {
       for await (const event of streamChat(text, sessionId, controller.signal)) {
+        // 检查 generation：如果被打断（generation 已递增），丢弃旧流剩余事件
+        if (generationRef.current !== gen) break;
+
         switch (event.type) {
           case 'token':
             fullAnswer += event.data.text;
-            setStreamingText(fullAnswer);
-            setEmotion('neutral');
+            streamingTextRef.current = fullAnswer;  // ref 始终实时，供打断读取
+            // 首个 token：从 thinking 切到 neutral（只做一次）
+            if (firstToken) {
+              firstToken = false;
+              setEmotion('neutral');
+            }
+            // 节流 UI 更新：最多每 50ms 更新一次，减少重渲染卡顿
+            const now = Date.now();
+            if (now - lastUiUpdate >= 50) {
+              lastUiUpdate = now;
+              setStreamingText(fullAnswer);
+            }
             break;
 
           case 'audio':
-            enqueue(event.data.base64, event.data.text);
+            if (generationRef.current === gen) {
+              enqueue(event.data.base64, event.data.text);
+            }
             break;
 
           case 'tool':

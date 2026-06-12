@@ -18,15 +18,19 @@ interface ChatPanelProps {
 
 export default function ChatPanel({ messages, onSend, disabled, streamingText, onStop }: ChatPanelProps) {
   const [input, setInput] = useState('');
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
+  // 自动滚动到底部 —— 用 scrollTop 直接赋值，比 scrollIntoView 性能好得多
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = listRef.current;
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    }
   }, [messages, streamingText]);
 
   const handleSend = () => {
     const text = input.trim();
-    if (!text || disabled) return;
+    if (!text) return;
     onSend(text);
     setInput('');
   };
@@ -41,7 +45,7 @@ export default function ChatPanel({ messages, onSend, disabled, streamingText, o
   return (
     <div style={styles.container}>
       {/* 消息列表 */}
-      <div style={styles.messageList}>
+      <div ref={listRef} style={styles.messageList}>
         {messages.length === 0 && (
           <div style={styles.welcome}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>👋</div>
@@ -88,8 +92,6 @@ export default function ChatPanel({ messages, onSend, disabled, streamingText, o
             </div>
           </div>
         )}
-
-        <div ref={bottomRef} />
       </div>
 
       {/* 输入区 */}
@@ -99,11 +101,10 @@ export default function ChatPanel({ messages, onSend, disabled, streamingText, o
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={disabled ? '正在生成回答...' : '输入您的问题...'}
-          disabled={disabled}
+          placeholder="输入您的问题..."
           style={styles.input}
         />
-        {disabled && onStop ? (
+        {disabled && onStop && (
           <button
             onClick={onStop}
             style={styles.stopBtn}
@@ -111,18 +112,17 @@ export default function ChatPanel({ messages, onSend, disabled, streamingText, o
           >
             ⏹
           </button>
-        ) : (
-          <button
-            onClick={handleSend}
-            disabled={disabled || !input.trim()}
-            style={{
-              ...styles.sendBtn,
-              opacity: disabled || !input.trim() ? 0.5 : 1,
-            }}
-          >
-            ➤
-          </button>
         )}
+        <button
+          onClick={handleSend}
+          disabled={!input.trim()}
+          style={{
+            ...styles.sendBtn,
+            opacity: !input.trim() ? 0.5 : 1,
+          }}
+        >
+          ➤
+        </button>
       </div>
     </div>
   );
