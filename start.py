@@ -17,14 +17,14 @@ import platform
 import threading
 from pathlib import Path
 
-# ---- 修复 Windows GBK 终端编码问题 ----
+# ---- 修复 Windows 终端编码问题 ----
 if platform.system() == "Windows":
     try:
-        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stdout = open(sys.stdout.fileno(), "w", encoding="utf-8", errors="replace", buffering=1)  # type: ignore
     except Exception:
         pass
     try:
-        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr = open(sys.stderr.fileno(), "w", encoding="utf-8", errors="replace", buffering=1)  # type: ignore
     except Exception:
         pass
 
