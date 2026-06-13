@@ -8,12 +8,17 @@ FAQ CSV → 常用对话数据库 导入脚本。
   4. 通过 POST /api/admin/common-dialogues/batch 导入
   5. 去重：跳过数据库中已存在的相同主问题
 """
+import sys
 import csv
 import json
 import difflib
 import urllib.request
 import urllib.error
 from pathlib import Path
+
+# Windows 控制台 UTF-8 编码修复
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
 API_BASE = "http://localhost:8000/api/admin/common-dialogues"
 CSV_PATH = Path(__file__).resolve().parent.parent / "data" / "scenic_faq_questions.csv"
