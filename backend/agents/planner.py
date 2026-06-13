@@ -30,6 +30,9 @@ TOOL_LABELS = {
 # 匹配子 Agent 内部泄漏的 [TOOL_CALL:...] 模式
 _TOOL_CALL_PATTERN = re.compile(r"\[TOOL_CALL:[^\]]*\]")
 
+# 匹配 LLM 输出中不该出现的符号（即使 prompt 禁止了，LLM 偶尔还是会生成）
+_OUTPUT_CLEANUP = re.compile(r"\*\*|~~|```|`|^---+$|^\*{3,}$", re.MULTILINE)
+
 
 class GuideAgent:
     """
@@ -128,7 +131,7 @@ class GuideAgent:
                     docs = result
                 if not docs:
                     return "未找到相关知识内容"
-                return "\n---\n".join(doc.page_content for doc in docs)
+                return "\n\n".join(doc.page_content for doc in docs)
             except Exception as e:
                 return f"检索出错: {str(e)}"
 
@@ -176,6 +179,8 @@ class GuideAgent:
                 if content:
                     # 过滤子 Agent 内部 TOOL_CALL 格式泄漏
                     content = _TOOL_CALL_PATTERN.sub("", content)
+                    # 过滤 LLM 偶尔生成的 markdown 符号（** ## ~~ -- 等）
+                    content = _OUTPUT_CLEANUP.sub("", content)
                     if content.strip():
                         yield {"type": "token", "data": content}
 

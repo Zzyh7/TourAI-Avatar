@@ -1,14 +1,15 @@
 /**
- * 知识库文档管理页 —— 上传/查看/删除 + FAQ 导入（RAG API）
+ * 知识库文档管理页 —— 上传/查看/删除 + 常用对话导入
  */
 import { useState, useEffect, useRef } from 'react';
 import {
   getDocuments,
   uploadDocument,
   deleteDocument,
-  getRAGHealth,
-  importFAQ,
+  getCommonDialogues,
+  importDialoguesToKnowledge,
   type DocumentItem,
+  type CommonDialogue,
 } from '../services/api';
 
 const TYPE_LABELS: Record<string, string> = {
@@ -17,6 +18,7 @@ const TYPE_LABELS: Record<string, string> = {
   doc: '📝 Word',
   txt: '📃 文本',
   md: '📝 Markdown',
+  dialogues: '💬 常用对话',
 };
 
 export default function Documents() {
@@ -27,21 +29,15 @@ export default function Documents() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // FAQ 导入
-  const [faqJson, setFaqJson] = useState('');
-  const [importing, setImporting] = useState(false);
-  const [importMsg, setImportMsg] = useState('');
-  const [ragHealth, setRagHealth] = useState<{ faq_count: number; status: string } | null>(null);
+  // 从常用对话导入
+  const [importingDialogues, setImportingDialogues] = useState(false);
+  const [importDlgMsg, setImportDlgMsg] = useState('');
 
   const loadDocs = async () => {
     setLoading(true);
     try {
-      const [docs, health] = await Promise.all([
-        getDocuments(),
-        getRAGHealth().catch(() => null),
-      ]);
+      const docs = await getDocuments();
       setDocuments(Array.isArray(docs) ? docs : []);
-      setRagHealth(health);
     } catch (e) {
       console.error('加载文档列表失败:', e);
     } finally {
@@ -85,27 +81,25 @@ export default function Documents() {
     }
   };
 
-  const handleFaqImport = async () => {
-    if (!faqJson.trim()) {
-      setImportMsg('❌ 请粘贴 JSON 数据');
-      return;
-    }
-    setImporting(true);
-    setImportMsg('');
+  const handleImportDialogues = async () => {
+    setImportingDialogues(true);
+    setImportDlgMsg('');
     try {
-      const items = JSON.parse(faqJson);
-      if (!Array.isArray(items)) {
-        setImportMsg('❌ 请粘贴 JSON 数组格式');
+      // 1. 获取所有启用的常用对话
+      const dialogues: CommonDialogue[] = await getCommonDialogues({ enabled: 1 });
+      if (!dialogues || dialogues.length === 0) {
+        setImportDlgMsg('⚠️ 没有已启用的常用对话');
         return;
       }
-      const result = await importFAQ(items);
-      setImportMsg(`✅ ${result.message || `成功导入 ${result.imported || items.length} 条`}`);
-      setFaqJson('');
+      // 2. 导入到知识库
+      const items = dialogues.map(d => ({ question: d.question, answer: d.answer }));
+      const result = await importDialoguesToKnowledge(items);
+      setImportDlgMsg(`✅ ${result.message || `已导入 ${result.dialogue_count} 条`}`);
       loadDocs();
     } catch (err: any) {
-      setImportMsg(`❌ 导入失败: ${err.message}`);
+      setImportDlgMsg(`❌ 导入失败: ${err.message}`);
     } finally {
-      setImporting(false);
+      setImportingDialogues(false);
     }
   };
 
@@ -120,11 +114,6 @@ export default function Documents() {
       <h1 style={s.title}>📚 知识库</h1>
       <p style={s.subtitle}>
         管理景区知识库文档（PDF/Word/TXT/Markdown），自动分块和向量化
-        {ragHealth && (
-          <span style={{ marginLeft: 12, color: '#1976d2', fontWeight: 500 }}>
-            | RAG 状态: {ragHealth.status} | FAQ 条目: {ragHealth.faq_count}
-          </span>
-        )}
       </p>
 
       {/* 工具栏 */}
@@ -132,7 +121,7 @@ export default function Documents() {
         <input
           ref={fileRef}
           type="file"
-          accept=".pdf,.docx,.doc,.txt,.md"
+          accept=".pdf,.docx,.txt,.md"
           onChange={handleUpload}
           style={{ display: 'none' }}
         />
@@ -152,6 +141,22 @@ export default function Documents() {
           </span>
         )}
         <div style={{ flex: 1 }} />
+        <button
+          onClick={handleImportDialogues}
+          disabled={importingDialogues}
+          style={{ ...s.primaryBtn, background: '#4CAF50' }}
+          title="将常用对话的问答内容导入知识库，作为 RAG 检索的参考资料"
+        >
+          {importingDialogues ? '导入中...' : '📥 从常用对话导入'}
+        </button>
+        {importDlgMsg && (
+          <span style={{
+            fontSize: 13,
+            color: importDlgMsg.startsWith('✅') ? '#4CAF50' : importDlgMsg.startsWith('⚠') ? '#f57c00' : '#f44336',
+          }}>
+            {importDlgMsg}
+          </span>
+        )}
         <span style={{ fontSize: 13, color: '#999' }}>共 {documents.length} 个文档</span>
       </div>
 
@@ -197,37 +202,6 @@ export default function Documents() {
             </tbody>
           </table>
         )}
-      </div>
-
-      {/* FAQ 导入区 */}
-      <div style={{ ...s.chartBox, marginTop: 20 }}>
-        <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#333' }}>📥 FAQ 批量导入</h3>
-        <p style={{ fontSize: 13, color: '#999', marginBottom: 12 }}>
-          粘贴 JSON 数组，每项包含 question 和 answer 字段
-        </p>
-        <textarea
-          style={{
-            width: '100%', minHeight: 120, padding: '12px 14px', borderRadius: 6,
-            border: '1px solid #ddd', fontSize: 13, fontFamily: 'monospace',
-            resize: 'vertical', boxSizing: 'border-box' as any,
-          }}
-          value={faqJson}
-          onChange={e => setFaqJson(e.target.value)}
-          placeholder={`[\n  { "question": "景区开放时间", "answer": "每日8:00-17:30" },\n  { "question": "门票多少钱", "answer": "成人票120元" }\n]`}
-        />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 12 }}>
-          <button onClick={handleFaqImport} disabled={importing} style={s.primaryBtn}>
-            {importing ? '导入中...' : '导入 FAQ'}
-          </button>
-          {importMsg && (
-            <span style={{
-              fontSize: 13,
-              color: importMsg.startsWith('✅') ? '#4CAF50' : '#f44336',
-            }}>
-              {importMsg}
-            </span>
-          )}
-        </div>
       </div>
 
       {/* 删除确认 */}

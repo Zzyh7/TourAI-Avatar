@@ -66,22 +66,20 @@ class DocumentLoader:
             )
 
         # 根据扩展名选择加载器
+        docs: List[Document]
         if ext == ".pdf":
-            loader = PyPDFLoader(file_path)
+            docs = PyPDFLoader(file_path).load()
         elif ext == ".docx":
-            loader = Docx2txtLoader(file_path)
+            docs = Docx2txtLoader(file_path).load()
         elif ext == ".txt":
-            loader = TextLoader(file_path, encoding="utf-8")
+            docs = TextLoader(file_path, encoding="utf-8").load()
         elif ext == ".md":
             # UnstructuredMarkdownLoader 需要 unstructured 库，
             # 如果不可用则回退到 TextLoader
             try:
-                loader = UnstructuredMarkdownLoader(file_path)
+                docs = UnstructuredMarkdownLoader(file_path).load()
             except ImportError:
-                loader = TextLoader(file_path, encoding="utf-8")
-
-        # 加载并返回
-        docs = loader.load()
+                docs = TextLoader(file_path, encoding="utf-8").load()
 
         # 确保每个 doc 的 metadata 包含 source 文件名
         filename = os.path.basename(file_path)

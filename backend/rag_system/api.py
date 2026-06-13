@@ -2,11 +2,12 @@
 RAG 知识库 API —— FastAPI 路由。
 
 端点:
-  POST /api/rag/admin/upload      — 上传文档 (PDF/Word/TXT/MD)
-  POST /api/rag/query             — 知识问答
-  POST /api/rag/admin/faq/import  — 批量导入 FAQ 问答对
-  GET  /api/rag/admin/stats       — 索引统计信息
-  GET  /api/rag/admin/documents   — 已上传文档列表
+  POST /api/rag/admin/upload              — 上传文档 (PDF/Word/TXT/MD)
+  POST /api/rag/query                     — 知识问答
+  POST /api/rag/admin/faq/import          — 批量导入 FAQ 问答对
+  POST /api/rag/admin/import-dialogues    — 将常用对话导入为知识库文档块
+  GET  /api/rag/admin/stats               — 索引统计信息
+  GET  /api/rag/admin/documents           — 已上传文档列表
   DELETE /api/rag/admin/documents/{doc_id} — 删除文档
 """
 import os
@@ -353,6 +354,88 @@ async def import_faq_csv(file: UploadFile = File(...)):
     return {
         "message": f"成功从CSV导入 {len(faq_dicts)} 个FAQ问答对",
         "count": len(faq_dicts),
+    }
+
+
+# ==================== 常用对话导入知识库 ====================
+
+class DialogueItem(BaseModel):
+    question: str
+    answer: str
+
+
+class DialogueImportRequest(BaseModel):
+    items: List[DialogueItem]
+
+
+@router.post("/admin/import-dialogues")
+async def import_dialogues(request: DialogueImportRequest):
+    """
+    将常用对话内容导入知识库（作为文档块存入 FAISS/BM25 索引）。
+
+    与 FAQ 导入不同：FAQ 是精确匹配后直接返回预设答案；
+    此接口将对话文本分块向量化后存入主文档索引，
+    在 RAG 检索时作为参考资料提供给 LLM 生成答案。
+
+    请求体示例:
+    {
+      "items": [
+        {"question": "景区开放时间？", "answer": "景区每日8:00-17:30开放。"},
+        {"question": "门票价格是多少？", "answer": "成人票80元，学生票半价。"}
+      ]
+    }
+    """
+    if not request.items:
+        raise HTTPException(status_code=400, detail="对话列表为空")
+
+    # 将每个对话转为文本文档
+    from langchain_core.documents import Document as LCDocument
+    docs = []
+    for item in request.items:
+        text = f"问题：{item.question}\n回答：{item.answer}"
+        docs.append(LCDocument(
+            page_content=text,
+            metadata={"source": "常用对话导入", "type": "dialogue"},
+        ))
+
+    # 分块
+    splitter = get_splitter()
+    chunks = splitter.split_documents(docs)
+
+    if not chunks:
+        raise HTTPException(status_code=400, detail="分块后无有效内容")
+
+    # 写入 SQLite 文档记录（标记为虚拟文档）
+    doc_store = get_doc_store()
+    doc_id, chunk_ids = doc_store.add_document(
+        filename="【常用对话导入】",
+        file_type="dialogues",
+        chunks=chunks,
+        size_bytes=0,
+    )
+
+    # 标记 chunk_id 和 embedding_model
+    embedder = get_embedder()
+    for chunk, cid in zip(chunks, chunk_ids):
+        chunk.metadata["chunk_id"] = cid
+        chunk.metadata["embedding_model"] = embedder.model_name
+
+    # 向量化并存入 FAISS + BM25 索引
+    retriever = get_retriever()
+    retriever.add_documents(chunks)
+
+    # 对齐校验
+    alignment = doc_store.validate_faiss_alignment(
+        retriever.stats["faiss_vectors"]
+    )
+    if not alignment["aligned"]:
+        print(f"[WARN] 导入对话后 FAISS/SQLite 对齐警告: {alignment['detail']}")
+
+    return {
+        "message": f"成功将 {len(request.items)} 条常用对话导入知识库（{len(chunks)} 个文本块）",
+        "dialogue_count": len(request.items),
+        "chunk_count": len(chunks),
+        "faiss_aligned": alignment["aligned"],
     }
 
 

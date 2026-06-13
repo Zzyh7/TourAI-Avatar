@@ -17,6 +17,23 @@ _SENTENCE_END = re.compile(r"[。！？；\n]")
 # 短停顿标点（逗号等），用于首句快速分块
 _PHRASE_END = re.compile(r"[，、,]")
 
+# TTS 朗读前需要清理的符号（这些符号不应该被朗读出来）
+_TTS_CLEANUP = re.compile(r"[\U0001F300-\U0001FAFF]|"       # emoji 表情
+                          r"[☀-➿]|"               # 杂项符号/装饰符
+                          r"[~*#_>`]|"                       # markdown 标记符号
+                          r"^---+$|"                         # 分隔线
+                          r"^\*{3,}$",                       # 星号分隔线
+                          re.MULTILINE)
+
+
+def _clean_text_for_tts(text: str) -> str:
+    """移除 TTS 不应朗读的符号：emoji、markdown 标记、装饰线等"""
+    cleaned = _TTS_CLEANUP.sub("", text)
+    # 清理多余空白
+    cleaned = re.sub(r"\n{2,}", "\n", cleaned)
+    cleaned = re.sub(r"[ \t]{2,}", " ", cleaned)
+    return cleaned.strip()
+
 
 class EdgeTTSService:
     """
@@ -65,7 +82,7 @@ class EdgeTTSService:
             return ""
 
         communicate = edge_tts.Communicate(
-            text=text.strip(),
+            text=_clean_text_for_tts(text),
             voice=voice or self.voice,
             rate=rate or self.rate,
         )
@@ -89,7 +106,7 @@ class EdgeTTSService:
             return
 
         communicate = edge_tts.Communicate(
-            text=text.strip(),
+            text=_clean_text_for_tts(text),
             voice=voice or self.voice,
             rate=rate or self.rate,
         )

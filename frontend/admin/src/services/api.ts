@@ -283,7 +283,8 @@ const RAG_BASE = '/api/rag/admin';
 
 export async function getDocuments(): Promise<DocumentItem[]> {
   const resp = await fetch(`${RAG_BASE}/documents`);
-  return resp.json();
+  const data = await resp.json();
+  return data.documents || [];
 }
 
 export async function uploadDocument(file: File): Promise<any> {
@@ -307,6 +308,17 @@ export async function getRAGHealth(): Promise<{ faq_count: number; status: strin
 
 export async function importFAQ(items: { question: string; answer: string }[]): Promise<any> {
   const resp = await fetch(`${RAG_BASE}/faq/import`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items }),
+  });
+  return resp.json();
+}
+
+export async function importDialoguesToKnowledge(
+  items: { question: string; answer: string }[],
+): Promise<any> {
+  const resp = await fetch(`${RAG_BASE}/import-dialogues`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ items }),

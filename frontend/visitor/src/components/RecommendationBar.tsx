@@ -8,7 +8,6 @@ interface RecommendationBarProps {
 
 const TAGS = [
   { key: '家庭游', label: '👨‍👩‍👧 家庭游', desc: '亲子友好路线' },
-  { key: '情侣游', label: '💑 情侣游', desc: '浪漫打卡路线' },
   { key: '文化深度游', label: '📚 文化深度游', desc: '历史文化路线' },
   { key: '休闲游', label: '🌿 休闲游', desc: '轻松惬意路线' },
 ];
