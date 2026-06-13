@@ -17,9 +17,10 @@ interface DigitalHumanProps {
   isSpeaking: boolean;
   currentText: string;
   emotion?: 'neutral' | 'happy' | 'thinking';
+  onStop?: () => void;
 }
 
-export default memo(function DigitalHuman({ isSpeaking, currentText, emotion = 'neutral' }: DigitalHumanProps) {
+export default memo(function DigitalHuman({ isSpeaking, currentText, emotion = 'neutral', onStop }: DigitalHumanProps) {
   const [mouthPhase, setMouthPhase] = useState(0);
 
   // 说话时口型循环动画
@@ -81,6 +82,13 @@ export default memo(function DigitalHuman({ isSpeaking, currentText, emotion = '
         <div style={styles.speechBubble}>
           {currentText.length > 30 ? currentText.slice(0, 30) + '...' : currentText}
         </div>
+      )}
+
+      {/* 强制停止按钮 —— 讲解中显示 */}
+      {isSpeaking && onStop && (
+        <button onClick={onStop} style={styles.stopBtn} title="强制停止讲解">
+          ⏹ 停止讲解
+        </button>
       )}
 
       {/* 状态指示 */}
@@ -180,4 +188,18 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 13,
     fontWeight: 600,
   },
+  stopBtn: {
+    marginTop: 14,
+    padding: '8px 24px',
+    borderRadius: 24,
+    border: 'none',
+    background: 'linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%)',
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: 700,
+    cursor: 'pointer',
+    boxShadow: '0 4px 16px rgba(255,77,79,0.45)',
+    animation: 'pulse 1.5s ease-in-out infinite',
+    letterSpacing: 1,
+  } as React.CSSProperties,
 };

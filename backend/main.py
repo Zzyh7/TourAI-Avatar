@@ -13,6 +13,13 @@
 import os
 import time
 import uuid
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%H:%M:%S",
+)
 import json
 import asyncio
 from typing import AsyncIterator
@@ -641,20 +648,25 @@ def recommend(
     tag_list = [t.strip() for t in tags.split(",") if t.strip()]
 
     routes_pool = {
-        "家庭游": {
-            "label": "亲子欢乐路线",
-            "focus": "重点讲解儿童感兴趣的景点故事和互动体验",
-            "spots": ["亲子乐园", "自然生态区", "科普馆", "游船码头"],
+        "自然风光": {
+            "label": "山水精华线",
+            "focus": "涵盖景区核心自然景观，适合户外与摄影爱好者",
+            "spots": ["灵山大佛", "九龙灌浴", "曼飞龙塔", "拈花湾"],
         },
-        "文化深度游": {
-            "label": "文化探索路线",
-            "focus": "深入讲解历史典故、建筑风格和文物价值",
-            "spots": ["古建筑群", "博物馆", "碑林", "名人故居"],
+        "历史人文": {
+            "label": "文化探索线",
+            "focus": "深度体验佛教文化和历史建筑群，讲解历史典故",
+            "spots": ["古建筑群", "大殿", "碑林", "寺庙遗址"],
         },
-        "休闲游": {
-            "label": "轻松惬意路线",
-            "focus": "推荐轻松的游览节奏，重点介绍休息区和景观",
-            "spots": ["湖畔步道", "茶室", "花园", "休闲广场"],
+        "亲子游乐": {
+            "label": "亲子欢乐线",
+            "focus": "轻松有趣的家庭出游路线，寓教于乐",
+            "spots": ["亲子乐园", "自然生态区", "互动体验区", "游船码头"],
+        },
+        "文创打卡": {
+            "label": "文创打卡线",
+            "focus": "文艺范十足的精美打卡路线，适合拍照分享",
+            "spots": ["文创街区", "观景台", "花园广场", "地标打卡点"],
         },
     }
 
@@ -734,8 +746,8 @@ async def speech_to_text(audio: UploadFile = File(...), mime_type: str = Form(de
 
         # 优先使用上传文件的 content_type
         actual_mime = audio.content_type or mime_type
-        text = transcribe(audio_data, actual_mime)
-        return {"text": text, "success": bool(text)}
+        result = transcribe(audio_data, actual_mime)
+        return result
 
     except Exception as e:
         return JSONResponse({"text": "", "success": False, "error": str(e)}, status_code=500)

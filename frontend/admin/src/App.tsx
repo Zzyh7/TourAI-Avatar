@@ -7,7 +7,7 @@ import Dashboard from './pages/Dashboard';
 import SpotPopularity from './pages/SpotPopularity';
 import TimeComparison from './pages/TimeComparison';
 import QAAnalysis from './pages/QAAnalysis';
-import VisitorSegmentation from './pages/VisitorSegmentation';
+import VisitorProfile from './pages/VisitorProfile';
 import NegativeFeedback from './pages/NegativeFeedback';
 import CommonDialogues from './pages/CommonDialogues';
 import Sessions from './pages/Sessions';
@@ -29,7 +29,7 @@ export default function App() {
       case 'qa-analysis':
         return <QAAnalysis />;
       case 'visitors':
-        return <VisitorSegmentation />;
+        return <VisitorProfile />;
       case 'negative':
         return <NegativeFeedback />;
       case 'dialogues':

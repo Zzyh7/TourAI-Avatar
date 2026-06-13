@@ -349,6 +349,187 @@ def visitor_segmentation(db: Session = Depends(get_db)):
     }
 
 
+# ========== 6.5 游客画像 (新版) ==========
+
+def _compute_attribute_tags(all_msgs):
+    """游客基础属性标签 — 6 个群体关键词匹配"""
+    tag_keywords = {
+        "亲子游客": ["孩子", "小孩", "宝宝", "亲子", "儿童", "小朋友"],
+        "研学学生": ["学生", "研学", "学校", "教育", "课程", "学习", "老师"],
+        "中老年观光": ["老人", "爸妈", "父母", "年纪大", "退休", "老年", "慢点"],
+        "青年徒步": ["徒步", "背包", "登山", "户外", "探险", "运动", "挑战"],
+        "摄影爱好者": ["拍照", "摄影", "相机", "拍摄", "照片", "取景", "构图"],
+        "外地短途游客": ["外地", "过来玩", "周边", "短途", "自驾", "周末"],
+    }
+
+    tag_counts = defaultdict(int)
+    for (content,) in all_msgs:
+        if not content:
+            continue
+        for tag, kws in tag_keywords.items():
+            if any(kw in content for kw in kws):
+                tag_counts[tag] += 1
+                break
+
+    return [{"name": k, "value": v} for k, v in sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)]
+
+
+def _compute_preference_stats(all_msgs, db):
+    """游玩偏好统计 + 自动生成路线推荐"""
+    pref_keywords = {
+        "自然风光": ["风景", "山水", "湖", "花", "季节", "景色", "美", "自然", "生态", "植物", "森林"],
+        "历史人文": ["历史", "文化", "佛教", "典故", "故事", "传说", "佛", "寺", "古", "建筑", "传统"],
+        "亲子游乐": ["孩子", "小孩", "亲子", "玩", "乐园", "互动", "体验", "游戏", "儿童"],
+        "文创打卡": ["拍照", "打卡", "网红", "文创", "纪念", "文艺", "艺术", "设计", "手作"],
+    }
+
+    route_meta = {
+        "自然风光": {"label": "山水精华线", "desc": "涵盖景区核心自然景观，适合户外与摄影爱好者"},
+        "历史人文": {"label": "文化探索线", "desc": "深度体验佛教文化和历史建筑群"},
+        "亲子游乐": {"label": "亲子欢乐线", "desc": "轻松有趣的家庭出游路线，寓教于乐"},
+        "文创打卡": {"label": "文创打卡线", "desc": "文艺范十足的精美打卡路线"},
+    }
+
+    pref_counts = defaultdict(int)
+    for (content,) in all_msgs:
+        if not content:
+            continue
+        for pref, kws in pref_keywords.items():
+            if any(kw in content for kw in kws):
+                pref_counts[pref] += 1
+                break
+
+    # 从 ScenicSpot 表自动匹配景点生成路线
+    spots = db.query(ScenicSpot).all()
+    result = []
+    for pref, _ in sorted(pref_counts.items(), key=lambda x: x[1], reverse=True):
+        kws = pref_keywords[pref]
+        scored = []
+        for spot in spots:
+            text = f"{spot.name or ''} {spot.description or ''} {spot.category or ''}"
+            score = sum(1 for kw in kws if kw in text)
+            if score > 0:
+                scored.append((spot.name, score))
+        scored.sort(key=lambda x: x[1], reverse=True)
+        top_spots = [s[0] for s in scored[:4]] if scored else []
+
+        meta = route_meta.get(pref, {"label": f"{pref}推荐路线", "desc": ""})
+        result.append({
+            "name": pref,
+            "value": pref_counts[pref],
+            "recommended_routes": [{
+                "label": meta["label"],
+                "spots": top_spots,
+                "description": meta["desc"],
+            }],
+        })
+    return result
+
+
+def _compute_origin_analysis(all_msgs):
+    """客源地分析 — 基于对话关键词推理（最佳努力）"""
+    origin_keywords = {
+        "本地": ["本地", "本市", "就住这", "附近", "家门口", "当地人", "本地人", "这里人", "住附近"],
+        "周边城市": ["周边", "邻市", "开车", "高铁", "短途", "周末", "隔壁", "不远", "周边城市"],
+        "省外": ["省外", "外省", "飞机", "远道", "旅游团", "专程", "专门来", "从…来"],
+    }
+
+    origin_counts = defaultdict(int)
+    for (content,) in all_msgs:
+        if not content:
+            continue
+        for origin, kws in origin_keywords.items():
+            if any(kw in content for kw in kws):
+                origin_counts[origin] += 1
+                break
+
+    distribution = [{"name": k, "value": v} for k, v in sorted(origin_counts.items(), key=lambda x: x[1], reverse=True)]
+    # 补全三个维度
+    for label in ["本地", "周边城市", "省外"]:
+        if not any(d["name"] == label for d in distribution):
+            distribution.append({"name": label, "value": 0})
+
+    return {
+        "data_available": False,
+        "method": "keyword_inference",
+        "distribution": distribution,
+        "note": "客源地数据通过对话关键词推测，准确度有限。建议在游客首次使用时主动收集位置信息，或在管理后台手动标注。",
+    }
+
+
+def _compute_stratification(db):
+    """游客分层 — 首次使用/多次复访/流失游客 + 可行性分析"""
+    month_s, month_e = _month_range()
+
+    # 过去完整时间窗口（本月之前）用于判断"新访客"
+    prev_cutoff = month_s
+
+    # 全部会话的对话数和活跃天数
+    session_stats = db.query(
+        Conversation.session_id,
+        func.count(Conversation.id).label("cnt"),
+        func.count(func.date(Conversation.created_at)).label("days"),
+        func.min(Conversation.created_at).label("first_seen"),
+    ).group_by(Conversation.session_id).all()
+
+    first_time = 0
+    repeat = 0
+    churned = 0
+
+    for sid, cnt, days, first_seen in session_stats:
+        if cnt > 5 and days >= 2:
+            repeat += 1
+        elif cnt <= 2 and days == 1:
+            churned += 1
+        else:
+            # 中等活跃度，视为首次使用（本月开始活跃）
+            if first_seen and first_seen >= prev_cutoff:
+                first_time += 1
+            elif cnt >= 3:
+                first_time += 1
+            else:
+                churned += 1
+
+    return {
+        "feasibility": {
+            "score": "medium",
+            "analysis": "分层通过会话对话数量和活跃天数推导。"
+                         "多次复访（跨天+高交互）置信度较高；"
+                         "首次使用通过本月新增+中等活跃度推断；"
+                         "流失游客仅凭单日低交互判断，无法确认是否为真实流失。",
+            "recommendation": "建议增加游客反馈收集机制（如行程结束后的满意度按钮或推送），以提升流失判断准确度并捕捉真实离场原因。",
+        },
+        "segments": [
+            {"label": "首次使用数字人游客", "count": first_time, "confidence": "medium"},
+            {"label": "多次复访游客", "count": repeat, "confidence": "high"},
+            {"label": "仅单次简短咨询流失游客", "count": churned, "confidence": "low"},
+        ],
+    }
+
+
+@router.get("/visitor-profile")
+def visitor_profile(db: Session = Depends(get_db)):
+    """游客画像 —— 标签/偏好/客源地/分层综合分析"""
+    month_s, month_e = _month_range()
+
+    all_user_msgs = db.query(Conversation.content).filter(
+        Conversation.created_at >= month_s, Conversation.role == "user"
+    ).all()
+
+    # 会话总数
+    session_count = db.query(func.count(SessionModel.id)).filter(
+        SessionModel.created_at >= month_s
+    ).scalar() or 0
+
+    return {
+        "total_visitors": session_count,
+        "attribute_tags": _compute_attribute_tags(all_user_msgs),
+        "preference_stats": _compute_preference_stats(all_user_msgs, db),
+        "origin_analysis": _compute_origin_analysis(all_user_msgs),
+        "stratification": _compute_stratification(db),
+    }
+
+
 # ========== 7. 负面反馈归类 ==========
 @router.get("/negative-analysis")
 def negative_analysis(db: Session = Depends(get_db)):
@@ -420,5 +601,5 @@ def full_dashboard(db: Session = Depends(get_db)):
         "qa_quality": qa_quality(db),
         "time_comparison": time_comparison(db),
         "question_analysis": question_analysis(db),
-        "visitor_segmentation": visitor_segmentation(db),
+        "visitor_segmentation": visitor_profile(db),
     }

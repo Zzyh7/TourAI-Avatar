@@ -393,11 +393,7 @@ export interface FullDashboard {
     top_questions: { question: string; count: number }[];
     unable_questions: { question: string; count: number }[];
   };
-  visitor_segmentation: {
-    segments: { label: string; count: number }[];
-    tag_distribution: { name: string; value: number }[];
-    preference_distribution?: { name: string; value: number }[];
-  };
+  visitor_segmentation: VisitorProfileRes;
 }
 
 export async function fetchFullDashboard(): Promise<FullDashboard> {
@@ -466,10 +462,63 @@ export async function fetchVisitorSegmentation(): Promise<VisitorSegmentationRes
   return resp.json();
 }
 
+/* ========== 游客画像 (新版) ========== */
+
+export interface RouteRecommendation {
+  label: string;
+  spots: string[];
+  description: string;
+}
+
+export interface PreferenceStat {
+  name: string;
+  value: number;
+  recommended_routes: RouteRecommendation[];
+}
+
+export interface OriginAnalysis {
+  data_available: boolean;
+  method: string;
+  distribution: { name: string; value: number }[];
+  note: string;
+}
+
+export interface Feasibility {
+  score: string;
+  analysis: string;
+  recommendation: string;
+}
+
+export interface StratSegment {
+  label: string;
+  count: number;
+  confidence: string;
+}
+
+export interface Stratification {
+  feasibility: Feasibility;
+  segments: StratSegment[];
+}
+
+export interface VisitorProfileRes {
+  total_visitors: number;
+  attribute_tags: { name: string; value: number }[];
+  preference_stats: PreferenceStat[];
+  origin_analysis: OriginAnalysis;
+  stratification: Stratification;
+}
+
+export async function fetchVisitorProfile(): Promise<VisitorProfileRes> {
+  const resp = await fetch(`${ANALYTICS_BASE}/visitor-profile`);
+  return resp.json();
+}
+
 export interface NegativeAnalysisRes {
-  categories: { name: string; count: number }[];
-  samples: { question: string; sentiment: string; category: string }[];
-  suggestion: string;
+  total_negative: number;
+  categories: { category: string; count: number }[];
+  unclassified: number;
+  samples: string[];
+  ai_suggestion: string;
 }
 
 export async function fetchNegativeAnalysis(): Promise<NegativeAnalysisRes> {

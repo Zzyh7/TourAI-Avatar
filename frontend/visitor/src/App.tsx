@@ -207,7 +207,7 @@ export default function App() {
         <h1 style={styles.title}>🏛️ 景区导览AI数字人</h1>
         <div style={styles.headerRight}>
           <PhotoRecognition disabled={loading} onResult={handlePhotoResult} />
-          <VoiceButton onResult={handleVoiceResult} disabled={loading} />
+          <VoiceButton onResult={handleVoiceResult} onInterrupt={() => abortGeneration()} />
         </div>
       </header>
 
@@ -222,6 +222,7 @@ export default function App() {
             isSpeaking={isSpeaking}
             currentText={currentText}
             emotion={emotion}
+            onStop={() => abortGeneration()}
           />
         </div>
 

@@ -25,7 +25,7 @@ export default function NegativeFeedback() {
       tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
       grid: { left: '15%', right: '10%', top: '3%', bottom: '5%', containLabel: true },
       xAxis: { type: 'value', name: '次数' },
-      yAxis: { type: 'category', data: cats.map(c => c.name), axisLabel: { fontSize: 12 } },
+      yAxis: { type: 'category', data: cats.map(c => c.category), axisLabel: { fontSize: 12 } },
       series: [{
         type: 'bar', data: cats.map(c => c.count),
         itemStyle: {
@@ -64,17 +64,17 @@ export default function NegativeFeedback() {
               <div style={s.empty}>暂无负面反馈</div>
             ) : (
               <div style={{ maxHeight: 280, overflow: 'auto' }}>
-                {(data?.samples || []).slice(0, 10).map((item, i) => (
+                {(data?.samples || []).slice(0, 10).map((text, i) => (
                   <div key={i} style={s.sampleRow}>
-                    <div style={s.sampleQ} title={item.question}>
-                      {item.question.length > 50 ? item.question.slice(0, 50) + '...' : item.question}
+                    <div style={s.sampleQ} title={text}>
+                      {text.length > 50 ? text.slice(0, 50) + '...' : text}
                     </div>
                     <span style={{
                       ...s.sampleTag,
-                      background: item.sentiment === '负面' ? '#ffebee' : '#fff3e0',
-                      color: item.sentiment === '负面' ? '#c62828' : '#e65100',
+                      background: '#ffebee',
+                      color: '#c62828',
                     }}>
-                      {item.sentiment}
+                      负面
                     </span>
                   </div>
                 ))}
@@ -85,7 +85,7 @@ export default function NegativeFeedback() {
           <div style={{ ...s.chartBox, marginTop: 16, borderLeft: '4px solid #1976d2' }}>
             <h3 style={s.chartTitle}>🤖 AI 优化建议</h3>
             <div style={{ fontSize: 14, color: '#555', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
-              {data?.suggestion || '暂无优化建议'}
+              {data?.ai_suggestion || '暂无优化建议'}
             </div>
           </div>
         </div>

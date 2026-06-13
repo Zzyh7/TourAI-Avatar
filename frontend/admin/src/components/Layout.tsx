@@ -16,7 +16,7 @@ const NAV_ITEMS: { key: PageKey; label: string; icon: string }[] = [
   { key: 'spots-hot', label: '景点热度', icon: '🔥' },
   { key: 'time-compare', label: '时间对比', icon: '📅' },
   { key: 'qa-analysis', label: '问答分析', icon: '💬' },
-  { key: 'visitors', label: '游客分层', icon: '👥' },
+  { key: 'visitors', label: '游客画像', icon: '🧑' },
   { key: 'negative', label: '负面反馈', icon: '⚠️' },
   { key: 'dialogues', label: '常用对话', icon: '📝' },
   { key: 'sessions', label: '会话记录', icon: '📋' },

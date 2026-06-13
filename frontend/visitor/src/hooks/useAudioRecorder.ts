@@ -98,12 +98,12 @@ export function useAudioRecorder(onResult: (text: string) => void) {
       const wavBlob = buildWav(int16, sampleRate);
 
       // 6. 发送到后端 STT
-      const text = await speechToText(wavBlob);
-      if (text) {
-        onResult(text);
+      const resp = await speechToText(wavBlob);
+      if (resp.text) {
+        onResult(resp.text);
         setError(null);
       } else {
-        setError('未识别到语音内容，请靠近麦克风再说一次');
+        setError(resp.error || '未识别到语音内容，请靠近麦克风再说一次');
       }
     } catch (e: any) {
       setError(`语音识别失败: ${e.message}`);
@@ -165,7 +165,7 @@ function writeString(view: DataView, offset: number, str: string) {
   }
 }
 
-async function speechToText(audioBlob: Blob): Promise<string> {
+async function speechToText(audioBlob: Blob): Promise<{ text: string; error?: string }> {
   const formData = new FormData();
   formData.append('audio', audioBlob, 'recording.wav');
   formData.append('mime_type', 'audio/wav');
@@ -175,11 +175,11 @@ async function speechToText(audioBlob: Blob): Promise<string> {
     body: formData,
   });
 
+  const data = await resp.json().catch(() => ({ text: '', success: false, error: `HTTP ${resp.status}` }));
+
   if (!resp.ok) {
-    const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
-    throw new Error(err.error || `HTTP ${resp.status}`);
+    return { text: '', error: data.error || `HTTP ${resp.status}` };
   }
 
-  const data = await resp.json();
-  return data.text || '';
+  return { text: data.text || '', error: data.error || undefined };
 }

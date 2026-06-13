@@ -110,5 +110,5 @@ export function useSpeech(onResult: (text: string) => void) {
     }
   })();
 
-  return { isListening, supported, errorMessage, start, stop };
+  return { isListening, supported, lastError, errorMessage, start, stop };
 }

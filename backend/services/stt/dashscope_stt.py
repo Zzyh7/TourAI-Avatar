@@ -36,7 +36,7 @@ class _NoopCallback(RecognitionCallback):
         pass
 
 
-def transcribe(audio_data: bytes, mime_type: str = "audio/wav") -> str:
+def transcribe(audio_data: bytes, mime_type: str = "audio/wav") -> dict:
     """
     将音频数据转为文字。
 
@@ -45,8 +45,16 @@ def transcribe(audio_data: bytes, mime_type: str = "audio/wav") -> str:
         mime_type: 前端传入的 Content-Type
 
     返回:
-        识别出的文字，失败返回空字符串
+        {"text": str, "success": bool, "error": str | None}
     """
+    api_key = os.getenv("DASHSCOPE_API_KEY", "")
+    if not api_key or api_key.startswith("sk-your-"):
+        return {
+            "text": "",
+            "success": False,
+            "error": "DASHSCOPE_API_KEY 未配置或仍为占位值，请在 .env 中填入真实的阿里百炼 API Key",
+        }
+
     fmt = MIME_FORMAT_MAP.get(mime_type, "wav")
     suffix = _format_to_suffix(fmt)
 
@@ -61,29 +69,43 @@ def transcribe(audio_data: bytes, mime_type: str = "audio/wav") -> str:
             callback=_NoopCallback(),
             format=fmt,
             sample_rate=16000,
+            api_key=api_key,
         )
         result = recognition.call(tmp_path)
 
         if result.status_code == 200:
             sentence = result.get_sentence()
-            # sentence 可能是 dict 或 list[dict]，取第一个的 text
             if isinstance(sentence, list) and len(sentence) > 0:
                 text = sentence[0].get("text", "")
             elif isinstance(sentence, dict):
                 text = sentence.get("text", "")
             else:
                 text = ""
-            logger.info(
-                f"ASR: \"{text[:80]}...\"" if len(text) > 80 else f"ASR: \"{text}\""
-            )
-            return text.strip()
+            text = text.strip()
+            if text:
+                logger.info(
+                    f"ASR: \"{text[:80]}...\"" if len(text) > 80 else f"ASR: \"{text}\""
+                )
+            else:
+                logger.warning("ASR returned 200 but no text recognized (silence / unclear speech)")
+            return {"text": text, "success": True, "error": None}
         else:
-            logger.error(f"DashScope ASR failed: {result.status_code} {result.message}")
-            return ""
+            logger.error(
+                f"DashScope ASR returned {result.status_code}: {result.message}"
+            )
+            return {
+                "text": "",
+                "success": False,
+                "error": f"语音识别服务返回错误 (code={result.status_code}): {result.message}",
+            }
 
     except Exception as e:
-        logger.error(f"STT error: {e}")
-        return ""
+        logger.error(f"STT exception: {type(e).__name__}: {e}")
+        return {
+            "text": "",
+            "success": False,
+            "error": f"语音识别异常: {type(e).__name__} — {e}",
+        }
 
     finally:
         if tmp_path and os.path.exists(tmp_path):
