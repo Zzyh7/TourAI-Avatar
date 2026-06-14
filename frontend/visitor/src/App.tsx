@@ -16,7 +16,9 @@ import ChatPanel from './components/ChatPanel';
 import VoiceButton from './components/VoiceButton';
 import RecommendationBar from './components/RecommendationBar';
 import PhotoRecognition from './components/PhotoRecognition';
+import LocationTrigger from './components/LocationTrigger';
 import { useAudioPlayer } from './hooks/useAudioPlayer';
+import { useGeolocation } from './hooks/useGeolocation';
 import { streamChat, createSession } from './services/api';
 
 interface Message {
@@ -33,6 +35,9 @@ export default function App() {
   const [sessionId, setSessionId] = useState('');
   const [selectedTag, setSelectedTag] = useState('');
   const [loading, setLoading] = useState(false);
+  const [gpsEnabled, setGpsEnabled] = useState(false);
+
+  const { position } = useGeolocation({ interval: 5000, enabled: gpsEnabled });
 
   const abortRef = useRef<AbortController | null>(null);
   // 用 ref 追踪 streamingText，供 abortGeneration 读取最新值
@@ -200,12 +205,36 @@ export default function App() {
     }
   }, [handleSend]);
 
+  // GPS 触发讲解
+  const handleGpsTrigger = useCallback((message: string) => {
+    handleSend(message);
+  }, [handleSend]);
+
   return (
+    <>
+      <LocationTrigger
+        position={position}
+        onTrigger={handleGpsTrigger}
+        enabled={gpsEnabled}
+      />
     <div style={styles.app}>
       {/* 标题栏 */}
       <header style={styles.header}>
         <h1 style={styles.title}>🏛️ 景区导览AI数字人</h1>
         <div style={styles.headerRight}>
+          <button
+            onClick={() => setGpsEnabled(!gpsEnabled)}
+            title={gpsEnabled ? 'GPS讲解已开启' : 'GPS讲解已关闭'}
+            style={{
+              width: 40, height: 40, borderRadius: '50%', border: 'none',
+              background: gpsEnabled ? '#4CAF50' : '#ddd',
+              color: '#fff', fontSize: 18, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'background 0.3s',
+            }}
+          >
+            📍
+          </button>
           <PhotoRecognition disabled={loading} onResult={handlePhotoResult} />
           <VoiceButton onResult={handleVoiceResult} onInterrupt={() => abortGeneration()} />
         </div>
@@ -238,6 +267,7 @@ export default function App() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

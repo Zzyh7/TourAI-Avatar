@@ -137,6 +137,18 @@ app.include_router(analytics_router)
 app.include_router(rag_router, prefix="/api/rag")
 
 
+# ==================== 工具函数 ====================
+
+def _haversine(lat1, lon1, lat2, lon2):
+    """计算两点间的球面距离（米）"""
+    from math import radians, cos, sin, asin, sqrt
+    r = 6371000
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+    a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
+    return r * 2 * asin(sqrt(a))
+
+
 # ==================== 请求/响应模型 ====================
 
 class ChatRequest(BaseModel):
@@ -696,20 +708,11 @@ async def nearby_spots(
     """
     GPS 触发附近景点 —— 返回指定范围内的预设景点。
     """
-    from math import radians, cos, sin, asin, sqrt
-
-    def haversine(lat1, lon1, lat2, lon2):
-        r = 6371000
-        dlat = radians(lat2 - lat1)
-        dlon = radians(lon2 - lon1)
-        a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
-        return r * 2 * asin(sqrt(a))
-
     db_spots = db.query(ScenicSpot).all()
 
     nearby = []
     for spot in db_spots:
-        dist = haversine(lat, lng, spot.latitude, spot.longitude)
+        dist = _haversine(lat, lng, spot.latitude, spot.longitude)
         if dist <= radius:
             nearby.append({
                 "name": spot.name,
@@ -722,6 +725,53 @@ async def nearby_spots(
 
     nearby.sort(key=lambda x: x["distance_m"])
     return {"spots": nearby, "center": {"lat": lat, "lng": lng}, "radius": radius}
+
+
+# ==================== GPS 触发讲解检测 ====================
+
+@app.get("/api/gps/check")
+def gps_trigger_check(
+    lat: float,
+    lng: float,
+    visited: str = "",
+    db: Session = Depends(get_db),
+):
+    """
+    GPS 触发检测 —— 检查用户是否进入了某个景点的触发范围。
+    前端每5秒轮询此接口，当用户进入新景点的 trigger_radius 时返回触发信息。
+
+    参数:
+      lat, lng: 用户当前 GPS 坐标
+      visited: 逗号分隔的已触发景点名称列表（避免重复触发）
+
+    返回:
+      {"triggered": true, "spot": {...}} 或 {"triggered": false}
+    """
+    visited_set = set(v.strip() for v in visited.split(",") if v.strip())
+
+    spots = db.query(ScenicSpot).all()
+    for spot in spots:
+        if not spot.latitude or not spot.longitude:
+            continue
+        if spot.name in visited_set:
+            continue
+
+        d = _haversine(lat, lng, spot.latitude, spot.longitude)
+        radius = spot.trigger_radius or 100
+
+        if d <= radius:
+            return {
+                "triggered": True,
+                "spot": {
+                    "name": spot.name,
+                    "distance_m": round(d),
+                    "description": spot.description,
+                    "category": spot.category or "",
+                    "visit_duration": spot.visit_duration or 10,
+                },
+            }
+
+    return {"triggered": False}
 
 
 # ==================== 语音识别 (STT) ====================
