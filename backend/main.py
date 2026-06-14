@@ -157,6 +157,59 @@ def _haversine(lat1, lon1, lat2, lon2):
     return r * 2 * asin(sqrt(a))
 
 
+def _strip_emoji(text: str) -> str:
+    """去除文本中的 emoji 表情符号"""
+    import re
+    # 匹配常见 emoji 范围 (Emoticons, Symbols, Pictographs, Transport, etc.)
+    emoji_pattern = re.compile(
+        "["
+        "\U0001F300-\U0001F9FF"  # Misc Symbols, Emoticons, Pictographs
+        "\U0001FA00-\U0001FA6F"  # Chess Symbols
+        "\U0001FA70-\U0001FAFF"  # Symbols Extended-A
+        "\U00002600-\U000027BF"  # Misc Symbols
+        "\U0000FE00-\U0000FE0F"  # Variation Selectors
+        "\U0001F000-\U0001F02F"  # Mahjong Tiles
+        "\U0001F0A0-\U0001F0FF"  # Playing Cards
+        "\U00002B50"              # ⭐
+        "\U00002764"              # ❤
+        "\U0000200D"              # Zero Width Joiner
+        "\U0001F100-\U0001F1FF"  # Enclosed Alphanumeric Supplement
+        "\U00002300-\U000023FF"  # Misc Technical (includes ⌚)
+        "\U00002500-\U000025FF"  # Geometric Shapes (includes ▶)
+        "\U00002100-\U000021FF"  # Letterlike Symbols (includes ™)
+        "\U000000A9"              # ©
+        "\U000000AE"              # ®
+        "\U0000203C"              # ‼
+        "\U00002049"              # ⁉
+        "\U00002122"              # ™
+        "\U00002139"              # ℹ
+        "\U00002328-\U0000232B"  # ⌨-⌫
+        "\U000023CF"              # ⏏
+        "\U000023E9-\U000023F3"  # ⏩-⏳
+        "\U000023F8-\U000023FA"  # ⏸-⏺
+        "\U000024C2"              # Ⓜ
+        "\U000025AA-\U000025AB"  # ▪-▫
+        "\U000025B6"              # ▶
+        "\U000025C0"              # ◀
+        "\U000025FB-\U000025FE"  # ◻-◾
+        "\U00002600-\U000027BF"  # ☀-➿
+        "\U00002934-\U00002935"  # ⤴-⤵
+        "\U00002B05-\U00002B07"  # ⬅-⬇
+        "\U00002B1B-\U00002B1C"  # ⬛-⬜
+        "\U00002B50"              # ⭐
+        "\U00002B55"              # ⭕
+        "\U00003030"              # 〰
+        "\U0000303D"              # 〽
+        "\U00003297"              # ㊗
+        "\U00003299"              # ㊙
+        "\U0001F004"              # 🀄
+        "\U0001F0CF"              # 🃏
+        "\U0001F170-\U0001F251"  # 🅰-🉑
+        "\U0001F300-\U0001FAFF"  # 🌀-🫿 (extended range)
+        "]+", flags=re.UNICODE)
+    return emoji_pattern.sub('', text).strip()
+
+
 # ==================== 请求/响应模型 ====================
 
 class ChatRequest(BaseModel):
@@ -386,8 +439,9 @@ async def chat(req: Request, chat_req: ChatRequest):
                 print(f"[CD] 常用对话匹配出错: {e}")
 
             if cd_matched:
-                # 预设回答直接逐字输出 + TTS
-                for char in cd_matched.answer:
+                # 预设回答直接逐字输出 + TTS（过滤 emoji）
+                cd_answer = _strip_emoji(cd_matched.answer)
+                for char in cd_answer:
                     if await check_disconnect():
                         break
                     char = _clean_stream_token(char)
@@ -428,7 +482,9 @@ async def chat(req: Request, chat_req: ChatRequest):
                         break
 
                     if event["type"] == "token":
-                        token = event["data"]
+                        token = _strip_emoji(event["data"])
+                        if not token:
+                            continue
                         full_answer += token
                         sentence_buffer += token
                         yield f"event: token\ndata: {json.dumps({'text': token})}\n\n"
@@ -479,6 +535,7 @@ async def chat(req: Request, chat_req: ChatRequest):
                         break
 
                     token = chunk.content if hasattr(chunk, 'content') else str(chunk)
+                    token = _strip_emoji(token)
                     if token:
                         token = _clean_stream_token(token)
                         if not token:
