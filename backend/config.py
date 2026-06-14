@@ -46,10 +46,21 @@ class Config:
         "geo":     ["maps_geo", "maps_regeocode"],
     })
 
-    # ==================== Edge-TTS ====================
-    tts_voice: str = "zh-CN-XiaoxiaoNeural"   # 默认中文女声
-    tts_rate: str = "+10%"                     # 语速
-    tts_pitch: str = "+0Hz"                    # 音调
+    # ==================== 豆包 TTS (Doubao / 火山引擎) ====================
+    doubao_tts_api_key: str = field(
+        default_factory=lambda: os.getenv("DOUBAO_TTS_API_KEY", "")
+    )
+    doubao_tts_appid: str = field(
+        default_factory=lambda: os.getenv("DOUBAO_TTS_APPID", "default")
+    )
+    doubao_tts_endpoint: str = "https://openspeech.bytedance.com/api/v1/tts"
+    doubao_tts_voice: str = "BV700_streaming"      # 默认灿灿 2.0 女声
+    doubao_tts_speed_ratio: float = 1.0            # 语速 0.5~2.0
+
+    # 向后兼容：Edge-TTS 配置（切换时保留）
+    tts_voice: str = "zh-CN-XiaoxiaoNeural"
+    tts_rate: str = "+10%"
+    tts_pitch: str = "+0Hz"
 
     # ==================== RAG 参数 ====================
     chunk_size: int = 500

@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/admin/config", tags=["数字人配置"])
 
 class DigitalHumanConfigUpdate(BaseModel):
     live2d_model: str = "default"
-    voice_name: str = "zh-CN-XiaoxiaoNeural"
+    voice_name: str = "BV700_streaming"  # 豆包 TTS 默认音色 (灿灿2.0女声)
     voice_speed: float = 1.0
 
 

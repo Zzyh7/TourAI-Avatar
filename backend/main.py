@@ -32,11 +32,19 @@ from fastapi.responses import StreamingResponse, JSONResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
+import re
 from config import CONFIG
 from database import init_db, get_db, SessionLocal
 from models.schema import ScenicSpot, Session as SessionModel, Conversation
 from agents.planner import GuideAgent
-from services.tts.edge_tts import tts_service
+from services.tts.doubao_tts import doubao_tts_service as tts_service
+
+# 流式输出过滤：即使 prompt 禁止了，LLM 偶尔还是会生成 markdown/emoji
+_OUTPUT_MD_CLEANUP = re.compile(r"\*\*|~~|```|`|^---+$|^\*{3,}$", re.MULTILINE)
+
+def _clean_stream_token(text: str) -> str:
+    """过滤流式输出中的 markdown 符号，清理后如果为空则返回空字符串"""
+    return _OUTPUT_MD_CLEANUP.sub("", text)
 from services.sentiment.analyzer import SentimentAnalyzer
 from admin.knowledge import router as knowledge_router
 from admin.config_router import router as config_router
@@ -248,7 +256,7 @@ async def chat(req: Request, chat_req: ChatRequest):
     文本问答 + TTS 语音合成（SSE 流式）—— 支持语音+文本混合输入。
 
     前端通过 Web Speech API 将语音转为文本后调用此端点。
-    后端使用 RAG 检索 + DeepSeek 生成回答，并通过 Edge-TTS 合成语音。
+    后端使用 RAG 检索 + DeepSeek 生成回答，并通过豆包 TTS (火山引擎) 合成语音。
 
     优化：TTS 合成与 LLM 生成并行进行，避免语音输出不连贯。
 
@@ -382,6 +390,9 @@ async def chat(req: Request, chat_req: ChatRequest):
                 for char in cd_matched.answer:
                     if await check_disconnect():
                         break
+                    char = _clean_stream_token(char)
+                    if not char:
+                        continue
                     full_answer += char
                     sentence_buffer += char
                     yield f"event: token\ndata: {json.dumps({'text': char})}\n\n"
@@ -469,6 +480,9 @@ async def chat(req: Request, chat_req: ChatRequest):
 
                     token = chunk.content if hasattr(chunk, 'content') else str(chunk)
                     if token:
+                        token = _clean_stream_token(token)
+                        if not token:
+                            continue
                         full_answer += token
                         sentence_buffer += token
                         yield f"event: token\ndata: {json.dumps({'text': token})}\n\n"

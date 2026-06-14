@@ -57,7 +57,7 @@ class DigitalHumanConfig(Base):
 
     id = Column(Integer, primary_key=True, default=1)
     live2d_model = Column(String(100), default="default")   # Live2D模型名
-    voice_name = Column(String(50), default="zh-CN-XiaoxiaoNeural")  # Edge-TTS音色
+    voice_name = Column(String(50), default="BV700_streaming")  # 豆包 TTS 音色
     voice_speed = Column(Float, default=1.0)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
