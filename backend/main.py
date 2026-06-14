@@ -39,12 +39,29 @@ from models.schema import ScenicSpot, Session as SessionModel, Conversation
 from agents.planner import GuideAgent
 from services.tts.doubao_tts import doubao_tts_service as tts_service
 
-# 流式输出过滤：即使 prompt 禁止了，LLM 偶尔还是会生成 markdown/emoji
-_OUTPUT_MD_CLEANUP = re.compile(r"\*\*|~~|```|`|^---+$|^\*{3,}$", re.MULTILINE)
+# 流式输出过滤：即使 prompt 禁止了，LLM 偶尔还是会生成 markdown/emoji/废话
+_OUTPUT_MD_CLEANUP = re.compile(
+    r"\*{1,3}(?!\s)"          # **, ***, * (但保留纯星号空格)
+    r"|#{1,4}"                # ###, #### 等标题标记
+    r"|~~|```|`"              # 删除线、代码块、行内代码
+    r"|^---+$|^\*{3,}$"       # 分隔线
+    r"|^\d+[\.\)、]\s*",       # 编号列表 (1. 2) 1、)
+    re.MULTILINE,
+)
+
+# 禁止的开场白/预告短语（LLM 偶尔会说"我来查一下"然后继续输出正文）
+_OUTPUT_BAN_PHRASES = re.compile(
+    r"(我(来|先)(帮您)?(查|搜|找|确认|获取|检索|看看|了解|搜索)一?下[。！，,]*"
+    r"|让我(来)?(查|搜|找|确认|获取|检索|看看|了解|搜索)一?下[。！，,]*"
+    r"|正在(为您)?(查|搜|找|获取|检索|搜索|查找)[。！，,]*"
+    r"|根据(检索|搜索|查询)结果[，,]*)"
+)
 
 def _clean_stream_token(text: str) -> str:
-    """过滤流式输出中的 markdown 符号，清理后如果为空则返回空字符串"""
-    return _OUTPUT_MD_CLEANUP.sub("", text)
+    """过滤流式输出中的 markdown/emoji/废话，清理后如果为空则返回空字符串"""
+    text = _OUTPUT_MD_CLEANUP.sub("", text)
+    text = _OUTPUT_BAN_PHRASES.sub("", text)
+    return text
 from services.sentiment.analyzer import SentimentAnalyzer
 from admin.knowledge import router as knowledge_router
 from admin.config_router import router as config_router
