@@ -225,15 +225,13 @@ def preflight(python_exe: str) -> bool:
             check=True,
         )
     except (subprocess.CalledProcessError, FileNotFoundError):
-        print(f"{RED}[ERROR]{NC} npm not found, please install Node.js")
-        ok = False
+        print(f"  {YELLOW}[WARN]{NC} npm not found, frontend services will be skipped")
 
     for fe in ["visitor", "admin"]:
         nm = PROJECT_ROOT / "frontend" / fe / "node_modules"
         if not nm.exists():
-            print(f"{RED}[ERROR]{NC} frontend/{fe}/node_modules missing")
-            print(f"       Run: cd frontend/{fe} && npm install")
-            ok = False
+            print(f"  {YELLOW}[WARN]{NC} frontend/{fe}/node_modules missing, {fe} service skipped")
+            print(f"       (Backend + static web pages are still available)")
 
     (PROJECT_ROOT / "backend" / "data").mkdir(exist_ok=True)
     return ok
@@ -369,6 +367,24 @@ def main():
     free_ports()
 
     services = build_services(python_exe)
+
+    # 如果没有 npm / node_modules，跳过前端服务
+    has_npm = False
+    try:
+        subprocess.run(
+            "npm --version" if platform.system() == "Windows" else ["npm", "--version"],
+            shell=(platform.system() == "Windows"), capture_output=True, check=True
+        )
+        has_npm = True
+    except Exception:
+        pass
+    if not has_npm:
+        services = [s for s in services if s["name"] == "Backend API"]
+    else:
+        for fe in ["visitor", "admin"]:
+            nm = PROJECT_ROOT / "frontend" / fe / "node_modules"
+            if not nm.exists():
+                services = [s for s in services if s["name"].lower() != fe]
 
     # 3. 启动
     print(f"\n{BOLD}Starting services...{NC}")

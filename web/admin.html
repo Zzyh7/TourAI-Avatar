@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>灵山胜境 — 管理后台</title>
+<style>
+:root {
+  --bg: #0f172a; --panel: #1e293b; --border: #334155;
+  --text: #e2e8f0; --text2: #94a3b8; --gold: #d4a853;
+  --radius: 12px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family: -apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;
+  background:var(--bg); color:var(--text); min-height:100vh;
+}
+.nav{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 28px; background:var(--panel); border-bottom:1px solid var(--border);
+}
+.nav h2{ color:var(--gold); font-size:18px; }
+.nav a{ color:var(--text2); text-decoration:none; font-size:13px; }
+.tabs{ display:flex; gap:4px; padding:16px 28px 0; }
+.tab{
+  padding:10px 20px; border-radius:10px 10px 0 0; border:none;
+  background:transparent; color:var(--text2); cursor:pointer; font-size:13px; font-weight:600;
+}
+.tab.active{ background:var(--panel); color:var(--gold); }
+.content{ padding:24px 28px; max-width:1000px; }
+.panel{
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:var(--radius); padding:24px; margin-bottom:16px;
+}
+.panel h3{ margin-bottom:14px; color:var(--gold); }
+table{ width:100%; border-collapse:collapse; font-size:13px; }
+th,td{ padding:10px 12px; text-align:left; border-bottom:1px solid var(--border); }
+th{ color:var(--text2); font-weight:600; }
+.form-row{ display:flex; gap:10px; margin-bottom:10px; align-items:center; }
+input,textarea,select{
+  padding:8px 12px; border-radius:8px; border:1px solid var(--border);
+  background:rgba(255,255,255,.04); color:var(--text); font-size:13px; outline:none;
+}
+input:focus{ border-color:var(--gold); }
+.btn{
+  padding:8px 18px; border-radius:8px; border:none; cursor:pointer; font-size:13px; font-weight:600;
+}
+.btn-gold{ background:linear-gradient(135deg,#d4a853,#b8860b); color:#fff; }
+.btn-outline{ background:transparent; border:1px solid var(--border); color:var(--text2); }
+.btn-danger{ background:rgba(248,113,113,.15); color:#f87171; border:1px solid rgba(248,113,113,.3); }
+.status{ padding:12px; border-radius:8px; margin-bottom:12px; display:none; font-size:13px; }
+.status.show{ display:block; }
+.status.ok{ background:rgba(52,211,153,.1); color:#34d399; }
+.status.err{ background:rgba(248,113,113,.1); color:#f87171; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <h2>🔧 灵山胜境 · 管理后台</h2>
+  <a href="/">← 返回首页</a>
+</nav>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchPanel('knowledge')">📚 知识库</button>
+  <button class="tab" onclick="switchPanel('spots')">🏯 景点管理</button>
+  <button class="tab" onclick="switchPanel('dialogue')">💬 常用对话</button>
+  <button class="tab" onclick="switchPanel('config')">⚙️ 系统配置</button>
+</div>
+
+<div class="content" id="content"></div>
+
+<script>
+const API = '';
+
+function switchPanel(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  event.target.classList.add('active');
+  panels[name]();
+}
+
+async function apiGet(path){
+  const r = await fetch(API + path);
+  if(!r.ok) throw new Error(r.status);
+  return r.json();
+}
+async function apiPost(path, data, method='POST'){
+  const r = await fetch(API + path, {
+    method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
+  });
+  if(!r.ok) throw new Error(r.status);
+  return r.json();
+}
+
+function showStatus(msg, type='ok'){
+  const el = document.getElementById('status');
+  el.textContent = msg; el.className = 'status show '+type;
+  setTimeout(()=>el.classList.remove('show'), 3000);
+}
+
+// ========== KNOWLEDGE PANEL ==========
+async function loadKnowledge(){
+  const html = `
+    <div class="panel">
+      <h3>📚 知识库文档管理</h3>
+      <div id="status" class="status"></div>
+      <div class="form-row">
+        <input type="file" id="knowledgeFile" accept=".txt,.md,.pdf,.docx">
+        <button class="btn btn-gold" onclick="uploadKnowledge()">上传文档</button>
+      </div>
+      <div id="knowledgeList"></div>
+    </div>`;
+  document.getElementById('content').innerHTML = html;
+  try{
+    const data = await apiGet('/api/admin/knowledge/list');
+    renderKnowledgeList(data);
+  }catch(e){ document.getElementById('knowledgeList').innerHTML='<p style="color:var(--text2)">加载失败</p>'; }
+}
+
+async function uploadKnowledge(){
+  const file = document.getElementById('knowledgeFile').files[0];
+  if(!file){ showStatus('请选择文件','err'); return; }
+  const fd = new FormData(); fd.append('file', file);
+  try{
+    const r = await fetch(API + '/api/admin/knowledge/upload', {method:'POST',body:fd});
+    if(!r.ok) throw new Error(r.status);
+    showStatus('上传成功');
+    loadKnowledge();
+  }catch(e){ showStatus('上传失败','err'); }
+}
+
+function renderKnowledgeList(data){
+  if(!data?.length){
+    document.getElementById('knowledgeList').innerHTML = '<p style="color:var(--text2)">暂无文档</p>';
+    return;
+  }
+  document.getElementById('knowledgeList').innerHTML = `
+    <table><thead><tr><th>文件名</th><th>大小</th><th>操作</th></tr></thead><tbody>
+    ${data.map(d=>`<tr><td>${d.filename||d.name||d}</td><td>${d.size||'-'}</td><td><button class="btn btn-danger" onclick="deleteKnowledge('${d.id||d.filename}')">删除</button></td></tr>`).join('')}
+    </tbody></table>`;
+}
+
+async function deleteKnowledge(id){
+  try{ await apiPost('/api/admin/knowledge/'+id,{},'DELETE'); showStatus('已删除'); loadKnowledge(); }
+  catch(e){ showStatus('删除失败','err'); }
+}
+
+// ========== SPOTS PANEL ==========
+async function loadSpots(){
+  const html = `
+    <div class="panel">
+      <h3>🏯 景点管理</h3>
+      <div id="status" class="status"></div>
+      <div class="form-row">
+        <input id="spotName" placeholder="景点名称">
+        <input id="spotCat" placeholder="分类">
+        <input id="spotLat" placeholder="纬度">
+        <input id="spotLng" placeholder="经度">
+        <button class="btn btn-gold" onclick="addSpot()">添加</button>
+      </div>
+      <textarea id="spotDesc" placeholder="景点描述" rows="2" style="width:100%;margin-bottom:10px"></textarea>
+      <div id="spotsList"></div>
+    </div>`;
+  document.getElementById('content').innerHTML = html;
+  try{
+    const data = await apiGet('/api/admin/scenic-spots');
+    renderSpotsList(data);
+  }catch(e){ document.getElementById('spotsList').innerHTML='<p style="color:var(--text2)">加载失败</p>'; }
+}
+
+function renderSpotsList(data){
+  if(!data?.length){
+    document.getElementById('spotsList').innerHTML = '<p style="color:var(--text2)">暂无景点</p>';
+    return;
+  }
+  document.getElementById('spotsList').innerHTML = `
+    <table><thead><tr><th>名称</th><th>分类</th><th>操作</th></tr></thead><tbody>
+    ${data.map(d=>`<tr><td>${d.name}</td><td>${d.category||'-'}</td><td><button class="btn btn-danger" onclick="deleteSpot('${d.id}')">删除</button></td></tr>`).join('')}
+    </tbody></table>`;
+}
+
+async function addSpot(){
+  const name = document.getElementById('spotName').value;
+  const category = document.getElementById('spotCat').value;
+  const lat = parseFloat(document.getElementById('spotLat').value)||0;
+  const lng = parseFloat(document.getElementById('spotLng').value)||0;
+  const desc = document.getElementById('spotDesc').value;
+  if(!name){ showStatus('请输入景点名称','err'); return; }
+  try{
+    await apiPost('/api/admin/scenic-spots',{name,category,latitude:lat,longitude:lng,description:desc});
+    showStatus('添加成功'); loadSpots();
+  }catch(e){ showStatus('添加失败','err'); }
+}
+
+async function deleteSpot(id){
+  try{ await apiPost('/api/admin/scenic-spots/'+id,{},'DELETE'); showStatus('已删除'); loadSpots(); }
+  catch(e){ showStatus('删除失败','err'); }
+}
+
+// ========== DIALOGUE PANEL ==========
+async function loadDialogue(){
+  const html = `
+    <div class="panel">
+      <h3>💬 常用对话管理</h3>
+      <div id="status" class="status"></div>
+      <div class="form-row">
+        <input id="dqQuestion" placeholder="用户问题">
+        <input id="dqAnswer" placeholder="预设回答">
+        <input id="dqCat" placeholder="分类">
+        <button class="btn btn-gold" onclick="addDialogue()">添加</button>
+      </div>
+      <div id="dialogueList"></div>
+    </div>`;
+  document.getElementById('content').innerHTML = html;
+  try{
+    const data = await apiGet('/api/admin/common-dialogue');
+    renderDialogueList(data);
+  }catch(e){ document.getElementById('dialogueList').innerHTML='<p style="color:var(--text2)">加载失败</p>'; }
+}
+
+function renderDialogueList(data){
+  if(!data?.length){
+    document.getElementById('dialogueList').innerHTML = '<p style="color:var(--text2)">暂无对话</p>';
+    return;
+  }
+  document.getElementById('dialogueList').innerHTML = `
+    <table><thead><tr><th>问题</th><th>回答</th><th>分类</th><th>操作</th></tr></thead><tbody>
+    ${data.map(d=>`<tr><td>${d.question?.substring(0,20)}</td><td>${d.answer?.substring(0,30)}</td><td>${d.category||'-'}</td><td><button class="btn btn-danger" onclick="deleteDialogue('${d.id}')">删除</button></td></tr>`).join('')}
+    </tbody></table>`;
+}
+
+async function addDialogue(){
+  const question = document.getElementById('dqQuestion').value;
+  const answer = document.getElementById('dqAnswer').value;
+  const category = document.getElementById('dqCat').value;
+  if(!question||!answer){ showStatus('问题和回答不能为空','err'); return; }
+  try{
+    await apiPost('/api/admin/common-dialogue',{question,answer,category});
+    showStatus('添加成功'); loadDialogue();
+  }catch(e){ showStatus('添加失败','err'); }
+}
+
+async function deleteDialogue(id){
+  try{ await apiPost('/api/admin/common-dialogue/'+id,{},'DELETE'); showStatus('已删除'); loadDialogue(); }
+  catch(e){ showStatus('删除失败','err'); }
+}
+
+// ========== CONFIG PANEL ==========
+async function loadConfig(){
+  const html = `
+    <div class="panel">
+      <h3>⚙️ 系统配置</h3>
+      <div id="status" class="status"></div>
+      <p style="color:var(--text2);font-size:13px">数字人配置信息</p>
+      <pre id="configData" style="background:rgba(0,0,0,.2);padding:16px;border-radius:8px;margin-top:10px;overflow:auto;font-size:12px"></pre>
+    </div>
+    <div class="panel">
+      <h3>📊 系统状态</h3>
+      <p style="color:var(--text2)">后端服务运行中 | 端口 8000 | <a href="/docs" target="_blank" style="color:var(--gold)">API 文档</a></p>
+    </div>`;
+  document.getElementById('content').innerHTML = html;
+  try{
+    const data = await apiGet('/api/admin/config/digital-human');
+    document.getElementById('configData').textContent = JSON.stringify(data, null, 2);
+  }catch(e){ document.getElementById('configData').textContent = '加载失败'; }
+}
+
+// ========== INIT ==========
+const panels = { knowledge:loadKnowledge, spots:loadSpots, dialogue:loadDialogue, config:loadConfig };
+loadKnowledge();
+</script>
+</body>
+</html>

@@ -28,7 +28,7 @@ from datetime import datetime
 
 from fastapi import FastAPI, Depends, Request, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import StreamingResponse, JSONResponse, FileResponse, Response
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
@@ -161,6 +161,39 @@ app.include_router(analytics_router)
 # 注册 RAG 增强知识库路由 (独立 /api/rag/query + /api/rag/admin/upload/faq)
 app.include_router(rag_router, prefix="/api/rag")
 
+# 注册 OpenAI 兼容 API (供 Live2D/OpenAvatarChat LLM 调用)
+from openai_compat_api import router as openai_compat_router
+app.include_router(openai_compat_router)
+
+# 轮播图
+@app.get("/carousel/{fname}")
+async def carousel_img(fname: str):
+    import os
+    path = os.path.join("../web/bg", fname)
+    if os.path.exists(path):
+        return FileResponse(path)
+    return Response(status_code=404)
+
+# 静态资源
+@app.get("/logo.png")
+async def serve_logo():
+    return FileResponse("../web/logo.png")
+
+@app.get("/web")
+async def serve_competition_web():
+    return FileResponse("../web/index.html")
+
+@app.get("/admin")
+async def serve_admin():
+    return FileResponse("../web/admin.html")
+
+@app.get("/chat")
+async def serve_chat():
+    return FileResponse("D:/cailin/competition-web/chat.html")
+
+@app.get("/")
+async def serve_root():
+    return FileResponse("../web/index.html")
 
 # ==================== 工具函数 ====================
 
@@ -892,6 +925,40 @@ async def speech_to_text(audio: UploadFile = File(...), mime_type: str = Form(de
 
 
 # ==================== 健康检查 ====================
+
+class TTSRequest(BaseModel):
+    text: str
+    voice: str = "BV700_streaming"
+
+@app.post("/api/tts")
+async def text_to_speech(req: TTSRequest):
+    """豆包 TTS — 文本转语音，返回 MP3 音频"""
+    import base64 as b64, httpx as _httpx, uuid as _uuid
+    try:
+        text = req.text.strip()
+        if not text:
+            return JSONResponse({"error": "empty text"}, status_code=400)
+        payload = {
+            "app": {"appid": CONFIG.doubao_tts_appid, "token": CONFIG.doubao_tts_api_key, "cluster": "volcano_tts"},
+            "user": {"uid": "live2d_user"},
+            "audio": {"voice_type": req.voice, "encoding": "mp3"},
+            "request": {"reqid": _uuid.uuid4().hex, "text": text, "text_type": "plain", "operation": "query", "with_frontend": 1},
+        }
+        headers = {"Authorization": f"Bearer;{CONFIG.doubao_tts_api_key}", "Content-Type": "application/json"}
+        async with _httpx.AsyncClient(timeout=30.0) as client:
+            resp = await client.post(CONFIG.doubao_tts_endpoint, json=payload, headers=headers)
+            if resp.status_code != 200:
+                return JSONResponse({"error": f"Doubao HTTP {resp.status_code}: {resp.text[:200]}"}, status_code=500)
+            result = resp.json()
+            if result.get("code") != 3000:
+                return JSONResponse({"error": result.get("message", str(result))}, status_code=500)
+            audio_b64 = result.get("data", "")
+            if not audio_b64:
+                return JSONResponse({"error": "empty audio"}, status_code=500)
+            audio_bytes = b64.b64decode(audio_b64)
+            return Response(content=audio_bytes, media_type="audio/mp3")
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 @app.get("/api/health")
 def health():
