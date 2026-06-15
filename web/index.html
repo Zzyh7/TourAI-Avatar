@@ -563,6 +563,17 @@ function toggleFloatMode(){
     el.classList.remove('active'); lb.textContent = '对话模式';
   }
 }
+
+// 从管理后台同步配置（模型 + 音色）
+fetch('/api/public-config')
+  .then(r => r.json())
+  .then(cfg => {
+    const iframe = document.querySelector('.float-dh-panel iframe');
+    if (iframe && cfg.character && cfg.character !== 'default') {
+      iframe.src = 'http://localhost:3000';
+    }
+  })
+  .catch(() => {});
 </script>
 
 </body>

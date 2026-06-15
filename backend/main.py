@@ -183,13 +183,22 @@ async def serve_logo():
 async def serve_competition_web():
     return FileResponse("../web/index.html")
 
-@app.get("/admin")
-async def serve_admin():
-    return FileResponse("../web/admin.html")
-
-@app.get("/chat")
-async def serve_chat():
-    return FileResponse("D:/cailin/competition-web/chat.html")
+@app.get("/api/public-config")
+async def public_config():
+    """供 Live2D 前端读取当前管理后台配置"""
+    try:
+        from models.schema import DigitalHumanConfig
+        db = SessionLocal()
+        config = db.query(DigitalHumanConfig).first()
+        db.close()
+        if config:
+            return {
+                "voice": config.voice_name or "BV700_streaming",
+                "character": config.live2d_model or "Haru",
+            }
+    except Exception:
+        pass
+    return {"voice": "BV700_streaming", "character": "Haru"}
 
 @app.get("/")
 async def serve_root():
@@ -409,12 +418,15 @@ async def chat(req: Request, chat_req: ChatRequest):
                 pending_tts.pop(0)
             return yielded
 
+        # 从数据库读取管理后台配置的音色
+        _db_voice = _get_db_voice()
+
         def fire_tts(text: str):
             """启动后台 TTS 任务，不阻塞当前流"""
             nonlocal tts_order
             if not text.strip():
                 return
-            task = asyncio.create_task(tts_service.synthesize(text.strip()))
+            task = asyncio.create_task(tts_service.synthesize(text.strip(), voice=_db_voice))
             _tts_tasks.append(task)
             pending_tts.append({"order": tts_order, "text": text.strip(), "task": task})
             tts_order += 1
@@ -926,9 +938,22 @@ async def speech_to_text(audio: UploadFile = File(...), mime_type: str = Form(de
 
 # ==================== 健康检查 ====================
 
+def _get_db_voice() -> str:
+    """从数据库读取管理后台配置的音色，失败则用默认值"""
+    try:
+        from models.schema import DigitalHumanConfig
+        db = SessionLocal()
+        config = db.query(DigitalHumanConfig).first()
+        db.close()
+        if config and config.voice_name:
+            return config.voice_name
+    except Exception:
+        pass
+    return CONFIG.doubao_tts_voice  # 默认 BV700_streaming
+
 class TTSRequest(BaseModel):
     text: str
-    voice: str = "BV700_streaming"
+    voice: str = ""
 
 @app.post("/api/tts")
 async def text_to_speech(req: TTSRequest):
@@ -938,10 +963,11 @@ async def text_to_speech(req: TTSRequest):
         text = req.text.strip()
         if not text:
             return JSONResponse({"error": "empty text"}, status_code=400)
+        voice = req.voice or _get_db_voice()
         payload = {
             "app": {"appid": CONFIG.doubao_tts_appid, "token": CONFIG.doubao_tts_api_key, "cluster": "volcano_tts"},
             "user": {"uid": "live2d_user"},
-            "audio": {"voice_type": req.voice, "encoding": "mp3"},
+            "audio": {"voice_type": voice, "encoding": "mp3"},
             "request": {"reqid": _uuid.uuid4().hex, "text": text, "text_type": "plain", "operation": "query", "with_frontend": 1},
         }
         headers = {"Authorization": f"Bearer;{CONFIG.doubao_tts_api_key}", "Content-Type": "application/json"}
