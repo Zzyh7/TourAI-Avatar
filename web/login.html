@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>员工登录 — 灵山胜境</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'PingFang SC','Microsoft YaHei',sans-serif;
+  background:linear-gradient(135deg,#f5f7fa 0%,#e4e8ec 100%);
+  width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;
+}
+.login-box{
+  background:#fff;border-radius:16px;padding:48px 40px;width:400px;
+  box-shadow:0 8px 40px rgba(0,0,0,.1);text-align:center;
+}
+.login-box h2{ font-size:22px;color:#333;margin-bottom:6px; }
+.login-box .sub{ font-size:13px;color:#999;margin-bottom:28px; }
+.login-box input{
+  width:100%;padding:12px 16px;border-radius:10px;border:1px solid #e0e0e0;
+  font-size:14px;outline:none;margin-bottom:14px;background:#fafafa;
+}
+.login-box input:focus{ border-color:#c9a050; }
+.login-box button{
+  width:100%;padding:12px;border-radius:24px;border:none;
+  background:linear-gradient(135deg,#c9a050,#9a7030);color:#fff;
+  font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;
+}
+.error{ color:#f87171;font-size:13px;margin-top:10px;display:none; }
+</style>
+</head>
+<body>
+<div class="login-box">
+  <h2>🔧 员工登录</h2>
+  <p class="sub">灵山胜境 · 管理后台</p>
+  <input id="account" placeholder="账号" autocomplete="off">
+  <input id="password" type="password" placeholder="密码" onkeydown="if(event.key==='Enter')login()">
+  <button onclick="login()">登 录</button>
+  <p class="error" id="error">账号或密码错误</p>
+</div>
+<script>
+async function login(){
+  const account = document.getElementById('account').value.trim();
+  const password = document.getElementById('password').value;
+  if(!account||!password) return;
+  try{
+    const resp = await fetch('/staff-login',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({account,password})
+    });
+    const data = await resp.json();
+    if(data.success){
+      sessionStorage.setItem('staff_token',data.token);
+      window.location.href = data.redirect || 'http://localhost:5174';
+    }else{
+      document.getElementById('error').style.display='block';
+    }
+  }catch(e){
+    document.getElementById('error').textContent='连接失败';
+    document.getElementById('error').style.display='block';
+  }
+}
+</script>
+</body>
+</html>

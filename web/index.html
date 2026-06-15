@@ -81,6 +81,16 @@ body{
   border:none;
 }
 .carousel-dot.active{ background:var(--gold); width:24px; border-radius:4px; }
+.carousel-arrow{
+  position:absolute; top:50%; transform:translateY(-50%); z-index:3;
+  width:44px; height:44px; border-radius:50%; border:none;
+  background:rgba(255,255,255,.3); color:#555; font-size:20px;
+  cursor:pointer; transition:.3s; display:flex; align-items:center; justify-content:center;
+  backdrop-filter:blur(4px);
+}
+.carousel-arrow:hover{ background:rgba(255,255,255,.6); }
+.carousel-arrow.left{ left:24px; }
+.carousel-arrow.right{ right:24px; }
 .hero-content{
   position:relative; z-index:2; padding:40px 60px;
   text-align:left; width:100%; max-width:1100px;
@@ -217,8 +227,8 @@ body{
     <button class="nav-link" onclick="openModal('showModal')"><span class="nav-dot">♪</span>演出信息</button>
   </div>
   <div class="nav-right">
-    <button class="nav-link ai" onclick="toggleFloat()"><span class="nav-dot white">◇</span>AI数字人</button>
-    <a class="nav-link staff" href="http://localhost:5174" target="_blank"><span class="nav-dot">🔑</span>员工通道</a>
+    <a class="nav-link ai" href="http://localhost:5173" target="_blank"><span class="nav-dot white">◇</span>AI导览</a>
+    <a class="nav-link staff" href="/login" target="_blank"><span class="nav-dot">🔑</span>员工通道</a>
   </div>
 </nav>
 
@@ -233,11 +243,13 @@ body{
     <p class="subtitle">一山一世界，一境一如来</p>
     <p class="hero-desc">灵山胜境位于江苏无锡太湖之滨，是国家5A级旅游景区、世界佛教论坛永久会址。<br>园区以88米灵山大佛、千年古刹祥符禅寺、气势恢宏的灵山梵宫、再现佛祖诞生场景的九龙灌浴等为核心，<br>将深厚的佛教文化与江南山水园林融为一体。</p>
     <div class="hero-btns">
-      <a class="btn btn-primary" href="javascript:toggleFloat()">🤖 AI数字人导览</a>
+      <a class="btn btn-primary" href="http://localhost:5173" target="_blank">🤖 AI数字人导览</a>
       <a class="btn btn-outline" href="#services">探索灵山 ↓</a>
     </div>
   </div>
   <div class="scroll-hint">↓ 向下滚动</div>
+  <button class="carousel-arrow left" onclick="prevSlide()">‹</button>
+  <button class="carousel-arrow right" onclick="nextSlide()">›</button>
   <div class="carousel-dots" id="carouselDots"></div>
 
 </section>
@@ -359,7 +371,9 @@ let activeLayer = 0;
 
 function startCarousel(){ carouselTimer = setInterval(nextSlide, 5000); }
 function stopCarousel(){ clearInterval(carouselTimer); }
-function nextSlide(){ goToSlide((currentSlide + 1) % CAROUSEL_IMAGES.length); }
+function resetCarousel(){ stopCarousel(); startCarousel(); }
+function nextSlide(){ goToSlide((currentSlide + 1) % CAROUSEL_IMAGES.length); resetCarousel(); }
+function prevSlide(){ goToSlide((currentSlide - 1 + CAROUSEL_IMAGES.length) % CAROUSEL_IMAGES.length); resetCarousel(); }
 
 function goToSlide(index){
   if(index === currentSlide) return;
@@ -492,88 +506,6 @@ document.getElementById('showModal').addEventListener('click', function(e){
   if(e.target===this && this.classList.contains('show')) loadShows();
 });
 
-</script>
-<!-- ==================== 浮动数字人 ==================== -->
-<div class="float-dh" id="floatDH">
-  <div class="float-dh-panel" id="floatPanel">
-    <div class="float-dh-header">
-      <span class="float-dh-title">AI数字人导游</span>
-      <div class="float-dh-mode" id="floatMode" onclick="toggleFloatMode()">
-        <span id="floatModeLabel">沉浸模式</span><span class="float-dot active"></span>
-      </div>
-      <button class="float-dh-close" onclick="toggleFloat()">✕</button>
-    </div>
-    <iframe src="http://localhost:3000" allow="camera;microphone;autoplay"></iframe>
-  </div>
-  <button class="float-dh-btn" id="floatBtn" onclick="toggleFloat()">
-    <span>🤖</span>
-  </button>
-</div>
-
-<style>
-.float-dh{ position:fixed; bottom:24px; right:24px; z-index:999; }
-.float-dh-btn{
-  width:56px; height:56px; border-radius:50%; border:none;
-  background:linear-gradient(135deg,#c9a050,#9a7030); color:#fff;
-  font-size:24px; cursor:pointer; box-shadow:0 4px 20px rgba(0,0,0,.15);
-  transition:.3s; display:flex; align-items:center; justify-content:center;
-}
-.float-dh-btn:hover{ transform:scale(1.1); box-shadow:0 6px 28px rgba(0,0,0,.2); }
-.float-dh-panel{
-  position:absolute; bottom:68px; right:0; display:none;
-  width:420px; height:620px; max-height:calc(100vh - 100px);
-  background:#fff; border-radius:16px; box-shadow:0 8px 40px rgba(0,0,0,.15);
-  overflow:hidden; flex-direction:column;
-}
-.float-dh.open .float-dh-panel{ display:flex; }
-.float-dh.open .float-dh-btn{ display:none; }
-.float-dh-panel iframe{ flex:1; border:none; }
-.float-dh-header{
-  display:flex; align-items:center; gap:8px; padding:10px 14px;
-  border-bottom:1px solid #e0e0e0; background:#fafafa;
-}
-.float-dh-title{ font-size:13px; font-weight:600; color:#666; flex:1; }
-.float-dh-mode{
-  display:flex; align-items:center; gap:4px; font-size:11px; color:#999;
-  cursor:pointer; user-select:none; white-space:nowrap;
-}
-.float-dot{ width:6px; height:6px; border-radius:50%; background:#ccc; }
-.float-dot.active{ background:#34d399; }
-.float-dh-mode.active{ color:#34d399; }
-.float-dh-close{
-  width:24px; height:24px; border-radius:50%; border:none;
-  background:transparent; color:#999; cursor:pointer; font-size:14px;
-}
-.float-dh-close:hover{ background:#eee; color:#333; }
-</style>
-
-<script>
-let floatOpen = false, floatImmersive = true;
-function toggleFloat(){
-  floatOpen = !floatOpen;
-  document.getElementById('floatDH').classList.toggle('open', floatOpen);
-}
-function toggleFloatMode(){
-  floatImmersive = !floatImmersive;
-  const el = document.getElementById('floatMode');
-  const lb = document.getElementById('floatModeLabel');
-  if(floatImmersive){
-    el.classList.add('active'); lb.textContent = '沉浸模式';
-  } else {
-    el.classList.remove('active'); lb.textContent = '对话模式';
-  }
-}
-
-// 从管理后台同步配置（模型 + 音色）
-fetch('/api/public-config')
-  .then(r => r.json())
-  .then(cfg => {
-    const iframe = document.querySelector('.float-dh-panel iframe');
-    if (iframe && cfg.character && cfg.character !== 'default') {
-      iframe.src = 'http://localhost:3000';
-    }
-  })
-  .catch(() => {});
 </script>
 
 </body>

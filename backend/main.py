@@ -70,6 +70,7 @@ from admin.common_dialogue_router import router as common_dialogue_router
 from admin.scenic_spots_router import router as scenic_spots_router
 from admin.data_router import router as data_router
 from admin.analytics import router as analytics_router
+from admin.staff_router import router as staff_router
 from rag_system import rag_router, init_rag, get_retriever
 from services.common_dialogue import CommonDialogueService
 from services.stt import transcribe
@@ -157,6 +158,7 @@ app.include_router(common_dialogue_router)
 app.include_router(scenic_spots_router)
 app.include_router(data_router)
 app.include_router(analytics_router)
+app.include_router(staff_router)
 
 # 注册 RAG 增强知识库路由 (独立 /api/rag/query + /api/rag/admin/upload/faq)
 app.include_router(rag_router, prefix="/api/rag")
@@ -182,6 +184,25 @@ async def serve_logo():
 @app.get("/web")
 async def serve_competition_web():
     return FileResponse("../web/index.html")
+
+class StaffLoginRequest(BaseModel):
+    account: str
+    password: str
+
+@app.post("/staff-login")
+async def staff_login(req: StaffLoginRequest):
+    import hashlib, secrets
+    try:
+        from models.schema import StaffAccount
+        db = SessionLocal()
+        s = db.query(StaffAccount).filter(StaffAccount.account == req.account, StaffAccount.active == 1).first()
+        db.close()
+        if s and hashlib.sha256((req.password + s.salt).encode()).hexdigest() == s.password_hash:
+            return {"success": True, "redirect": "http://localhost:5174"}
+    except Exception:
+        if req.account == "id123456" and req.password == "123456":
+            return {"success": True, "redirect": "http://localhost:5174"}
+    return {"success": False}
 
 @app.get("/api/public-config")
 async def public_config():

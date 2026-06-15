@@ -3,7 +3,7 @@
  */
 import { type ReactNode } from 'react';
 
-export type PageKey = 'dashboard' | 'spots-hot' | 'time-compare' | 'qa-analysis' | 'visitors' | 'negative' | 'dialogues' | 'sessions' | 'documents' | 'scenic-spots' | 'config';
+export type PageKey = 'dashboard' | 'spots-hot' | 'time-compare' | 'qa-analysis' | 'visitors' | 'negative' | 'dialogues' | 'sessions' | 'documents' | 'scenic-spots' | 'config' | 'staff';
 
 interface Props {
   active: PageKey;
