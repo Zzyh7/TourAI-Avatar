@@ -23,6 +23,7 @@ const NAV_ITEMS: { key: PageKey; label: string; icon: string }[] = [
   { key: 'documents', label: '知识库', icon: '📚' },
   { key: 'scenic-spots', label: '景点管理', icon: '🏛️' },
   { key: 'config', label: '系统配置', icon: '⚙️' },
+  { key: 'staff', label: '员工账号', icon: '🔑' },
 ];
 
 export default function Layout({ active, onNavigate, children }: Props) {
