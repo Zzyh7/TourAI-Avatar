@@ -181,6 +181,10 @@ async def carousel_img(fname: str):
 async def serve_logo():
     return FileResponse("../web/logo.png")
 
+@app.get("/login")
+async def serve_login():
+    return FileResponse("../web/login.html")
+
 @app.get("/web")
 async def serve_competition_web():
     return FileResponse("../web/index.html")
