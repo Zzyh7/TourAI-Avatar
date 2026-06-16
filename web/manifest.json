@@ -1,0 +1,14 @@
+{
+  "name": "灵山胜境 · AI数字人导游",
+  "short_name": "灵山胜境",
+  "description": "TourAI景区导览AI数字人 — 智能语音对话、拍照识景、个性推荐",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#e8e8e8",
+  "theme_color": "#c9a050",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/logo.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/logo.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

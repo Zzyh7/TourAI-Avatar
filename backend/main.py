@@ -177,9 +177,21 @@ async def carousel_img(fname: str):
     return Response(status_code=404)
 
 # 静态资源
+@app.get("/manifest.json")
+async def serve_manifest():
+    return FileResponse("../web/manifest.json", media_type="application/json")
+
+@app.get("/sw.js")
+async def serve_sw():
+    return FileResponse("../web/sw.js", media_type="application/javascript")
+
 @app.get("/logo.png")
 async def serve_logo():
     return FileResponse("../web/logo.png")
+
+@app.get("/map")
+async def serve_map():
+    return FileResponse("../web/map.html")
 
 @app.get("/login")
 async def serve_login():

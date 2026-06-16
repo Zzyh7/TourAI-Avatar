@@ -3,330 +3,356 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>灵山胜境 — 太湖之滨 · 江南佛国</title>
+<title>灵山胜境 · AI数字人导游</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0E0F12">
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js');}</script>
 <style>
-:root {
-  --bg: #e8e8e8;
-  --card: #fafafa;
-  --border: #e0e0e0;
-  --text: #333333;
-  --text2: #666666;
-  --gold: #c9a050;
-  --green: #34d399;
-  --amber: #f59e0b;
-  --radius: 18px;
-  --radius-sm: 12px;
-  --font: 'SimSun', 'STSong', 'Songti SC', serif;
+/* ===== DESIGN SYSTEM ===== */
+:root{
+  --gold:#C9A24E; --brown:#8B5E34; --dark:#0E0F12; --white:#FFFFFF;
+  --glass:rgba(255,255,255,.06); --glass-border:rgba(255,255,255,.1);
+  --font:'SimSun','STSong','Songti SC',serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth; background:var(--dark)}
 body{
-  font-family: var(--font);
-  background: var(--bg); color: var(--text); overflow-x: hidden;
-  font-size:15px;
+  font-family:var(--font); background:var(--dark); color:var(--white);
+  overflow-x:hidden; font-size:15px;
 }
 
-/* ========== NAVBAR ========== */
-.navbar{
+/* ===== TOP NAV ===== */
+.topnav{
   position:fixed; top:0; left:0; right:0; z-index:100;
   display:flex; align-items:center; justify-content:space-between;
-  padding:12px 28px;
-  background:rgba(250,250,250,.92); backdrop-filter:blur(16px);
-  border-bottom:1px solid var(--border);
+  padding:10px 32px;
+  background:rgba(14,15,18,.3); backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  transition:background .4s;
 }
-.nav-left{ display:flex; align-items:center; gap:2px; padding-left:8px; }
-.nav-logo{ width:auto; height:52px; }
-.brand-wrap{ display:flex; flex-direction:column; line-height:1.2; }
-.nav-left .brand{ font-size:18px; font-weight:700; color:var(--gold); letter-spacing:1px; }
-.brand-sub{ font-size:11px; color:#555; font-weight:700; letter-spacing:0.5px; }
-.nav-center{ display:flex; gap:4px; align-items:center; position:absolute; left:50%; transform:translateX(-50%); }
-.nav-right{ display:flex; gap:4px; align-items:center; }
-.nav-link{
-  padding:7px 16px; border-radius:18px; font-size:14px; font-weight:500;
-  color:var(--gold); text-decoration:none; cursor:pointer;
-  transition:.2s; border:none; background:transparent;
+.topnav.scrolled{ background:rgba(14,15,18,.85); }
+.topnav-left{ display:flex; align-items:center; gap:6px; }
+.topnav-left img{ height:40px; }
+.topnav-brand{ font-size:15px; font-weight:700; color:var(--gold); letter-spacing:1px; }
+.topnav-center{ display:flex; gap:2px; position:absolute; left:50%; transform:translateX(-50%); }
+.topnav-right{ display:flex; gap:8px; align-items:center; }
+.nv-link{
+  padding:6px 14px; border-radius:14px; font-size:13px; font-weight:500;
+  color:rgba(255,255,255,.7); text-decoration:none; cursor:pointer;
+  transition:.25s; border:none; background:transparent;
 }
-.nav-link:hover{ color:#8b6914; background:rgba(184,134,11,.06); }
-.nav-link.staff{ border:1px solid #333; border-radius:18px; }
-.nav-link.ai{ background:var(--gold); color:#fff !important; border-radius:18px; }
-.nav-link.ai:hover{ background:#9a6f0a; color:#fff !important; }
-.nav-dot{ color:var(--gold); font-size:10px; margin-right:4px; }
-.nav-dot.white{ color:#fff; font-size:14px; }
+.nv-link:hover{ color:var(--gold); }
+.nv-link.gold{
+  background:linear-gradient(135deg,var(--gold),#A07B30); color:#fff;
+  box-shadow:0 0 18px rgba(201,162,78,.3); font-weight:600;
+}
+.nv-link.gold:hover{ box-shadow:0 0 28px rgba(201,162,78,.5); transform:scale(1.04); }
+.nv-link.login{ border:1px solid rgba(255,255,255,.2); color:rgba(255,255,255,.6); }
+.nv-link.login:hover{ border-color:var(--gold); color:var(--gold); }
 
-/* ========== HERO ========== */
+/* ===== HERO ===== */
 .hero{
-  width:100%; min-height:100vh;
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  text-align:center; position:relative; overflow:hidden;
+  width:100%; min-height:100vh; position:relative; overflow:hidden;
+  display:flex; align-items:center;
 }
-/* Carousel layers */
+.hero-bg{ position:absolute; inset:0; z-index:0; }
 .hero-bg-layer{
-  position:absolute; inset:0; z-index:0;
-  background: center/cover no-repeat;
-  opacity:0; transition: opacity 1.2s ease-in-out;
+  position:absolute; inset:0;
+  background:center/cover no-repeat;
+  opacity:0; transition:opacity 1.5s ease;
 }
 .hero-bg-layer.active{ opacity:1; }
-.hero-bg-overlay{
+.hero-shadow{
   position:absolute; inset:0; z-index:1;
-  background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.6) 60%, var(--bg) 100%);
+  background:linear-gradient(135deg, rgba(14,15,18,.75) 0%, rgba(14,15,18,.35) 40%, rgba(14,15,18,.15) 70%, rgba(14,15,18,.6) 100%);
 }
-/* Carousel dots */
+.hero-content{
+  position:relative; z-index:2; width:40%; min-width:380px;
+  padding:80px 60px;
+}
+.hero-badge{
+  font-size:13px; color:var(--gold); letter-spacing:3px; margin-bottom:16px;
+  opacity:0; animation:fadeUp .8s .2s forwards;
+}
+.hero h1{
+  font-size:clamp(48px,7vw,72px); font-weight:900; color:var(--white);
+  line-height:1.1; margin-bottom:12px; letter-spacing:4px;
+  opacity:0; animation:fadeUp .8s .4s forwards;
+}
+.hero .sub{
+  font-size:18px; color:var(--gold); letter-spacing:2px; margin-bottom:8px;
+  opacity:0; animation:fadeUp .8s .6s forwards;
+}
+.hero .desc{
+  font-size:13px; color:rgba(255,255,255,.45); line-height:1.8; margin-bottom:32px;
+  opacity:0; animation:fadeUp .8s .8s forwards;
+}
+.hero-btns{
+  display:flex; gap:12px; flex-wrap:wrap;
+  opacity:0; animation:fadeUp .8s 1s forwards;
+}
+.btn{
+  padding:13px 28px; border-radius:24px; font-size:14px; font-weight:600;
+  cursor:pointer; text-decoration:none; transition:.3s; border:none;
+  display:inline-flex; align-items:center; gap:6px;
+}
+.btn-glow{
+  background:linear-gradient(135deg,var(--gold),#A07B30); color:#fff;
+  box-shadow:0 0 24px rgba(201,162,78,.35);
+}
+.btn-glow:hover{ box-shadow:0 0 40px rgba(201,162,78,.55); transform:translateY(-2px); }
+.btn-ghost{
+  background:transparent; border:1px solid rgba(255,255,255,.2); color:rgba(255,255,255,.7);
+}
+.btn-ghost:hover{ border-color:var(--gold); color:var(--gold); background:rgba(201,162,78,.06); }
+
+/* Carousel arrows & dots */
+.carousel-arrow{
+  position:absolute; top:50%; transform:translateY(-50%); z-index:3;
+  width:40px; height:40px; border-radius:50%; border:1px solid rgba(255,255,255,.15);
+  background:rgba(0,0,0,.3); color:rgba(255,255,255,.6); font-size:18px;
+  cursor:pointer; transition:.3s; display:flex; align-items:center; justify-content:center;
+}
+.carousel-arrow:hover{ background:rgba(0,0,0,.5); color:#fff; }
+.carousel-arrow.left{ left:20px; }
+.carousel-arrow.right{ right:20px; }
 .carousel-dots{
-  position:absolute; bottom:100px; z-index:3;
+  position:absolute; bottom:36px; left:50%; transform:translateX(-50%); z-index:3;
   display:flex; gap:8px;
 }
 .carousel-dot{
-  width:8px; height:8px; border-radius:50%;
-  background:rgba(0,0,0,.2); cursor:pointer; transition:.3s;
-  border:none;
+  width:6px; height:6px; border-radius:50%; border:none;
+  background:rgba(255,255,255,.25); cursor:pointer; transition:.3s;
 }
-.carousel-dot.active{ background:var(--gold); width:24px; border-radius:4px; }
-.carousel-arrow{
-  position:absolute; top:50%; transform:translateY(-50%); z-index:3;
-  width:44px; height:44px; border-radius:50%; border:none;
-  background:rgba(255,255,255,.3); color:#555; font-size:20px;
-  cursor:pointer; transition:.3s; display:flex; align-items:center; justify-content:center;
-  backdrop-filter:blur(4px);
-}
-.carousel-arrow:hover{ background:rgba(255,255,255,.6); }
-.carousel-arrow.left{ left:24px; }
-.carousel-arrow.right{ right:24px; }
-.hero-content{
-  position:relative; z-index:2; padding:40px 60px;
-  text-align:left; width:100%; max-width:1100px;
-}
-.hero-badge{
-  display:inline-block; padding:6px 0; margin-bottom:16px;
-  color:#c9a050; font-size:15px; font-weight:700; letter-spacing:2px;
-}
-.hero h1{
-  font-family: 'STSong', 'SimSun', 'Noto Serif SC', 'Songti SC', 'SimSun-ExtB', serif;
-  font-size:clamp(42px,6vw,64px); font-weight:900;
-  color:#c9a050;
-  margin-bottom:12px; line-height:1.2;
-  letter-spacing:6px;
-}
-.hero .subtitle{
-  font-size:20px; color:#c9a050; margin-bottom:24px; line-height:1.6;
-  letter-spacing:2px; font-weight:700;
-}
-.hero-desc{
-  font-size:15px; color:#222; line-height:2.2; max-width:520px;
-  margin:0 0 32px 0; font-weight:700; letter-spacing:0.5px;
-}
-.hero-btns{ display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-start; }
+.carousel-dot.active{ background:var(--gold); width:20px; border-radius:3px; }
 
-.btn{
-  padding:13px 28px; border-radius:26px; font-size:15px; font-weight:600;
-  cursor:pointer; text-decoration:none; transition:.25s; border:none;
-  display:inline-flex; align-items:center; gap:6px;
+/* Scroll hint */
+.scroll-down{
+  position:absolute; bottom:60px; left:50%; transform:translateX(-50%); z-index:3;
+  color:rgba(255,255,255,.35); font-size:11px; letter-spacing:2px;
+  animation:float 2.5s ease-in-out infinite;
 }
-.btn-primary{ background:linear-gradient(135deg,#c9a050,#9a7030); color:#fff;
-  box-shadow:0 4px 20px rgba(201,160,80,.3); }
-.btn-primary:hover{ transform:translateY(-2px); box-shadow:0 8px 30px rgba(201,160,80,.4); }
-.btn-outline{ background:transparent; border:1px solid rgba(201,160,80,.3); color:#c9a050; }
-.btn-outline:hover{ background:rgba(201,160,80,.1); border-color:rgba(201,160,80,.5); }
 
-.scroll-hint{
-  position:absolute; bottom:28px; color:#999; font-size:12px;
-  animation:float 2s ease-in-out infinite;
+/* ===== AI FEATURE CARDS ===== */
+.features-section{
+  padding:80px 60px; background:linear-gradient(180deg, var(--dark) 0%, #11151a 100%);
 }
-@keyframes float{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(8px)} }
-
-.hero-bg-btn{
-  position:absolute; bottom:70px; right:28px; z-index:10;
-  width:36px; height:36px; border-radius:50%;
-  background:rgba(0,0,0,.4); border:1px solid rgba(255,255,255,.15);
-  color:#fff; cursor:pointer; font-size:14px; backdrop-filter:blur(10px);
-  transition:.2s;
+.section-label{
+  text-align:center; font-size:12px; color:var(--gold); letter-spacing:3px;
+  margin-bottom:8px; text-transform:uppercase;
 }
-.hero-bg-btn:hover{ background:rgba(255,255,255,.12); }
-
-/* ========== SECTIONS ========== */
-.section{ max-width:1100px; margin:0 auto; padding:80px 24px; }
-.section-header{ text-align:center; margin-bottom:48px; }
-.section-header h2{ font-size:30px; margin-bottom:8px; }
-.section-header p{ color:var(--text2); font-size:14px; }
-
-.cards{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:18px; }
-
-.card{
-  background:var(--card); border:1px solid var(--border);
-  border-radius:var(--radius); padding:28px 24px;
-  cursor:pointer; transition:.3s; text-decoration:none; color:inherit;
-  display:flex; flex-direction:column; align-items:flex-start; gap:12px;
+.section-title{
+  text-align:center; font-size:28px; font-weight:700; margin-bottom:40px; color:var(--white);
 }
-.card:hover{
-  transform:translateY(-3px); border-color:rgba(255,255,255,.12);
-  box-shadow:0 10px 32px rgba(0,0,0,.3);
+.cards-row{
+  display:flex; gap:20px; max-width:1000px; margin:0 auto; flex-wrap:wrap; justify-content:center;
 }
-.card-icon{
-  width:50px; height:50px; border-radius:13px; font-size:26px;
-  display:flex; align-items:center; justify-content:center;
+.glass-card{
+  flex:1; min-width:220px; max-width:300px;
+  background:var(--glass); border:1px solid var(--glass-border);
+  border-radius:16px; padding:32px 24px; text-align:center;
+  cursor:pointer; transition:.35s; text-decoration:none; color:inherit;
+  backdrop-filter:blur(10px);
 }
-.card-icon.blue{ background:rgba(56,189,248,.12); }
-.card-icon.green{ background:rgba(52,211,153,.12); }
-.card-icon.amber{ background:rgba(245,158,11,.12); }
-.card-icon.red{ background:rgba(248,113,113,.12); }
-.card-icon.purple{ background:rgba(129,140,248,.12); }
-.card h3{ font-size:17px; }
+.glass-card:hover{
+  transform:translateY(-6px); border-color:rgba(201,162,78,.3);
+  box-shadow:0 8px 32px rgba(201,162,78,.1);
+}
+.glass-card .card-icon{ font-size:36px; margin-bottom:14px; }
+.glass-card h4{ font-size:16px; color:var(--gold); margin-bottom:8px; }
+.glass-card p{ font-size:12px; color:rgba(255,255,255,.45); line-height:1.6; }
 
-/* ========== MODAL ========== */
+/* ===== SCENE NARRATIVE ===== */
+.scene{
+  width:100%; min-height:100vh; position:relative; display:flex; align-items:center;
+  overflow:hidden;
+}
+.scene-bg{
+  position:absolute; inset:0; background:center/cover no-repeat;
+  z-index:0; transition:transform 1s ease-out;
+}
+.scene-overlay{
+  position:absolute; inset:0; z-index:1;
+  background:linear-gradient(180deg, rgba(14,15,18,.5) 0%, rgba(14,15,18,.3) 50%, rgba(14,15,18,.7) 100%);
+}
+.scene:nth-child(odd) .scene-content{ margin-left:8%; }
+.scene:nth-child(even) .scene-content{ margin-left:auto; margin-right:8%; text-align:right; }
+.scene-content{
+  position:relative; z-index:2; max-width:480px; padding:40px;
+}
+.scene-content h3{ font-size:32px; color:var(--gold); margin-bottom:12px; font-weight:900; }
+.scene-content p{
+  font-size:14px; color:rgba(255,255,255,.6); line-height:1.8; margin-bottom:20px;
+}
+.scene-content .btn-ghost{ display:inline-flex; }
+
+/* ===== FOOTER ===== */
+.footer{
+  padding:40px 60px; text-align:center; border-top:1px solid rgba(255,255,255,.06);
+  font-size:12px; color:rgba(255,255,255,.3); background:var(--dark);
+}
+
+/* ===== MODALS (keep existing) ===== */
 .modal-overlay{
-  position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:999;
+  position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:999;
   display:none; align-items:center; justify-content:center;
 }
 .modal-overlay.show{ display:flex; }
 .modal{
-  background:#fafafa; border:1px solid var(--border);
-  border-radius:var(--radius); padding:32px; max-width:520px; width:92%;
-  box-shadow:0 8px 40px rgba(0,0,0,.12); max-height:85vh; overflow-y:auto;
+  background:#1a1d24; border:1px solid rgba(255,255,255,.1);
+  border-radius:16px; padding:32px; max-width:520px; width:92%;
+  max-height:85vh; overflow-y:auto; color:var(--white);
 }
 .modal.wide{ max-width:800px; }
-.modal h3{ margin-bottom:12px; font-size:21px; }
-.modal .hint{ font-size:13px; color:var(--text2); margin-bottom:12px; }
+.modal h3{ margin-bottom:12px; font-size:20px; color:var(--gold); }
+.modal .hint{ font-size:12px; color:rgba(255,255,255,.4); margin-bottom:12px; }
 .modal input, .modal textarea{ width:100%; padding:10px 14px; border-radius:10px;
-  border:1px solid var(--border); background:#fafafa;
-  color:var(--text); outline:none; font-size:14px; margin:6px 0; resize:vertical; }
+  border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.04);
+  color:var(--white); outline:none; font-size:14px; margin:6px 0; resize:vertical; }
+.modal input:focus{ border-color:var(--gold); }
 .modal .btns{ display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
 .result-box{
-  margin-top:12px; padding:14px; background:#fafafa;
-  border-radius:var(--radius-sm); max-height:240px; overflow-y:auto;
-  display:none; font-size:13px; line-height:1.7;
-  border:1px solid var(--border);
+  margin-top:12px; padding:14px; background:rgba(255,255,255,.04);
+  border-radius:10px; max-height:240px; overflow-y:auto;
+  display:none; font-size:13px; line-height:1.7; border:1px solid rgba(255,255,255,.06);
 }
 .result-box.show{ display:block; }
-.result-box h4{ color:var(--accent); margin-bottom:6px; }
-
-.chat-box{ max-height:320px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin:12px 0; }
+.chat-box{ max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin:10px 0; }
 .chat-bubble{ padding:10px 14px; border-radius:12px; font-size:14px; line-height:1.6; max-width:88%; }
-.chat-bubble.user{ align-self:flex-end; background:linear-gradient(135deg,var(--accent2),#6366f1); color:#fff; }
-.chat-bubble.bot{ align-self:flex-start; background:#f8f8f8; border:1px solid var(--border); }
+.chat-bubble.user{ align-self:flex-end; background:linear-gradient(135deg,var(--gold),#A07B30); color:#fff; }
+.chat-bubble.bot{ align-self:flex-start; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); }
+
+/* ===== MAP MODAL ===== */
+#mapModal .modal-overlay{ background:rgba(0,0,0,.9); }
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeUp{ from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes float{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(10px)} }
 
 @media(max-width:768px){
-  .hero h1{ font-size:26px; }
-  .section{ padding:48px 16px; }
-  .cards{ grid-template-columns:1fr; }
+  .hero-content{ width:100%; padding:40px 24px; min-width:auto; }
+  .topnav-center{ display:none; }
+  .cards-row{ flex-direction:column; align-items:center; }
+  .scene-content{ margin:0 !important; padding:24px; }
 }
 </style>
 </head>
 <body>
 
-<!-- ==================== NAVBAR ==================== -->
-<nav class="navbar">
-  <div class="nav-left">
-    <img class="nav-logo" src="/logo.png" alt="灵山胜境">
-    <div class="brand-wrap">
-      <span class="brand">灵山胜境</span>
-      <span class="brand-sub">AI数字人导游</span>
-    </div>
+<!-- ===== TOP NAV ===== -->
+<nav class="topnav" id="topnav">
+  <div class="topnav-left">
+    <img src="/logo.png?v=20260616" alt="灵山胜境">
+    <span class="topnav-brand">灵山胜境</span>
   </div>
-  <div class="nav-center">
-    <button class="nav-link" onclick="openModal('spotModal')"><span class="nav-dot">◈</span>景点介绍</button>
-    <button class="nav-link" onclick="openModal('mapModal')"><span class="nav-dot">◎</span>景区地图</button>
-    <button class="nav-link" onclick="openModal('showModal')"><span class="nav-dot">♪</span>演出信息</button>
+  <div class="topnav-center">
+    <button class="nv-link" onclick="openModal('spotModal')">景点</button>
+    <button class="nv-link" onclick="window.open('/map','_blank')">路线</button>
+    <button class="nv-link" onclick="openModal('showModal')">演出</button>
   </div>
-  <div class="nav-right">
-    <a class="nav-link ai" href="http://localhost:5173" target="_blank"><span class="nav-dot white">◇</span>AI导览</a>
-    <a class="nav-link staff" href="/login" target="_blank"><span class="nav-dot">🔑</span>员工通道</a>
+  <div class="topnav-right">
+    <a class="nv-link gold" href="http://localhost:5173" target="_blank">✦ AI导览</a>
+    <a class="nv-link login" href="/login" target="_blank">登录</a>
   </div>
 </nav>
 
-<!-- ==================== HERO ==================== -->
+<!-- ===== HERO ===== -->
 <section class="hero" id="hero">
-  <div class="hero-bg-layer active" id="bgLayer0"></div>
-  <div class="hero-bg-layer" id="bgLayer1"></div>
-  <div class="hero-bg-overlay"></div>
-  <div class="hero-content">
-    <div class="hero-badge">太湖之滨 · 江南佛国</div>
-    <h1>灵山胜境</h1>
-    <p class="subtitle">一山一世界，一境一如来</p>
-    <p class="hero-desc">灵山胜境位于江苏无锡太湖之滨，是国家5A级旅游景区、世界佛教论坛永久会址。<br>园区以88米灵山大佛、千年古刹祥符禅寺、气势恢宏的灵山梵宫、再现佛祖诞生场景的九龙灌浴等为核心，<br>将深厚的佛教文化与江南山水园林融为一体。</p>
-    <div class="hero-btns">
-      <a class="btn btn-primary" href="http://localhost:5173" target="_blank">🤖 AI数字人导览</a>
-      <a class="btn btn-outline" href="#services">探索灵山 ↓</a>
-    </div>
+  <div class="hero-bg">
+    <div class="hero-bg-layer active" id="bgLayer0"></div>
+    <div class="hero-bg-layer" id="bgLayer1"></div>
   </div>
-  <div class="scroll-hint">↓ 向下滚动</div>
+  <div class="hero-shadow"></div>
+
   <button class="carousel-arrow left" onclick="prevSlide()">‹</button>
   <button class="carousel-arrow right" onclick="nextSlide()">›</button>
   <div class="carousel-dots" id="carouselDots"></div>
 
+  <div class="hero-content">
+    <div class="hero-badge">太湖之滨 · 江南佛国</div>
+    <h1>灵山胜境</h1>
+    <p class="sub">一山一世界，一境一如来</p>
+    <p class="desc">国家5A级景区 · 世界佛教文化体验目的地</p>
+    <div class="hero-btns">
+      <a class="btn btn-glow" href="http://localhost:5173" target="_blank">▶ 开始AI数字人导览</a>
+      <a class="btn btn-ghost" href="#features">探索灵山景点 →</a>
+    </div>
+  </div>
+
+  <div class="scroll-down">↓ 向下探索</div>
 </section>
 
-
-<!-- 智能对话 -->
-<div class="modal-overlay" id="chatModal">
-  <div class="modal">
-    <h3>💬 智能对话</h3>
-    <div class="chat-box" id="chatBox">
-      <div class="chat-bubble bot">您好！我是景区导览AI数字人<strong>小导</strong>，有什么可以帮您？</div>
+<!-- ===== AI FEATURE CARDS ===== -->
+<section class="features-section" id="features">
+  <div class="section-label">AI Smart Guide</div>
+  <div class="section-title">智能导览体验</div>
+  <div class="cards-row">
+    <div class="glass-card" onclick="openModal('chatModal')">
+      <div class="card-icon">🎧</div>
+      <h4>AI语音导览</h4>
+      <p>像本地讲解员一样<br>带你游览灵山胜境</p>
     </div>
-    <div style="display:flex;gap:8px">
-      <input id="chatInput" placeholder="输入您的问题，按 Enter 发送..."
-        onkeydown="if(event.key==='Enter')sendChat()">
-      <button class="btn btn-primary" style="padding:10px 20px" onclick="sendChat()">发送</button>
+    <div class="glass-card" onclick="window.open('/map','_blank')">
+      <div class="card-icon">🗺</div>
+      <h4>景区地图导航</h4>
+      <p>实时路线规划<br>与景点精确定位</p>
     </div>
-    <div class="btns">
-      <button class="btn btn-outline" onclick="closeModal('chatModal')">关闭</button>
-    </div>
-  </div>
-</div>
-
-<!-- 拍照识景 -->
-<div class="modal-overlay" id="photoModal">
-  <div class="modal">
-    <h3>📷 拍照识景</h3>
-    <p class="hint">上传景点照片，AI自动识别并生成详细讲解</p>
-    <input type="file" id="photoFile" accept="image/*" onchange="uploadPhoto(this)">
-    <div class="result-box" id="photoResult"></div>
-    <div class="btns">
-      <button class="btn btn-outline" onclick="closeModal('photoModal')">关闭</button>
+    <div class="glass-card" onclick="openModal('showModal')">
+      <div class="card-icon">🎭</div>
+      <h4>演出信息</h4>
+      <p>九龙灌浴 / 佛教演出<br>时间提醒与介绍</p>
     </div>
   </div>
-</div>
+</section>
 
-<!-- 个性推荐 -->
-<div class="modal-overlay" id="recModal">
-  <div class="modal">
-    <h3>🧭 个性推荐</h3>
-    <p class="hint">选择您的旅行偏好，AI为您定制专属游览路线</p>
-    <div id="recResult" style="margin:12px 0;line-height:1.7"></div>
-    <div class="btns">
-      <button class="btn btn-primary" onclick="getRec('家庭游')">👨‍👩‍👧 家庭游</button>
-      <button class="btn btn-outline" onclick="getRec('文化深度游')">🏛️ 文化深度游</button>
-      <button class="btn btn-outline" onclick="getRec('休闲游')">🌿 休闲游</button>
-      <button class="btn btn-outline" onclick="closeModal('recModal')">关闭</button>
-    </div>
+<!-- ===== SCENE 1: 灵山大佛 ===== -->
+<section class="scene" id="scene1">
+  <div class="scene-bg" style="background-image:url('/carousel/3.jpg')"></div>
+  <div class="scene-overlay"></div>
+  <div class="scene-content">
+    <h3>灵山大佛</h3>
+    <p>88米青铜释迦牟尼立像<br>面朝太湖，背倚灵山，慈颜微笑<br>广视众生，祈福圣地</p>
+    <span class="btn btn-ghost" onclick="openModal('spotModal')">了解更多 →</span>
   </div>
-</div>
+</section>
 
+<!-- ===== SCENE 2: 梵宫 ===== -->
+<section class="scene" id="scene2">
+  <div class="scene-bg" style="background-image:url('/carousel/2.png')"></div>
+  <div class="scene-overlay"></div>
+  <div class="scene-content">
+    <h3>灵山梵宫</h3>
+    <p>金色穹顶 · 佛教艺术殿堂<br>汇集木雕、壁画、琉璃等<br>世界级佛教艺术精品</p>
+    <span class="btn btn-ghost" onclick="openModal('spotModal')">了解更多 →</span>
+  </div>
+</section>
+
+<!-- ===== SCENE 3: 九龙灌浴 ===== -->
+<section class="scene" id="scene3">
+  <div class="scene-bg" style="background-image:url('/carousel/0.png')"></div>
+  <div class="scene-overlay"></div>
+  <div class="scene-content">
+    <h3>九龙灌浴</h3>
+    <p>再现佛祖诞生场景<br>九条青铜龙口喷圣水<br>莲花开合，天地祥瑞</p>
+    <span class="btn btn-ghost" onclick="openModal('spotModal')">了解更多 →</span>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  灵山胜境 · AI数字人导游 &copy; 2026 &nbsp;|&nbsp; 太湖之滨 · 江南佛国
+</footer>
+
+<!-- ===== MODALS ===== -->
 <!-- 景点介绍 -->
 <div class="modal-overlay" id="spotModal">
   <div class="modal">
     <h3>🏯 景点介绍</h3>
-    <p class="hint">搜索景区景点，获取详细信息</p>
     <input type="text" id="spotSearch" placeholder="输入景点名称搜索..." onkeydown="if(event.key==='Enter')searchSpot()">
     <div class="result-box" id="spotResult"></div>
     <div class="btns">
-      <button class="btn btn-primary" onclick="searchSpot()">🔍 搜索</button>
-      <button class="btn btn-outline" onclick="closeModal('spotModal')">关闭</button>
-    </div>
-  </div>
-</div>
-
-<!-- 景区地图 -->
-<div class="modal-overlay" id="mapModal">
-  <div class="modal wide">
-    <h3>🗺️ 景区地图</h3>
-    <p class="hint">高德地图 — 搜索景点、查看路线、周边设施</p>
-    <div style="width:100%;aspect-ratio:16/10;border-radius:12px;overflow:hidden;border:1px solid var(--border)">
-      <iframe id="mapFrame" style="width:100%;height:100%;border:none"
-        src="https://uri.amap.com/marker?position=120.15,30.28&name=西湖"></iframe>
-    </div>
-    <p style="font-size:11px;color:var(--text2);margin-top:8px">* 可在地图中搜索任意景区位置</p>
-    <div class="btns">
-      <button class="btn btn-outline" onclick="closeModal('mapModal')">关闭</button>
+      <button class="btn btn-glow" onclick="searchSpot()">🔍 搜索</button>
+      <button class="btn btn-ghost" onclick="closeModal('spotModal')">关闭</button>
     </div>
   </div>
 </div>
@@ -335,178 +361,149 @@ body{
 <div class="modal-overlay" id="showModal">
   <div class="modal">
     <h3>🎭 演出信息</h3>
-    <p class="hint">今日景区演出时间表</p>
     <div id="showResult" style="line-height:1.8;font-size:14px"></div>
     <div class="btns">
-      <button class="btn btn-primary" onclick="loadShows()">🔄 刷新</button>
-      <button class="btn btn-outline" onclick="closeModal('showModal')">关闭</button>
+      <button class="btn btn-glow" onclick="loadShows()">🔄 刷新</button>
+      <button class="btn btn-ghost" onclick="closeModal('showModal')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI对话 -->
+<div class="modal-overlay" id="chatModal">
+  <div class="modal">
+    <h3>🎧 AI语音导览</h3>
+    <div class="chat-box" id="chatBox">
+      <div class="chat-bubble bot">您好！我是灵山胜境AI数字人导游<strong>小导</strong>，有什么可以帮您？</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <input id="chatInput" placeholder="输入您的问题..." onkeydown="if(event.key==='Enter')sendChat()">
+      <button class="btn btn-glow" style="padding:10px 20px" onclick="sendChat()">发送</button>
+    </div>
+    <div class="btns">
+      <button class="btn btn-ghost" onclick="closeModal('chatModal')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 地图 -->
+<div class="modal-overlay" id="mapModal" onclick="if(event.target===this)closeModal('mapModal')">
+  <button onclick="closeModal('mapModal')" style="position:fixed;top:16px;right:16px;z-index:1001;width:36px;height:36px;border-radius:50%;border:none;background:rgba(0,0,0,.5);color:#fff;font-size:20px;cursor:pointer">✕</button>
+  <div id="mapViewer" style="width:100vw;height:100vh;cursor:grab;display:flex;align-items:center;justify-content:center">
+    <img src="/carousel/map.png" id="mapImg" style="max-width:100%;max-height:100%;object-fit:contain;transition:transform .2s;user-select:none" draggable="false" />
+    <div style="position:fixed;bottom:20px;right:20px;display:flex;gap:6px;z-index:1001">
+      <button onclick="zoomMap(1)" style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.4);color:#fff;font-size:20px;cursor:pointer;line-height:1">+</button>
+      <button onclick="zoomMap(-1)" style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.4);color:#fff;font-size:20px;cursor:pointer;line-height:1">−</button>
+      <button onclick="resetMap()" style="width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.4);color:#fff;font-size:16px;cursor:pointer">⟲</button>
     </div>
   </div>
 </div>
 
 <script>
-// ========== HERO CAROUSEL ==========
-const CAROUSEL_IMAGES = [
-  '/carousel/0.png',
-  '/carousel/1.jpg',
-  '/carousel/2.png',
-  '/carousel/3.jpg',
-];
-let currentSlide = 0, carouselTimer = null;
-const bgLayers = [document.getElementById('bgLayer0'), document.getElementById('bgLayer1')];
-let activeLayer = 0;
-
-(function initCarousel(){
-  bgLayers[0].style.backgroundImage = `url(${CAROUSEL_IMAGES[0]})`;
-  bgLayers[1].style.backgroundImage = `url(${CAROUSEL_IMAGES[1]})`;
-  const dotsEl = document.getElementById('carouselDots');
-  CAROUSEL_IMAGES.forEach((_, i) => {
-    const dot = document.createElement('button');
-    dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
-    dot.onclick = () => goToSlide(i);
-    dotsEl.appendChild(dot);
+// ===== HERO CAROUSEL =====
+const IMGS=['/carousel/0.png','/carousel/1.jpg','/carousel/2.png','/carousel/3.jpg'];
+let cur=0, timer, active=0;
+const layers=[document.getElementById('bgLayer0'),document.getElementById('bgLayer1')];
+(function init(){
+  layers[0].style.backgroundImage=`url(${IMGS[0]})`;
+  layers[1].style.backgroundImage=`url(${IMGS[1]})`;
+  const dots=document.getElementById('carouselDots');
+  IMGS.forEach((_,i)=>{
+    const d=document.createElement('button');
+    d.className='carousel-dot'+(i===0?' active':'');
+    d.onclick=()=>goTo(i);
+    dots.appendChild(d);
   });
-  startCarousel();
+  start();
 })();
-
-function startCarousel(){ carouselTimer = setInterval(nextSlide, 5000); }
-function stopCarousel(){ clearInterval(carouselTimer); }
-function resetCarousel(){ stopCarousel(); startCarousel(); }
-function nextSlide(){ goToSlide((currentSlide + 1) % CAROUSEL_IMAGES.length); resetCarousel(); }
-function prevSlide(){ goToSlide((currentSlide - 1 + CAROUSEL_IMAGES.length) % CAROUSEL_IMAGES.length); resetCarousel(); }
-
-function goToSlide(index){
-  if(index === currentSlide) return;
-  const nextLayer = 1 - activeLayer;
-  bgLayers[nextLayer].style.backgroundImage = `url(${CAROUSEL_IMAGES[index]})`;
-  bgLayers[activeLayer].classList.remove('active');
-  bgLayers[nextLayer].classList.add('active');
-  document.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === index));
-  activeLayer = nextLayer; currentSlide = index;
+function start(){timer=setInterval(()=>next(),5000)}
+function stop(){clearInterval(timer)}
+function next(){goTo((cur+1)%IMGS.length)}
+function prevSlide(){goTo((cur-1+IMGS.length)%IMGS.length);reset()}
+function nextSlide(){next();reset()}
+function reset(){stop();start()}
+function goTo(i){
+  if(i===cur)return;
+  const n=1-active;
+  layers[n].style.backgroundImage=`url(${IMGS[i]})`;
+  layers[active].classList.remove('active');
+  layers[n].classList.add('active');
+  document.querySelectorAll('.carousel-dot').forEach((d,j)=>d.classList.toggle('active',j===i));
+  active=n; cur=i;
 }
+document.getElementById('hero').addEventListener('mouseenter',stop);
+document.getElementById('hero').addEventListener('mouseleave',start);
 
-document.getElementById('hero').addEventListener('mouseenter', stopCarousel);
-document.getElementById('hero').addEventListener('mouseleave', startCarousel);
-
-// ========== MODAL ==========
-function openModal(id){ document.getElementById(id).classList.add('show'); }
-function closeModal(id){ document.getElementById(id).classList.remove('show'); }
-document.querySelectorAll('.modal-overlay').forEach(m=>{
-  m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('show'); });
+// ===== NAV SCROLL =====
+window.addEventListener('scroll',()=>{
+  document.getElementById('topnav').classList.toggle('scrolled',window.scrollY>100);
 });
 
-// ========== CHAT ==========
-const sid = 'web_'+Date.now().toString(36);
+// ===== MODALS =====
+function openModal(id){document.getElementById(id).classList.add('show')}
+function closeModal(id){document.getElementById(id).classList.remove('show')}
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')});
+});
+
+// ===== CHAT =====
+const sid='web_'+Date.now().toString(36);
 async function sendChat(){
-  const inp = document.getElementById('chatInput');
-  const text = inp.value.trim(); if(!text) return;
-  inp.value = '';
-  addBubble('user', text);
+  const inp=document.getElementById('chatInput'),text=inp.value.trim();
+  if(!text)return; inp.value='';
+  addBubble('user',text);
   try{
-    const r = await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,session_id:sid})});
-    const reader = r.body.getReader(); const dec = new TextDecoder();
-    let full='', buf='', el=addBubble('bot','');
+    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,session_id:sid})});
+    const reader=r.body.getReader(),dec=new TextDecoder();
+    let full='',buf='',el=addBubble('bot','');
     while(true){
-      const {done,value}=await reader.read(); if(done) break;
+      const {done,value}=await reader.read(); if(done)break;
       buf+=dec.decode(value,{stream:true});
-      const lines=buf.split('\n'); buf=lines.pop()||'';
-      for(const l of lines){
-        if(l.startsWith('event: token')){ try{ full+=JSON.parse(l.slice(13)).text; el.textContent=full; }catch(e){} }
-      }
+      for(const l of buf.split('\n')){buf='';if(l.startsWith('event: token')){try{full+=JSON.parse(l.slice(13)).text;el.textContent=full}catch{}}}
     }
-    if(!full) el.textContent='（无回复）';
-  }catch(e){ addBubble('bot','⚠️ 连接失败，请确认服务已启动'); }
+    if(!full)el.textContent='（无回复）';
+  }catch(e){addBubble('bot','⚠️ 连接失败')}
 }
 function addBubble(role,text){
   const d=document.createElement('div');
   d.className='chat-bubble '+role; d.textContent=text;
   document.getElementById('chatBox').appendChild(d);
-  const box=document.getElementById('chatBox'); box.scrollTop=box.scrollHeight;
+  document.getElementById('chatBox').scrollTop=document.getElementById('chatBox').scrollHeight;
   return d;
 }
 
-// ========== PHOTO ==========
-async function uploadPhoto(input){
-  const f=input.files[0]; if(!f) return;
-  const reader=new FileReader();
-  reader.onload=async e=>{
-    const b64=e.target.result.split(',')[1];
-    const box=document.getElementById('photoResult');
-    box.classList.add('show'); box.innerHTML='<p>🔍 识别中...</p>';
-    try{
-      const r=await fetch('/api/photo-recognize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:b64})});
-      const d=await r.json();
-      if(d.error){ box.innerHTML=`<p style="color:#f87171">❌ ${d.error}</p>`; }
-      else{ box.innerHTML=`<h4>📍 ${d.name||'识别结果'}</h4><p>${d.description||''}</p>`; }
-    }catch(e){ box.innerHTML='<p style="color:#f87171">识别失败</p>'; }
-  };
-  reader.readAsDataURL(f);
-}
-
-// ========== RECOMMEND ==========
-async function getRec(tag){
-  const el=document.getElementById('recResult');
-  el.innerHTML='<p>⏳ 生成中...</p>';
-  try{
-    const r=await fetch('/api/recommend?tags='+encodeURIComponent(tag));
-    const d=await r.json();
-    if(d.routes?.length){
-      const rt=d.routes[0];
-      el.innerHTML=`<h4 style="color:var(--accent)">🎯 ${rt.label}</h4><p style="margin-top:6px">${rt.focus}</p><p style="margin-top:6px;color:var(--text2)">推荐景点：${rt.spots.join('、')}</p>`;
-    }
-  }catch(e){ el.innerHTML='<p style="color:#f87171">获取失败</p>'; }
-}
-
-// ========== SPOT SEARCH ==========
+// ===== SPOT SEARCH =====
 async function searchSpot(){
-  const q = document.getElementById('spotSearch').value.trim();
-  const box = document.getElementById('spotResult');
-  box.classList.add('show');
-  if(!q){ box.innerHTML='<p style="color:var(--text2)">请输入景点名称</p>'; return; }
+  const q=document.getElementById('spotSearch').value.trim(),box=document.getElementById('spotResult');
+  box.classList.add('show'); if(!q){box.innerHTML='<p>请输入景点名称</p>';return}
   box.innerHTML='<p>🔍 搜索中...</p>';
   try{
-    // Use the nearby-spots API or RAG query
-    const r = await fetch(`/api/rag/query?q=${encodeURIComponent(q)}`);
-    if(!r.ok) throw new Error('查询失败');
-    const d = await r.json();
-    if(d.answer){
-      box.innerHTML=`<h4>🏯 ${q}</h4><p style="line-height:1.8;margin-top:8px">${d.answer}</p>`;
-      if(d.sources?.length) box.innerHTML+=`<p style="font-size:11px;color:var(--text2);margin-top:8px">📚 ${d.sources.join(', ')}</p>`;
-    }else{
-      box.innerHTML='<p style="color:var(--text2)">未找到相关信息，请尝试其他关键词</p>';
-    }
-  }catch(e){
-    box.innerHTML=`<p style="color:var(--text2)">查询失败 — 请确认后端服务已启动</p>`;
-  }
+    const r=await fetch(`/api/rag/query?q=${encodeURIComponent(q)}`);
+    const d=await r.json();
+    box.innerHTML=d.answer?`<h4>🏯 ${q}</h4><p style="line-height:1.8;margin-top:8px">${d.answer}</p>`:'<p>未找到相关信息</p>';
+  }catch(e){box.innerHTML='<p>查询失败</p>'}
 }
 
-// ========== SHOWS ==========
+// ===== SHOWS =====
 function loadShows(){
-  const el = document.getElementById('showResult');
-  const shows = [
-    {time:'09:30', name:'开园迎宾表演', location:'景区入口广场', duration:'15分钟'},
-    {time:'10:30', name:'民俗文化展演', location:'古戏台', duration:'30分钟'},
-    {time:'11:30', name:'传统技艺展示', location:'非遗工坊', duration:'25分钟'},
-    {time:'14:00', name:'大型实景演出', location:'水景舞台', duration:'45分钟'},
-    {time:'15:30', name:'国风巡游', location:'主街 → 观景台', duration:'30分钟'},
-    {time:'16:30', name:'民乐演奏', location:'湖心亭', duration:'20分钟'},
-    {time:'19:00', name:'灯光秀', location:'全景广场', duration:'20分钟'},
-    {time:'20:00', name:'夜游讲解团', location:'游客中心集合', duration:'40分钟'},
-  ];
-  el.innerHTML = shows.map(s=>
-    `<div style="padding:10px 0;border-bottom:1px solid var(--border)">
-      <span style="color:var(--amber);font-weight:600">${s.time}</span>
-      <strong style="margin-left:10px">${s.name}</strong>
-      <div style="font-size:12px;color:var(--text2)">📍 ${s.location} · ⏱ ${s.duration}</div>
-    </div>`
-  ).join('');
+  const shows=[{t:'09:30',n:'开园迎宾表演',l:'景区入口广场',d:'15分钟'},{t:'10:30',n:'民俗文化展演',l:'古戏台',d:'30分钟'},{t:'11:30',n:'传统技艺展示',l:'非遗工坊',d:'25分钟'},{t:'14:00',n:'大型实景演出',l:'水景舞台',d:'45分钟'},{t:'15:30',n:'国风巡游',l:'主街→观景台',d:'30分钟'},{t:'16:30',n:'民乐演奏',l:'湖心亭',d:'20分钟'},{t:'19:00',n:'灯光秀',l:'全景广场',d:'20分钟'},{t:'20:00',n:'夜游讲解团',l:'游客中心集合',d:'40分钟'}];
+  document.getElementById('showResult').innerHTML=shows.map(s=>`<div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)"><span style="color:var(--gold);font-weight:600">${s.t}</span><strong style="margin-left:10px">${s.n}</strong><div style="font-size:12px;color:rgba(255,255,255,.4)">📍 ${s.l} · ⏱ ${s.d}</div></div>`).join('');
 }
-// Auto-load on open
-document.getElementById('showModal').addEventListener('click', function(e){
-  if(e.target===this && this.classList.contains('show')) loadShows();
-});
+document.getElementById('showModal').addEventListener('click',function(e){if(e.target===this&&this.classList.contains('show'))loadShows()});
 
+// ===== MAP =====
+let mapScale=1,mapPanX=0,mapPanY=0;
+function zoomMap(d){mapScale=Math.max(.3,Math.min(5,mapScale+d*.3));applyMap()}
+function resetMap(){mapScale=1;mapPanX=0;mapPanY=0;applyMap()}
+function applyMap(){const img=document.getElementById('mapImg');if(img)img.style.transform=`scale(${mapScale}) translate(${mapPanX}px,${mapPanY}px)`}
+(function initMap(){
+  const v=document.getElementById('mapViewer'); if(!v)return;
+  let dragging=false,sx=0,sy=0;
+  v.addEventListener('wheel',e=>{e.preventDefault();zoomMap(e.deltaY<0?1:-1)});
+  v.addEventListener('mousedown',e=>{dragging=true;sx=e.clientX-mapPanX;sy=e.clientY-mapPanY;v.style.cursor='grabbing'});
+  window.addEventListener('mousemove',e=>{if(!dragging)return;mapPanX=(e.clientX-sx)/mapScale;mapPanY=(e.clientY-sy)/mapScale;applyMap()});
+  window.addEventListener('mouseup',()=>{dragging=false;if(v)v.style.cursor='grab'});
+})();
 </script>
-
 </body>
 </html>
