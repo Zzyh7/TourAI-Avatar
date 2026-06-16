@@ -8,19 +8,15 @@ import {
   type DigitalHumanConfig,
 } from '../services/api';
 
-// 豆包 TTS (火山引擎) 中文音色 — 已实测可用
+// Edge-TTS (微软免费) 中文音色
 const VOICE_OPTIONS = [
-  { value: 'BV700_streaming', label: '灿灿 2.0（女，活泼）' },
-  { value: 'BV701_streaming', label: '灿灿 2.0（男，青春）' },
-  { value: 'BV001_streaming', label: '甜美女生（女，温柔）' },
-  { value: 'BV002_streaming', label: '知性女生（女，知性）' },
-  { value: 'BV004_streaming', label: '阳光男声（男，清爽）' },
-  { value: 'BV005_streaming', label: '温柔女声（女，温和）' },
-  { value: 'BV411_streaming', label: '小帅解说（男，影视）' },
-  { value: 'BV412_streaming', label: '小美解说（女，影视）' },
-  { value: 'zh_male_M392_conversation_wvae_bigtts', label: '对话男声（男，自然）' },
-  { value: 'zh_female_wanwanxiaohe_moon_bigtts', label: '湾湾小何（女，特色）' },
-  { value: 'zh_male_shaonianzixin_uranus_bigtts', label: '少年自信（男，收藏）' },
+  { value: 'zh-CN-XiaoxiaoNeural', label: '晓晓（女，活泼）' },
+  { value: 'zh-CN-YunxiNeural', label: '云希（男，青春）' },
+  { value: 'zh-CN-XiaoyiNeural', label: '晓伊（女，温柔）' },
+  { value: 'zh-CN-YunjianNeural', label: '云健（男，知性）' },
+  { value: 'zh-CN-YunyangNeural', label: '云扬（男，新闻）' },
+  { value: 'zh-CN-XiaochenNeural', label: '晓晨（女，甜美）' },
+  { value: 'zh-CN-XiaohanNeural', label: '晓涵（女，自然）' },
 ];
 
 const LIVE2D_OPTIONS = [
@@ -39,7 +35,7 @@ export default function Config() {
 
   // 表单
   const [live2dModel, setLive2dModel] = useState('default');
-  const [voiceName, setVoiceName] = useState('BV700_streaming');
+  const [voiceName, setVoiceName] = useState('zh-CN-XiaoxiaoNeural');
   const [voiceSpeed, setVoiceSpeed] = useState(1.0);
 
   useEffect(() => {
@@ -112,7 +108,7 @@ export default function Config() {
 
         <h3 style={{ ...styles.sectionTitle, marginTop: 28 }}>🔊 语音合成 (TTS)</h3>
         <div style={styles.formGroup}>
-          <label style={styles.label}>豆包 TTS 音色</label>
+          <label style={styles.label}>Edge-TTS 音色</label>
           <select
             value={voiceName}
             onChange={e => setVoiceName(e.target.value)}
@@ -122,7 +118,7 @@ export default function Config() {
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>
-          <span style={styles.hint}>选择 TTS 语音合成的发音人</span>
+          <span style={styles.hint}>选择 TTS 语音合成的发音人（微软 Edge 免费引擎）</span>
         </div>
 
         <div style={styles.formGroup}>

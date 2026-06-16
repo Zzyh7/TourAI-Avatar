@@ -37,7 +37,7 @@ from config import CONFIG
 from database import init_db, get_db, SessionLocal
 from models.schema import ScenicSpot, Session as SessionModel, Conversation
 from agents.planner import GuideAgent
-from services.tts.doubao_tts import doubao_tts_service as tts_service
+from services.tts.edge_tts import tts_service
 
 # 流式输出过滤：即使 prompt 禁止了，LLM 偶尔还是会生成 markdown/emoji/废话
 _OUTPUT_MD_CLEANUP = re.compile(
@@ -938,18 +938,35 @@ async def speech_to_text(audio: UploadFile = File(...), mime_type: str = Form(de
 
 # ==================== 健康检查 ====================
 
+# Doubao → Edge-TTS 音色兼容映射
+_DOUBAO_TO_EDGE = {
+    "BV700_streaming": "zh-CN-XiaoxiaoNeural",
+    "BV701_streaming": "zh-CN-YunxiNeural",
+    "BV001_streaming": "zh-CN-XiaoxiaoNeural",
+    "BV002_streaming": "zh-CN-XiaoyiNeural",
+    "BV004_streaming": "zh-CN-YunyangNeural",
+    "BV005_streaming": "zh-CN-XiaoyiNeural",
+    "BV411_streaming": "zh-CN-YunjianNeural",
+    "BV412_streaming": "zh-CN-XiaoxiaoNeural",
+    "zh_male_shaonianzixin_uranus_bigtts": "zh-CN-YunxiNeural",
+}
+
+
 def _get_db_voice() -> str:
-    """从数据库读取管理后台配置的音色，失败则用默认值"""
+    """从数据库读取管理后台配置的音色，自动适配 Edge-TTS"""
     try:
         from models.schema import DigitalHumanConfig
         db = SessionLocal()
         config = db.query(DigitalHumanConfig).first()
         db.close()
         if config and config.voice_name:
-            return config.voice_name
+            v = config.voice_name
+            if v.startswith("zh-CN-"):
+                return v  # 已是 Edge-TTS 格式
+            return _DOUBAO_TO_EDGE.get(v, CONFIG.tts_voice)
     except Exception:
         pass
-    return CONFIG.doubao_tts_voice  # 默认 BV700_streaming
+    return CONFIG.tts_voice
 
 class TTSRequest(BaseModel):
     text: str

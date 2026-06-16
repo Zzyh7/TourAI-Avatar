@@ -55,12 +55,14 @@ class Config:
     )
     doubao_tts_endpoint: str = "https://openspeech.bytedance.com/api/v1/tts"
     doubao_tts_voice: str = field(
-        default_factory=lambda: os.getenv("DOUBAO_TTS_VOICE", "zh_male_shaonianzixin_uranus_bigtts")
-    )  # 少年自信 (收藏音色)
-    doubao_tts_speed_ratio: float = 1.0            # 语速 0.5~2.0
+        default_factory=lambda: os.getenv("DOUBAO_TTS_VOICE", "zh-CN-XiaoxiaoNeural")
+    )
+    doubao_tts_speed_ratio: float = 1.0
 
-    # 向后兼容：Edge-TTS 配置（切换时保留）
-    tts_voice: str = "zh-CN-XiaoxiaoNeural"
+    # Edge-TTS 配置（当前使用）
+    tts_voice: str = field(
+        default_factory=lambda: os.getenv("TTS_VOICE", "zh-CN-XiaoxiaoNeural")
+    )
     tts_rate: str = "+10%"
     tts_pitch: str = "+0Hz"
 
