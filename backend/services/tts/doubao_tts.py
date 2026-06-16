@@ -47,6 +47,7 @@ DOUBAO_VOICES = {
     "BV412_streaming": "小美解说 (女)",
     "zh_male_M392_conversation_wvae_bigtts": "对话男声",
     "zh_female_wanwanxiaohe_moon_bigtts": "湾湾小何 (女)",
+    "zh_male_shaonianzixin_uranus_bigtts": "少年自信 (收藏音色)",
 }
 
 # 与 Edge-TTS 音色的兼容映射

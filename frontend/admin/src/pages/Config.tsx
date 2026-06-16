@@ -20,6 +20,7 @@ const VOICE_OPTIONS = [
   { value: 'BV412_streaming', label: '小美解说（女，影视）' },
   { value: 'zh_male_M392_conversation_wvae_bigtts', label: '对话男声（男，自然）' },
   { value: 'zh_female_wanwanxiaohe_moon_bigtts', label: '湾湾小何（女，特色）' },
+  { value: 'zh_male_shaonianzixin_uranus_bigtts', label: '少年自信（男，收藏）' },
 ];
 
 const LIVE2D_OPTIONS = [

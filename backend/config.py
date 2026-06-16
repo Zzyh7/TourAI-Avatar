@@ -54,7 +54,9 @@ class Config:
         default_factory=lambda: os.getenv("DOUBAO_TTS_APPID", "default")
     )
     doubao_tts_endpoint: str = "https://openspeech.bytedance.com/api/v1/tts"
-    doubao_tts_voice: str = "BV700_streaming"      # 默认灿灿 2.0 女声
+    doubao_tts_voice: str = field(
+        default_factory=lambda: os.getenv("DOUBAO_TTS_VOICE", "zh_male_shaonianzixin_uranus_bigtts")
+    )  # 少年自信 (收藏音色)
     doubao_tts_speed_ratio: float = 1.0            # 语速 0.5~2.0
 
     # 向后兼容：Edge-TTS 配置（切换时保留）
