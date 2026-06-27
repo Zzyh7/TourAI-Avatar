@@ -86,11 +86,11 @@ export default function App() {
       {/* ===== TOP NAV ===== */}
       <div style={s.topNav}>
         <div style={{display:'flex',alignItems:'center',gap:8}}>
-          <img src="http://localhost:8000/logo.png?v=20260616" alt="灵山" style={{height:36}} />
+          <img src="/logo.png?v=20260616" alt="灵山" style={{height:36}} />
           <span style={{fontSize:13,fontWeight:600,color:'#C9A24E',letterSpacing:1}}>AI景区导览系统</span>
         </div>
         <div style={{display:'flex',gap:8,alignItems:'center'}}>
-          <a href="http://localhost:8000" style={s.backLink}>← 首页</a>
+          <a href="http://10.40.0.157:8000" style={s.backLink}>← 首页</a>
         </div>
       </div>
 
@@ -103,14 +103,14 @@ export default function App() {
             <div key={i} style={s.recCard} onClick={()=>{
               const text=`介绍一下${r.title}`;
               // 调 TourAI 对话 API
-              fetch('http://localhost:8000/api/chat', {
+              fetch('http://10.40.0.157:8000/api/chat', {
                 method:'POST', headers:{'Content-Type':'application/json'},
                 body: JSON.stringify({text, session_id:'rec_'+Date.now()})
               });
               // 通过 postMessage 发送到 Live2D iframe
               const iframe = document.querySelector('iframe') as HTMLIFrameElement;
               if (iframe?.contentWindow) {
-                iframe.contentWindow.postMessage({type:'chat',text}, 'http://localhost:3000');
+                iframe.contentWindow.postMessage({type:'chat',text}, 'http://10.40.0.157:3000');
               }
             }}>
               <div style={{fontSize:24}}>{r.icon}</div>
@@ -127,9 +127,9 @@ export default function App() {
             <div key={tag} style={{...s.recCard,padding:'8px 12px'}}
               onClick={()=>{
                 const text=`我对${tag.replace(/[^一-龥]/g,'')}感兴趣，请推荐适合的路线和讲解重点`;
-                fetch('http://localhost:8000/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,session_id:'pref_'+Date.now()})});
+                fetch('http://10.40.0.157:8000/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,session_id:'pref_'+Date.now()})});
                 const iframe=document.querySelector('iframe') as HTMLIFrameElement;
-                if(iframe?.contentWindow){iframe.contentWindow.postMessage({type:'chat',text},'http://localhost:3000')}
+                if(iframe?.contentWindow){iframe.contentWindow.postMessage({type:'chat',text},'http://10.40.0.157:3000')}
               }}>
               <span style={{fontSize:13,color:'rgba(255,255,255,.7)'}}>{tag}</span>
             </div>
@@ -147,7 +147,7 @@ export default function App() {
 
         {/* ===== CENTER: LIVE2D CHARACTER ===== */}
         <div style={s.centerPanel}>
-          <iframe src="http://localhost:3000/sentio" allow="camera;microphone;autoplay"
+          <iframe src="http://10.40.0.157:3000/sentio" allow="camera;microphone;autoplay"
             style={{width:'100%',height:'100%',border:'none'}} />
         </div>
       </div>

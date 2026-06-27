@@ -28,7 +28,7 @@ from datetime import datetime
 
 from fastapi import FastAPI, Depends, Request, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, JSONResponse, FileResponse, Response
+from fastapi.responses import RedirectResponse,  StreamingResponse, JSONResponse, FileResponse, Response
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
@@ -236,6 +236,20 @@ async def public_config():
     except Exception:
         pass
     return {"voice": "BV700_streaming", "character": "Haru"}
+
+
+# 移动端代理跳转 —— 通过8000端口访问前端服务
+@app.get("/visitor")
+async def redirect_visitor():
+    return RedirectResponse(url="http://10.40.0.157:5173")
+
+@app.get("/guide")
+async def serve_guide():
+    return FileResponse("../web/guide.html")
+
+@app.get("/admin-panel")
+async def redirect_admin():
+    return RedirectResponse(url="http://10.40.0.157:5174")
 
 @app.get("/")
 async def serve_root():

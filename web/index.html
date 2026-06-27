@@ -230,10 +230,51 @@ body{
 @keyframes float{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(10px)} }
 
 @media(max-width:768px){
-  .hero-content{ width:100%; padding:40px 24px; min-width:auto; }
+  /* Top nav */
+  .topnav{ padding:8px 16px; }
+  .topnav-brand{ font-size:13px; }
+  .topnav-left img{ height:30px; }
   .topnav-center{ display:none; }
-  .cards-row{ flex-direction:column; align-items:center; }
-  .scene-content{ margin:0 !important; padding:24px; }
+  .topnav-right{gap:4px;}
+  .nv-link{font-size:11px;padding:5px 10px;}
+  .nv-link.gold{font-size:11px;padding:5px 10px;}
+
+  /* Hero */
+  .hero{min-height:90vh;}
+  .hero-content{width:100%;padding:60px 20px 40px;min-width:auto;text-align:center;}
+  .hero h1{font-size:36px;letter-spacing:2px;}
+  .hero .sub{font-size:15px;}
+  .hero .desc{font-size:12px;}
+  .hero-btns{justify-content:center;}
+  .btn{padding:12px 22px;font-size:13px;}
+  .carousel-arrow{width:32px;height:32px;font-size:14px;}
+  .carousel-arrow.left{left:8px;}.carousel-arrow.right{right:8px;}
+  .carousel-dots{bottom:24px;}
+
+  /* Features */
+  .features-section{padding:48px 20px;}
+  .section-title{font-size:22px;}
+  .cards-row{flex-direction:column;align-items:center;}
+  .glass-card{max-width:100%;min-width:auto;}
+
+  /* Scenes */
+  .scene{min-height:60vh;}
+  .scene-content{margin:0 !important;padding:24px 20px;max-width:100%;text-align:left !important;}
+  .scene-content h3{font-size:24px;}
+  .scene-content p{font-size:13px;}
+  .scene:nth-child(even) .scene-content{text-align:left !important;}
+
+  /* Footer */
+  .footer{padding:24px 16px;font-size:11px;}
+
+  /* Modals */
+  .modal{padding:20px;max-width:95vw;}
+  .modal h3{font-size:17px;}
+  .modal input,.modal textarea{font-size:13px;}
+  .chat-bubble{font-size:13px;}
+
+  /* Map modal */
+  #mapModal .modal-overlay{background:rgba(0,0,0,.9);}
 }
 </style>
 </head>
@@ -251,7 +292,7 @@ body{
     <button class="nv-link" onclick="openModal('showModal')">演出</button>
   </div>
   <div class="topnav-right">
-    <a class="nv-link gold" href="http://localhost:5173" target="_blank">✦ AI导览</a>
+    <a class="nv-link gold" href="http://10.40.0.157:3000/sentio" target="_blank">✦ AI导览</a>
     <a class="nv-link login" href="/login" target="_blank">登录</a>
   </div>
 </nav>
@@ -274,7 +315,7 @@ body{
     <p class="sub">一山一世界，一境一如来</p>
     <p class="desc">国家5A级景区 · 世界佛教文化体验目的地</p>
     <div class="hero-btns">
-      <a class="btn btn-glow" href="http://localhost:5173" target="_blank">▶ 开始AI数字人导览</a>
+      <a class="btn btn-glow" href="http://10.40.0.157:3000/sentio" target="_blank">▶ 开始AI数字人导览</a>
       <a class="btn btn-ghost" href="#features">探索灵山景点 →</a>
     </div>
   </div>

@@ -1,0 +1,9 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>WebGL Test</title></head><body>
+<div id="result"></div><script>
+var d=document.getElementById('result');
+var c=document.createElement('canvas');
+var gl2=c.getContext('webgl2');
+var gl1=c.getContext('webgl')||c.getContext('experimental-webgl');
+d.innerHTML='WebGL2: '+(gl2?'YES':'NO')+'<br>WebGL1: '+(gl1?'YES':'NO')+
+'<br>Browser: '+navigator.userAgent.substring(0,60);
+</script></body></html>
