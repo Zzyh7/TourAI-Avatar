@@ -308,21 +308,23 @@ async def _log_conversation(
     satisfaction = _detect_satisfaction(user_text)
 
     # ---- 2. 情感分析 ----
-    sentiment = "中性"
+    sentiment = "正面"  # 默认为正面，只有明确不满才标负面
     try:
         llm = CONFIG.create_llm()
         analyzer = SentimentAnalyzer(llm)
         sentiment = await asyncio.wait_for(analyzer.analyze(user_text), timeout=3.0)
     except (asyncio.TimeoutError, Exception):
         # 超时或失败时使用简单的关键词判断作为降级
+        # 负面词必须明显多于正面词才判为负面（默认倾向满意）
         positive_words = ["好", "美", "赞", "喜欢", "开心", "棒", "不错", "谢谢", "厉害", "方便"]
         negative_words = ["差", "烂", "失望", "生气", "垃圾", "坑", "骗", "糟糕", "烦", "慢"]
         pos_count = sum(1 for w in positive_words if w in user_text)
         neg_count = sum(1 for w in negative_words if w in user_text)
-        if pos_count > neg_count:
-            sentiment = "正面"
-        elif neg_count > pos_count:
+        if neg_count >= 2 and neg_count > pos_count * 2:
+            # 负面词至少2个，且数量是正面词的2倍以上，才判负面
             sentiment = "负面"
+        elif pos_count > 0:
+            sentiment = "正面"
 
     # 如果有显式满意度信号，覆盖情感分析结果
     if satisfaction == "satisfied":
