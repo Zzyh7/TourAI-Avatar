@@ -144,7 +144,7 @@ app = FastAPI(
 # CORS — 允许前端跨域
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -250,6 +250,10 @@ async def serve_guide():
 @app.get("/admin-panel")
 async def redirect_admin():
     return RedirectResponse(url="http://10.40.0.157:5174")
+
+@app.get("/debug")
+async def serve_debug():
+    return FileResponse("../web/debug.html")
 
 @app.get("/")
 async def serve_root():
@@ -1008,32 +1012,19 @@ class TTSRequest(BaseModel):
 
 @app.post("/api/tts")
 async def text_to_speech(req: TTSRequest):
-    """豆包 TTS — 文本转语音，返回 MP3 音频"""
-    import base64 as b64, httpx as _httpx, uuid as _uuid
+    """豆包 TTS (Seed-TTS-2.0 WebSocket) — 文本转语音，返回 MP3 音频"""
+    import base64 as b64
+    from services.tts.doubao_tts import doubao_tts_service
     try:
         text = req.text.strip()
         if not text:
             return JSONResponse({"error": "empty text"}, status_code=400)
         voice = req.voice or _get_db_voice()
-        payload = {
-            "app": {"appid": CONFIG.doubao_tts_appid, "token": CONFIG.doubao_tts_api_key, "cluster": "volcano_tts"},
-            "user": {"uid": "live2d_user"},
-            "audio": {"voice_type": voice, "encoding": "mp3"},
-            "request": {"reqid": _uuid.uuid4().hex, "text": text, "text_type": "plain", "operation": "query", "with_frontend": 1},
-        }
-        headers = {"Authorization": f"Bearer;{CONFIG.doubao_tts_api_key}", "Content-Type": "application/json"}
-        async with _httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(CONFIG.doubao_tts_endpoint, json=payload, headers=headers)
-            if resp.status_code != 200:
-                return JSONResponse({"error": f"Doubao HTTP {resp.status_code}: {resp.text[:200]}"}, status_code=500)
-            result = resp.json()
-            if result.get("code") != 3000:
-                return JSONResponse({"error": result.get("message", str(result))}, status_code=500)
-            audio_b64 = result.get("data", "")
-            if not audio_b64:
-                return JSONResponse({"error": "empty audio"}, status_code=500)
-            audio_bytes = b64.b64decode(audio_b64)
-            return Response(content=audio_bytes, media_type="audio/mp3")
+        audio_b64 = await doubao_tts_service.synthesize(text, voice)
+        if not audio_b64:
+            return JSONResponse({"error": "empty audio"}, status_code=500)
+        audio_bytes = b64.b64decode(audio_b64)
+        return Response(content=audio_bytes, media_type="audio/mp3")
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 

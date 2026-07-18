@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Live2D Debug</title>
+<style>
+  body{margin:20px;font-family:monospace;background:#111;color:#0f0}
+  iframe{width:300px;height:400px;border:2px solid #0f0}
+  button{padding:10px 20px;margin:5px;cursor:pointer}
+  #log{background:#000;padding:10px;margin:10px 0;max-height:300px;overflow-y:auto}
+</style></head><body>
+<h1>Live2D Debug Page</h1>
+<button onclick="sendChat()">发送聊天消息</button>
+<button onclick="sendConfig()">发送音色配置</button>
+<button onclick="clearLog()">清日志</button>
+<div id="log"></div>
+<iframe id="dh" src="http://guide.ezcompany.cn:3000/sentio" allow="camera;microphone;autoplay"></iframe>
+
+<script>
+const log = (msg) => {
+  const el = document.getElementById('log');
+  el.innerHTML += `[${new Date().toLocaleTimeString()}] ${msg}<br>`;
+  el.scrollTop = el.scrollHeight;
+  console.log('[DEBUG]', msg);
+};
+
+// 监听 iframe 的消息回复
+window.addEventListener('message', (e) => {
+  log(`收到 iframe 消息: ${JSON.stringify(e.data)}`);
+});
+
+document.getElementById('dh').addEventListener('load', () => {
+  log('iframe 加载完成');
+  // 延迟等 React 挂载
+  setTimeout(() => {
+    log('发送测试配置...');
+    fetch('/api/public-config').then(r=>r.json()).then(cfg => {
+      log(`配置: voice=${cfg.voice}`);
+      document.getElementById('dh').contentWindow.postMessage(
+        {type:'config', voice:cfg.voice, character:cfg.character}, '*'
+      );
+    });
+  }, 2000);
+});
+
+function sendChat() {
+  const iframe = document.getElementById('dh');
+  if (iframe?.contentWindow) {
+    log('发送 chat 消息...');
+    iframe.contentWindow.postMessage(
+      {type:'chat', text:'介绍一下灵山大佛'}, '*'
+    );
+  } else {
+    log('ERROR: iframe 未就绪');
+  }
+}
+
+function sendConfig() {
+  fetch('/api/public-config').then(r=>r.json()).then(cfg => {
+    log(`发送 config: ${JSON.stringify(cfg)}`);
+    document.getElementById('dh').contentWindow.postMessage(
+      {type:'config', voice:cfg.voice, character:cfg.character}, '*'
+    );
+  });
+}
+
+function clearLog() { document.getElementById('log').innerHTML = ''; }
+</script>
+</body></html>

@@ -46,18 +46,20 @@ class Config:
         "geo":     ["maps_geo", "maps_regeocode"],
     })
 
-    # ==================== 豆包 TTS (Doubao / 火山引擎) ====================
+    # ==================== 豆包 TTS (Seed-TTS-2.0 / 火山引擎 WebSocket V3) ====================
     doubao_tts_api_key: str = field(
         default_factory=lambda: os.getenv("DOUBAO_TTS_API_KEY", "")
     )
     doubao_tts_appid: str = field(
         default_factory=lambda: os.getenv("DOUBAO_TTS_APPID", "default")
     )
-    doubao_tts_endpoint: str = "https://openspeech.bytedance.com/api/v1/tts"
+    doubao_tts_v1_api_key: str = field(
+        default_factory=lambda: os.getenv("DOUBAO_TTS_V1_API_KEY", "")
+    )  # V1 HTTP fallback 专用 Key（支持 mars_bigtts 中文音色）
     doubao_tts_voice: str = field(
-        default_factory=lambda: os.getenv("DOUBAO_TTS_VOICE", "zh_male_shaonianzixin_uranus_bigtts")
-    )  # 少年自信 (收藏音色)
-    doubao_tts_speed_ratio: float = 0.85            # 语速 0.5~2.0
+        default_factory=lambda: os.getenv("DOUBAO_TTS_VOICE", "zh_male_tiancaitongsheng_mars_bigtts")
+    )  # 天才童声 (男)
+    doubao_tts_speed_ratio: float = 1.0              # 语速 1.0=正常，会自动转为 speech_rate (-50~100)
 
     # 向后兼容：Edge-TTS 配置（切换时保留）
     tts_voice: str = "zh-CN-XiaoxiaoNeural"

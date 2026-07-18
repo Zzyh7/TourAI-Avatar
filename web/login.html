@@ -52,7 +52,7 @@ async function login(){
     const data = await resp.json();
     if(data.success){
       sessionStorage.setItem('staff_token',data.token);
-      window.location.href = data.redirect || 'http://localhost:5174';
+      window.location.href = data.redirect || 'http://guide.ezcompany.cn:5174';
     }else{
       document.getElementById('error').style.display='block';
     }

@@ -3,6 +3,7 @@
  * Layout: TopNav | Left(AI角色+快捷意图) | Center(对话主舞台) | Right(推荐卡片)
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
+const API_BASE = '/api';
 import { streamChat, createSession } from './services/api';
 import { useAudioPlayer } from './hooks/useAudioPlayer';
 import { useGeolocation } from './hooks/useGeolocation';
@@ -29,6 +30,7 @@ export default function App() {
   const streamingTextRef = useRef('');
   const generationRef = useRef(0);
   const msgsEndRef = useRef<HTMLDivElement>(null);
+  const dhIframeRef = useRef<HTMLIFrameElement>(null);
 
   const { enqueue, stop: stopAudio } = useAudioPlayer(() => {});
   const { position } = useGeolocation({ interval: 5000, enabled: gpsEnabled });
@@ -36,6 +38,30 @@ export default function App() {
   useEffect(() => { createSession().then(setSessionId); }, []);
   useEffect(() => { streamingTextRef.current = streamingText; }, [streamingText]);
   useEffect(() => { msgsEndRef.current?.scrollIntoView({behavior:'smooth'}); }, [messages, streamingText]);
+
+  // 拉取管理后台音色配置，传给 Live2D 数字人 iframe
+  useEffect(() => {
+    const sendConfig = () => {
+      fetch(`${API_BASE}/public-config`)
+        .then(r => r.json())
+        .then(cfg => {
+          const iframe = dhIframeRef.current;
+          if (iframe?.contentWindow) {
+            iframe.contentWindow.postMessage(
+              { type: 'config', voice: cfg.voice, character: cfg.character },
+              '*'
+            );
+          }
+        })
+        .catch(() => {});
+    };
+    // 立即发送一次
+    sendConfig();
+    // iframe 加载完成后补发一次
+    const iframe = dhIframeRef.current;
+    iframe?.addEventListener('load', sendConfig);
+    return () => { iframe?.removeEventListener('load', sendConfig); };
+  }, []);
 
   const abortGeneration = useCallback((save = true) => {
     generationRef.current += 1;
@@ -90,7 +116,7 @@ export default function App() {
           <span style={{fontSize:13,fontWeight:600,color:'#C9A24E',letterSpacing:1}}>AI景区导览系统</span>
         </div>
         <div style={{display:'flex',gap:8,alignItems:'center'}}>
-          <a href="http://10.40.0.157:8000" style={s.backLink}>← 首页</a>
+          <a href="http://localhost:8000" style={s.backLink}>← 首页</a>
         </div>
       </div>
 
@@ -103,14 +129,14 @@ export default function App() {
             <div key={i} style={s.recCard} onClick={()=>{
               const text=`介绍一下${r.title}`;
               // 调 TourAI 对话 API
-              fetch('http://10.40.0.157:8000/api/chat', {
+              fetch(`${API_BASE}/chat`, {
                 method:'POST', headers:{'Content-Type':'application/json'},
                 body: JSON.stringify({text, session_id:'rec_'+Date.now()})
               });
               // 通过 postMessage 发送到 Live2D iframe
               const iframe = document.querySelector('iframe') as HTMLIFrameElement;
               if (iframe?.contentWindow) {
-                iframe.contentWindow.postMessage({type:'chat',text}, 'http://10.40.0.157:3000');
+                iframe.contentWindow.postMessage({type:'chat',text}, '*');
               }
             }}>
               <div style={{fontSize:24}}>{r.icon}</div>
@@ -127,9 +153,9 @@ export default function App() {
             <div key={tag} style={{...s.recCard,padding:'8px 12px'}}
               onClick={()=>{
                 const text=`我对${tag.replace(/[^一-龥]/g,'')}感兴趣，请推荐适合的路线和讲解重点`;
-                fetch('http://10.40.0.157:8000/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,session_id:'pref_'+Date.now()})});
+                fetch(`${API_BASE}/chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,session_id:'pref_'+Date.now()})});
                 const iframe=document.querySelector('iframe') as HTMLIFrameElement;
-                if(iframe?.contentWindow){iframe.contentWindow.postMessage({type:'chat',text},'http://10.40.0.157:3000')}
+                if(iframe?.contentWindow){iframe.contentWindow.postMessage({type:'chat',text},'*')}
               }}>
               <span style={{fontSize:13,color:'rgba(255,255,255,.7)'}}>{tag}</span>
             </div>
@@ -147,7 +173,7 @@ export default function App() {
 
         {/* ===== CENTER: LIVE2D CHARACTER ===== */}
         <div style={s.centerPanel}>
-          <iframe src="http://10.40.0.157:3000/sentio" allow="camera;microphone;autoplay"
+          <iframe ref={dhIframeRef} src="http://localhost:3000/sentio" allow="camera;microphone;autoplay"
             style={{width:'100%',height:'100%',border:'none'}} />
         </div>
       </div>

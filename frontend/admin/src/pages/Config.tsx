@@ -8,19 +8,16 @@ import {
   type DigitalHumanConfig,
 } from '../services/api';
 
-// 豆包 TTS (火山引擎) 中文音色 — 已实测可用
+// 豆包 TTS (Seed-TTS-2.0 WebSocket) — 已实测可用
 const VOICE_OPTIONS = [
-  { value: 'BV700_streaming', label: '灿灿 2.0（女，活泼）' },
-  { value: 'BV701_streaming', label: '灿灿 2.0（男，青春）' },
-  { value: 'BV001_streaming', label: '甜美女生（女，温柔）' },
-  { value: 'BV002_streaming', label: '知性女生（女，知性）' },
-  { value: 'BV004_streaming', label: '阳光男声（男，清爽）' },
-  { value: 'BV005_streaming', label: '温柔女声（女，温和）' },
-  { value: 'BV411_streaming', label: '小帅解说（男，影视）' },
-  { value: 'BV412_streaming', label: '小美解说（女，影视）' },
-  { value: 'zh_male_M392_conversation_wvae_bigtts', label: '对话男声（男，自然）' },
-  { value: 'zh_female_wanwanxiaohe_moon_bigtts', label: '湾湾小何（女，特色）' },
-  { value: 'zh_male_shaonianzixin_uranus_bigtts', label: '少年自信（男，收藏）' },
+  { value: 'zh_male_tiancaitongsheng_mars_bigtts', label: '天才童声（男，默认）' },
+  { value: 'zh_male_shaonianzixin_uranus_bigtts', label: '少年自信（男）' },
+  { value: 'zh_female_vv_uranus_bigtts', label: 'Vivi 2.0（女，温暖对话）' },
+  { value: 'zh_female_xiaohe_uranus_bigtts', label: 'Mindy（女，甜美）' },
+  { value: 'zh_male_m191_uranus_bigtts', label: 'Kian（男，清爽）' },
+  { value: 'zh_male_taocheng_uranus_bigtts', label: 'Cedric（男，沉稳）' },
+  { value: 'zh_female_shuangkuaisisi_moon_bigtts', label: '新闻播报（女，干脆）' },
+  { value: 'zh_male_yuanboxiaoshu_moon_bigtts', label: '温暖男主播（男，叙事）' },
 ];
 
 const LIVE2D_OPTIONS = [
@@ -39,7 +36,7 @@ export default function Config() {
 
   // 表单
   const [live2dModel, setLive2dModel] = useState('default');
-  const [voiceName, setVoiceName] = useState('BV700_streaming');
+  const [voiceName, setVoiceName] = useState('zh_male_shaonianzixin_uranus_bigtts');
   const [voiceSpeed, setVoiceSpeed] = useState(1.0);
 
   useEffect(() => {
