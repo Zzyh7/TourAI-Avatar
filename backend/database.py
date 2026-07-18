@@ -33,6 +33,16 @@ def init_db():
         cursor.execute("ALTER TABLE common_dialogues ADD COLUMN variants TEXT DEFAULT ''")
     except (sqlite3.OperationalError, Exception):
         pass  # 列已存在，忽略
+    # conversations 新增 satisfaction 字段
+    try:
+        cursor.execute("ALTER TABLE conversations ADD COLUMN satisfaction VARCHAR(10) DEFAULT ''")
+    except (sqlite3.OperationalError, Exception):
+        pass
+    # conversations 新增 is_unanswered 字段
+    try:
+        cursor.execute("ALTER TABLE conversations ADD COLUMN is_unanswered INTEGER DEFAULT 0")
+    except (sqlite3.OperationalError, Exception):
+        pass
     conn.commit()
     conn.close()
 

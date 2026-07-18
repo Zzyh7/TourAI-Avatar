@@ -33,6 +33,8 @@ class Conversation(Base):
     role = Column(String(10), nullable=False)          # user / assistant
     content = Column(Text, nullable=False)
     sentiment = Column(String(10), default="")          # 正面/中性/负面
+    satisfaction = Column(String(10), default="")       # satisfied / unsatisfied / ""（用户明确表达满意/不满）
+    is_unanswered = Column(Integer, default=0)          # 1=系统未能回答该问题
     latency_ms = Column(Integer, default=0)             # 响应延迟(毫秒)
     created_at = Column(DateTime, default=datetime.utcnow)
 

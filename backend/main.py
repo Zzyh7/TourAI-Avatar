@@ -85,46 +85,18 @@ guide_agent: GuideAgent | None = None
 async def lifespan(app: FastAPI):
     """启动时初始化所有服务"""
     global guide_agent
-
     print("[START] 景区导览AI数字人 启动中...")
 
-    # 1. 初始化数据库（可选，失败不阻塞）
+    # 1. 初始化数据库
     try:
         init_db()
         print("[OK] 数据库就绪")
     except Exception as e:
-        print(f"[WARN] 数据库初始化失败 (不影响核心功能): {e}")
+        print(f"[WARN] 数据库初始化失败: {e}")
 
-    # 2. 初始化 RAG 知识库 (FAISS + BM25 + SQLite)
-    init_rag()
-    print("[OK] RAG 知识库就绪")
-
-    # 2.5 预热 TTS 连接，减少首次语音合成的延迟
-    try:
-        await asyncio.wait_for(tts_service.warm_up(), timeout=5.0)
-    except (asyncio.TimeoutError, Exception):
-        print("[WARN] TTS 预热未完成（不影响正常使用）")
-
-    # 3. 尝试初始化 GuideAgent (DeepSeek + MCP + RAG)
-    # 设置 SKIP_MCP=1 环境变量可跳过 MCP 连接（测试时启动更快）
-    skip_mcp = os.environ.get("SKIP_MCP", "0") == "1"
-    llm = CONFIG.create_llm()
-    guide_agent = GuideAgent(llm, get_retriever())
-
-    if skip_mcp:
-        print("[INFO] SKIP_MCP=1, 跳过 MCP 连接, 使用纯 RAG + LLM 模式")
-        guide_agent = None
-    else:
-        try:
-            # MCP 连接高德地图，设置 10 秒超时避免卡启动
-            await asyncio.wait_for(guide_agent.build(), timeout=10.0)
-            print("[OK] GuideAgent 就绪 (Agent + MCP + RAG)")
-        except asyncio.TimeoutError:
-            print("[WARN] MCP 连接超时 (10s), 降级为纯 RAG + LLM")
-            guide_agent = None
-        except Exception as e:
-            print(f"[WARN] MCP 不可用, 降级为纯 RAG + LLM: {e}")
-            guide_agent = None
+    # 2. RAG / GuideAgent 首次请求时懒加载
+    print("[OK] AI服务（首次对话时自动初始化）")
+    guide_agent = None
 
     print("[READY] 服务启动完成")
     yield
@@ -276,7 +248,49 @@ class ChatRequest(BaseModel):
     session_id: str = ""
 
 
-# ==================== 对话日志 & 情感分析 ====================
+# ==================== 对话日志 & 情感分析 & 满意度 & 答不上率 ====================
+
+# 用户明确表达满意的关键词（优先级高于情感分析）
+_SATISFIED_KEYWORDS = [
+    "我很满意", "非常满意", "很满意", "挺满意", "满意",
+    "很棒", "太好了", "非常好", "很不错", "真棒", "太好了",
+    "谢谢你", "感谢", "多谢", "太感谢了",
+]
+# 用户明确表达不满的关键词
+_UNSATISFIED_KEYWORDS = [
+    "我不满意", "不满意", "很不满意", "非常不满意",
+    "太差了", "不好", "不行", "不够好", "垃圾",
+    "什么玩意", "没用", "听不懂", "答非所问", "胡说",
+]
+# 系统答不上的标志（出现在助手回复中）
+_UNANSWERED_PATTERNS = [
+    "不太了解", "不太清楚", "无法回答", "暂时不知道", "暂时还不太了解",
+    "暂时无法回答", "还不清楚", "建议您问问", "建议问问景区工作人员",
+    "我暂时还不太清楚", "这个我还真不太清楚",
+    "资料中没有相关信息", "未找到相关", "暂时没有相关信息",
+    "抱歉，这个我暂时", "抱歉，我暂时无法",
+]
+
+
+def _detect_satisfaction(text: str) -> str:
+    """从用户消息中检测显式满意度信号（先检测不满，再检测满意）"""
+    # 先检测"不满意"类（避免"不满意"被"满意"关键词误匹配）
+    for kw in _UNSATISFIED_KEYWORDS:
+        if kw in text:
+            return "unsatisfied"
+    for kw in _SATISFIED_KEYWORDS:
+        if kw in text:
+            return "satisfied"
+    return ""
+
+
+def _detect_unanswered(assistant_text: str) -> bool:
+    """检测助手回复是否为'答不上'状态"""
+    for pattern in _UNANSWERED_PATTERNS:
+        if pattern in assistant_text:
+            return True
+    return False
+
 
 async def _log_conversation(
     session_id: str,
@@ -285,43 +299,60 @@ async def _log_conversation(
     latency_ms: int,
 ):
     """
-    保存对话记录并调用 LLM 进行情感分析。
-    情感分析设置超时，避免阻塞主流程。
+    保存对话记录，同时完成：
+    1. 情感分析（LLM + 关键词降级）
+    2. 显式满意度识别（"我很满意"/"我不满意"）
+    3. 答不上检测（系统是否未能解答用户问题）
     """
+    # ---- 1. 显式满意度检测（优先于情感分析） ----
+    satisfaction = _detect_satisfaction(user_text)
+
+    # ---- 2. 情感分析 ----
     sentiment = "中性"
     try:
         llm = CONFIG.create_llm()
         analyzer = SentimentAnalyzer(llm)
-        # 设置 3 秒超时，避免情感分析拖慢响应
         sentiment = await asyncio.wait_for(analyzer.analyze(user_text), timeout=3.0)
     except (asyncio.TimeoutError, Exception):
         # 超时或失败时使用简单的关键词判断作为降级
         positive_words = ["好", "美", "赞", "喜欢", "开心", "棒", "不错", "谢谢", "厉害", "方便"]
         negative_words = ["差", "烂", "失望", "生气", "垃圾", "坑", "骗", "糟糕", "烦", "慢"]
-        text = user_text
-        pos_count = sum(1 for w in positive_words if w in text)
-        neg_count = sum(1 for w in negative_words if w in text)
+        pos_count = sum(1 for w in positive_words if w in user_text)
+        neg_count = sum(1 for w in negative_words if w in user_text)
         if pos_count > neg_count:
             sentiment = "正面"
         elif neg_count > pos_count:
             sentiment = "负面"
-        # else remain "中性"
 
+    # 如果有显式满意度信号，覆盖情感分析结果
+    if satisfaction == "satisfied":
+        sentiment = "正面"
+    elif satisfaction == "unsatisfied":
+        sentiment = "负面"
+
+    # ---- 3. 答不上检测 ----
+    is_unanswered = 1 if _detect_unanswered(assistant_text) else 0
+
+    # ---- 4. 写入数据库 ----
     db = SessionLocal()
     try:
         now = datetime.utcnow()
-        # 保存用户消息
+        # 保存用户消息（含满意度标记）
         db.add(Conversation(
             session_id=session_id, role="user", content=user_text,
-            sentiment=sentiment, latency_ms=latency_ms, created_at=now,
+            sentiment=sentiment, satisfaction=satisfaction,
+            is_unanswered=0, latency_ms=latency_ms, created_at=now,
         ))
-        # 保存助手回复
+        # 保存助手回复（含答不上标记）
         db.add(Conversation(
             session_id=session_id, role="assistant", content=assistant_text,
-            sentiment=sentiment, latency_ms=latency_ms, created_at=now,
+            sentiment=sentiment, satisfaction="",
+            is_unanswered=is_unanswered, latency_ms=latency_ms, created_at=now,
         ))
         db.commit()
-        print(f"[LOG] 对话已记录 [{sentiment}] {session_id}: {user_text[:30]}...")
+        extra = f" [满意度:{satisfaction}]" if satisfaction else ""
+        extra += " [答不上]" if is_unanswered else ""
+        print(f"[LOG] 对话已记录 [{sentiment}]{extra} {session_id}: {user_text[:30]}...")
     except Exception as e:
         db.rollback()
         print(f"[WARN] 对话记录失败: {e}")
@@ -586,10 +617,13 @@ async def chat(req: Request, chat_req: ChatRequest):
 
                 llm = CONFIG.create_llm()
                 prompt = (
-                    "你是一个专业的景区导览数字人，名叫小导。请基于【参考资料】回答问题。\n"
-                    "如果参考资料不足以回答，请直接说「资料中没有相关信息」，不要编造。\n\n"
-                    f"【用户问题】：{chat_req.text}\n\n"
-                    f"【参考资料】：\n{context}"
+                    "你是灵山胜境景区的专属导游小导，景区知识你烂熟于心。\n"
+                    "用口语化、亲和自然的方式直接回答游客，就像老朋友聊天。\n"
+                    "绝对不能说「根据资料」「查询显示」「据说」「据了解」等机械用语。\n"
+                    "如果下面的知识不足以回答，就说「这个我还真不太清楚，建议问问景区工作人员」。\n"
+                    "禁止emoji和markdown符号。\n\n"
+                    f"游客问：{chat_req.text}\n\n"
+                    f"你的脑中知识：\n{context}"
                 )
                 async for chunk in llm.astream(prompt):
                     # 检查客户端是否断开
@@ -733,11 +767,12 @@ async def photo_recognize(request: PhotoRequest):
                     # === 4. DeepSeek 整合生成 ===
                     llm = CONFIG.create_llm()
                     integration_prompt = (
-                        "你是一个专业的景区导览数字人。请综合以下两方面的信息，"
-                        "为游客生成一段生动、详细的景点讲解（200-400字）。\n\n"
-                        f"【多模态识别结果】\n{vl_text}\n\n"
-                        f"【知识库参考资料】\n{rag_context}\n\n"
-                        "要求：口语化、生动有趣、包含关键数据和历史典故。"
+                        "你是灵山胜境景区的专属导游小导。综合以下信息，"
+                        "为游客做一段生动亲切的现场讲解（200-400字）。\n\n"
+                        f"【视觉识别】\n{vl_text}\n\n"
+                        f"【景区知识】\n{rag_context}\n\n"
+                        "要求：口语化、生动像聊天、自然融入关键数据和历史故事。"
+                        "绝对不能说「根据资料」「查询显示」「据说」这类话，就当这些是你本来就知道的。"
                     )
                     llm_result = await llm.ainvoke(integration_prompt)
                     enriched_description = llm_result.content

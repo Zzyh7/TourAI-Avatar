@@ -15,15 +15,34 @@ router = APIRouter(prefix="/api/admin/stats", tags=["数据统计"])
 
 @router.get("/overview")
 def get_overview(db: Session = Depends(get_db)):
-    """获取总览数据（服务人次、满意度、平均延迟）"""
+    """获取总览数据（服务人次、满意度、答不上率、平均延迟）"""
     total_sessions = db.query(func.count(SessionModel.id)).scalar() or 0
     total_conversations = db.query(func.count(Conversation.id)).scalar() or 0
 
-    # 满意度：正面占比
+    # 正面情感占比（LLM情感分析）
     positive_count = db.query(func.count(Conversation.id)).filter(
         Conversation.sentiment == "正面"
     ).scalar() or 0
     sentiment_rate = round(positive_count / total_conversations * 100, 1) if total_conversations > 0 else 0
+
+    # 显式满意度：用户明确说"我很满意"的占比
+    satisfied_count = db.query(func.count(Conversation.id)).filter(
+        Conversation.satisfaction == "satisfied"
+    ).scalar() or 0
+    unsatisfied_count = db.query(func.count(Conversation.id)).filter(
+        Conversation.satisfaction == "unsatisfied"
+    ).scalar() or 0
+    satisfaction_total = satisfied_count + unsatisfied_count
+    satisfaction_rate = round(satisfied_count / satisfaction_total * 100, 1) if satisfaction_total > 0 else 0
+
+    # 答不上率：系统未能回答的问题占比（按助手回复统计）
+    unanswered_count = db.query(func.count(Conversation.id)).filter(
+        Conversation.is_unanswered == 1
+    ).scalar() or 0
+    assistant_count = db.query(func.count(Conversation.id)).filter(
+        Conversation.role == "assistant"
+    ).scalar() or 0
+    unanswered_rate = round(unanswered_count / assistant_count * 100, 1) if assistant_count > 0 else 0
 
     # 平均延迟
     avg_latency = db.query(func.avg(Conversation.latency_ms)).filter(
@@ -34,6 +53,11 @@ def get_overview(db: Session = Depends(get_db)):
         "total_sessions": total_sessions,
         "total_conversations": total_conversations,
         "sentiment_rate": sentiment_rate,
+        "satisfaction_rate": satisfaction_rate,
+        "satisfied_count": satisfied_count,
+        "unsatisfied_count": unsatisfied_count,
+        "unanswered_rate": unanswered_rate,
+        "unanswered_count": unanswered_count,
         "avg_latency_ms": round(avg_latency, 0),
     }
 
@@ -142,8 +166,24 @@ def get_dashboard(db: Session = Depends(get_db)):
     # 总览
     total_sessions = db.query(func.count(SessionModel.id)).scalar() or 0
     total_convs = db.query(func.count(Conversation.id)).scalar() or 0
+    total_assistant = db.query(func.count(Conversation.id)).filter(
+        Conversation.role == "assistant"
+    ).scalar() or 0
     total_positive = db.query(func.count(Conversation.id)).filter(
         Conversation.sentiment == "正面"
+    ).scalar() or 0
+
+    # 满意度统计
+    total_satisfied = db.query(func.count(Conversation.id)).filter(
+        Conversation.satisfaction == "satisfied"
+    ).scalar() or 0
+    total_unsatisfied = db.query(func.count(Conversation.id)).filter(
+        Conversation.satisfaction == "unsatisfied"
+    ).scalar() or 0
+
+    # 答不上率
+    total_unanswered = db.query(func.count(Conversation.id)).filter(
+        Conversation.is_unanswered == 1
     ).scalar() or 0
 
     # 本周每日趋势
@@ -166,11 +206,17 @@ def get_dashboard(db: Session = Depends(get_db)):
             Conversation.created_at < day_end,
             Conversation.sentiment == "负面"
         ).scalar() or 0
+        unanswered = db.query(func.count(Conversation.id)).filter(
+            Conversation.created_at >= day_start,
+            Conversation.created_at < day_end,
+            Conversation.is_unanswered == 1,
+        ).scalar() or 0
         week_days.append({
             "date": str(day),
             "total": count,
             "positive": positive,
             "negative": negative,
+            "unanswered": unanswered,
         })
 
     # 热门提问 Top 8
@@ -211,6 +257,15 @@ def get_dashboard(db: Session = Depends(get_db)):
             "conversations": total_convs,
             "positive_rate": round(total_positive / total_convs * 100, 1) if total_convs > 0 else 0,
         },
+        "satisfaction": {
+            "satisfied": total_satisfied,
+            "unsatisfied": total_unsatisfied,
+            "rate": round(total_satisfied / (total_satisfied + total_unsatisfied) * 100, 1) if (total_satisfied + total_unsatisfied) > 0 else 0,
+        },
+        "unanswered": {
+            "count": total_unanswered,
+            "rate": round(total_unanswered / total_assistant * 100, 1) if total_assistant > 0 else 0,
+        },
         "sentiment_distribution": {
             "positive": pos_all,
             "neutral": neu_all,
@@ -243,6 +298,22 @@ async def get_report(days: int = Query(7, description="统计天数"), db: Sessi
     ).scalar() or 0
     neg_count = db.query(func.count(Conversation.id)).filter(
         Conversation.created_at >= since, Conversation.sentiment == "负面"
+    ).scalar() or 0
+
+    # 满意度统计
+    satisfied_count = db.query(func.count(Conversation.id)).filter(
+        Conversation.created_at >= since, Conversation.satisfaction == "satisfied"
+    ).scalar() or 0
+    unsatisfied_count = db.query(func.count(Conversation.id)).filter(
+        Conversation.created_at >= since, Conversation.satisfaction == "unsatisfied"
+    ).scalar() or 0
+
+    # 答不上统计
+    unanswered_count = db.query(func.count(Conversation.id)).filter(
+        Conversation.created_at >= since, Conversation.is_unanswered == 1
+    ).scalar() or 0
+    assistant_total = db.query(func.count(Conversation.id)).filter(
+        Conversation.created_at >= since, Conversation.role == "assistant"
     ).scalar() or 0
 
     # 负面用户消息（用于分析痛点）
@@ -285,7 +356,11 @@ async def get_report(days: int = Query(7, description="统计天数"), db: Sessi
             Conversation.created_at >= ds, Conversation.created_at < de,
             Conversation.sentiment == "负面"
         ).scalar() or 0
-        daily_trend.append({"date": str(day), "total": dc, "positive": dp, "negative": dn})
+        du = db.query(func.count(Conversation.id)).filter(
+            Conversation.created_at >= ds, Conversation.created_at < de,
+            Conversation.is_unanswered == 1,
+        ).scalar() or 0
+        daily_trend.append({"date": str(day), "total": dc, "positive": dp, "negative": dn, "unanswered": du})
 
     # 关注点统计（从热门提问中提取关键词）
     concern_keywords = {}
@@ -352,6 +427,10 @@ async def get_report(days: int = Query(7, description="统计天数"), db: Sessi
             "neutral": neu_count,
             "negative": neg_count,
             "satisfaction_rate": round(pos_count / total * 100, 1) if total > 0 else 0,
+            "explicit_satisfied": satisfied_count,
+            "explicit_unsatisfied": unsatisfied_count,
+            "unanswered_count": unanswered_count,
+            "unanswered_rate": round(unanswered_count / assistant_total * 100, 1) if assistant_total > 0 else 0,
         },
         "daily_trend": daily_trend,
         "concerns": concerns,
