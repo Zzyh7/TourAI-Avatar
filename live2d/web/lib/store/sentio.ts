@@ -6,27 +6,32 @@ import * as CONSTANTS from '@/lib/constants';
 // ==================== 聊天记录 ==================
 interface SentioChatRecordState {
     chatRecord: ChatMessage[],
+    pendingExternalMessage: string | null,
     addChatRecord: (message: ChatMessage) => void,
     getLastRecord: () => ChatMessage | undefined,
     updateLastRecord: (message: ChatMessage) => void,
     deleteLastRecord: () => void,
-    clearChatRecord: () => void
+    clearChatRecord: () => void,
+    setPendingExternalMessage: (msg: string | null) => void
 }
 export const useChatRecordStore = create<SentioChatRecordState>()(
     persist(
         (set) => ({
             chatRecord: [],
+            pendingExternalMessage: null,
             addChatRecord: (message: ChatMessage) => set((state) => ({ chatRecord: [...state.chatRecord, message] })),
-            getLastRecord: () => { 
+            getLastRecord: () => {
                 const chatRecord: ChatMessage[] = useChatRecordStore.getState().chatRecord;
-                return chatRecord.length > 0 ? chatRecord[chatRecord.length - 1] : undefined; 
+                return chatRecord.length > 0 ? chatRecord[chatRecord.length - 1] : undefined;
             },
             updateLastRecord: (message: ChatMessage) => set((state) => ({ chatRecord: [...state.chatRecord.slice(0, -1), message] })),
             deleteLastRecord: () => set((state) => ({ chatRecord: [...state.chatRecord.slice(0, -1)] })),
             clearChatRecord: () => set((state) => ({ chatRecord: [] })),
+            setPendingExternalMessage: (msg: string | null) => set((state) => ({ pendingExternalMessage: msg })),
         }),
         {
-            name: 'sentio-chat-record-storage'
+            name: 'sentio-chat-record-storage',
+            partialize: (state) => ({ chatRecord: state.chatRecord }),
         }
     )
 )

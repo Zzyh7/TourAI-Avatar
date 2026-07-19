@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, memo } from 'react';
+import { useEffect, useState, memo, useRef } from 'react';
 import { StopCircleIcon, MicrophoneIcon, PaperAirplaneIcon } from '@heroicons/react/24/solid';
 import { useSentioAsrStore, useChatRecordStore } from '@/lib/store/sentio';
 import { Input, Button, Spinner, addToast, Tooltip } from '@heroui/react';
@@ -14,15 +14,30 @@ import { useMicVAD } from "@ricky0123/vad-react"
 import { useChatWithAgent, useAudioTimer } from '../../hooks/chat';
 import { getSrcPath } from '@/lib/path';
 import clsx from 'clsx';
+import { Live2dManager } from '@/lib/live2d/live2dManager';
 
 let micRecoder: Recorder | null = null;
 
+// 每隔500ms检查一次Live2D状态
+function startDebugMonitor() {
+  const el = document.getElementById('lip-debug');
+  if (!el) return;
+  setInterval(() => {
+    const lm = Live2dManager.getInstance();
+    const audioPlaying = lm.isAudioPlaying();
+    const lipFactor = lm.getLipFactor();
+    const queueLen = (lm as any)._ttsQueue?.length || 0;
+    const rms = lm.getLastRms();
+    el.innerHTML = `🔊播放:${audioPlaying} 👄系数:${lipFactor} 📋队列:${queueLen} 🔊RMS:${rms.toFixed(4)}`;
+    el.style.color = audioPlaying && rms > 0.001 ? '#0f0' : '#f00';
+  }, 500);
+}
 
-export const ChatInput = memo(({ 
+export const ChatInput = memo(({
     postProcess
 }: {
     postProcess?: (conversation_id: string, message_id: string, think: string, content: string) => void
-   
+
 }) => {
     const t = useTranslations('Products.sentio');
     const [message, setMessage] = useState("");
@@ -31,13 +46,27 @@ export const ChatInput = memo(({
     const { enable: enableASR, engine: asrEngine, settings: asrSettings } = useSentioAsrStore();
     const { chat, abort, chatting } = useChatWithAgent();
     const { startAudioTimer, stopAudioTimer } = useAudioTimer();
+    const pendingExternalMessage = useChatRecordStore(s => s.pendingExternalMessage);
+    const setPendingExternalMessage = useChatRecordStore(s => s.setPendingExternalMessage);
+
+    // 启动调试监视器
+    useEffect(() => { startDebugMonitor(); }, []);
+
+    // 监听父窗口 postMessage 触发的外部消息
+    useEffect(() => {
+        if (pendingExternalMessage) {
+            setPendingExternalMessage(null);
+            chat(pendingExternalMessage, postProcess);
+        }
+    }, [pendingExternalMessage]);
+
     const handleStartRecord = () => {
         abort();
         if (micRecoder == null) {
             micRecoder = new Recorder({
-                sampleBits: 16,         // 采样位数，支持 8 或 16，默认是16
-                sampleRate: 16000,      // 采样率，支持 11025、16000、22050、24000、44100、48000
-                numChannels: 1,         // 声道，支持 1 或 2， 默认是1
+                sampleBits: 16,
+                sampleRate: 16000,
+                numChannels: 1,
                 compiling: false,
             })
         }
@@ -59,10 +88,8 @@ export const ChatInput = memo(({
         micRecoder.stop();
         setStartMicRecord(false);
         if (!stopAudioTimer()) return;
-        // 开始做语音识别
         setMessage(t('speech2text'));
         setStartAsrConvert(true);
-        // 获取mp3数据, 转mp3的计算放到web客户端, 后端拿到的是mp3数据
         const mp3Blob = convertToMp3(micRecoder);
         let asrResult = "";
         asrResult = await api_asr_infer_file(asrEngine, asrSettings, mp3Blob);
@@ -75,7 +102,6 @@ export const ChatInput = memo(({
     }
 
     const onFileClick = () => {
-        // TODO: open file dialog
     }
     const onSendClick = () => {
         if (message == "") return;
@@ -87,7 +113,6 @@ export const ChatInput = memo(({
             onSendClick();
         }
     }
-    // 快捷键
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "m" && e.ctrlKey) {
@@ -106,6 +131,13 @@ export const ChatInput = memo(({
 
     return (
         <div className='flex flex-col w-4/5 md:w-2/3 2xl:w-1/2 items-start z-10 gap-2'>
+            {/* 调试指示器 */}
+            <div id="lip-debug" style={{
+              position:'fixed',top:0,left:0,zIndex:9999,
+              background:'rgba(0,0,0,0.8)',color:'#0f0',
+              padding:'4px 12px',fontSize:12,fontFamily:'monospace',
+              borderRadius:'0 0 8px 0'
+            }}>等待音频...</div>
             <div className='flex w-full items-center z-10'>
                 <Input
                     className='opacity-90'
@@ -143,13 +175,6 @@ export const ChatInput = memo(({
                             </button>
                             :
                             <></>
-                        // <button
-                        //     type="button"
-                        //     onClick={onFileClick}
-                        //     className="focus:outline-none hover:text-blue-500"
-                        // >
-                        //     <PaperClipIcon className='size-6 pointer-events-none' />
-                        // </button>
                     }
                     type='text'
                     enterKeyHint='send'
@@ -172,9 +197,7 @@ const convertFloat32ToAnalyseData = (float32Data: Float32Array) => {
 
     for (let i = 0; i < dataLength; i++) {
         const value = float32Data[i];
-        // 将 -1 到 1 的值映射到 0 到 255
         const mappedValue = Math.round((value + 1) * 128);
-        // 确保值在 0 到 255 之间
         analyseData[i] = Math.max(0, Math.min(255, mappedValue));
     }
 
@@ -192,7 +215,6 @@ export const ChatVadInput = memo(() => {
     const drawId = useRef<number | null>(null);
 
     const handleSpeechEnd = async (audio: Float32Array) => {
-        // 获取mp3数据, 转mp3的计算放到web客户端, 后端拿到的是mp3数据
         const mp3Blob = convertFloat32ArrayToMp3(audio);
         let asrResult = ""
         asrResult = await api_asr_infer_file(asrEngine, asrSettings, mp3Blob);
@@ -203,13 +225,11 @@ export const ChatVadInput = memo(() => {
     const vad = useMicVAD({
         baseAssetPath: getSrcPath("vad/"),
         onnxWASMBasePath: getSrcPath("vad/"),
-        // model: "v5",
         onSpeechStart: () => {
             abort();
             startAudioTimer();
         },
         onFrameProcessed: (audio, frame) => {
-            // frame 转 dataUnit8Array
             const dataUnit8Array = convertFloat32ToAnalyseData(frame);
             waveData.current = dataUnit8Array;
         },
@@ -257,10 +277,6 @@ export const ChatVadInput = memo(() => {
                     return prev + next
                 }, 0) / gap
 
-                // if (v < 128)
-                //     v = 128
-                // if (v > 178)
-                //     v = 178
                 const y = (v - 128) / 128 * canvas.height
 
                 ctx.moveTo(x, 16)
@@ -285,7 +301,6 @@ export const ChatVadInput = memo(() => {
     }, [])
 
     return (
-        // <div>{vad.userSpeaking ? "User is speaking" : "no speaking"}</div>
         <div className='flex flex-col h-10 w-1/2 md:w-1/3 items-center'>
             {vad.loading && <div className='flex flex-row gap-1 items-center'>
                     <p className='text-xl font-bold'>{t('loading')}</p>
@@ -294,7 +309,7 @@ export const ChatVadInput = memo(() => {
             }
             <canvas id="voice-input" className='h-full w-full' />
         </div>
-        
+
     )
 });
 
@@ -346,10 +361,6 @@ export const ChatStreamInput = memo(() => {
                     return prev + next
                 }, 0) / gap
 
-                // if (v < 128)
-                //     v = 128
-                // if (v > 178)
-                //     v = 178
                 const y = (v - 128) / 128 * canvas.height
 
                 ctx.moveTo(x, 16)
@@ -418,13 +429,13 @@ export const ChatStreamInput = memo(() => {
             }
         })
         const audioRecoder = new AudioRecoder(
-            16000, 
-            1, 
-            16000 / 1000 * 60 * 2, // 60ms数据(字节数, 一个frame 16位, 2个byte)
+            16000,
+            1,
+            16000 / 1000 * 60 * 2,
             (chunk: Uint8Array) => {
                 try {
                     if (asrWsClient.isConnected && engineReady.current) {
-                        asrWsClient.sendMessage(WS_SEND_ACTION_TYPE.ENGINE_PARTIAL_INPUT, chunk) 
+                        asrWsClient.sendMessage(WS_SEND_ACTION_TYPE.ENGINE_PARTIAL_INPUT, chunk)
                     }
                 } catch(error: any) {
                     addToast({
@@ -461,6 +472,6 @@ export const ChatStreamInput = memo(() => {
             }
             <canvas id="voice-input" className='h-full w-full' />
         </div>
-        
+
     )
 });

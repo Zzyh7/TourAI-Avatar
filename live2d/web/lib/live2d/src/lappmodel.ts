@@ -571,13 +571,14 @@ export class LAppModel extends CubismUserModel {
     if (this._lipsync) {
       let value = 0.0;
       this._wavFileHandler.update(deltaTimeSeconds);
-      value = this._wavFileHandler.getRms() * Live2dManager.getInstance().getLipFactor();
-      // 解析新的音频数据
+      const rms = this._wavFileHandler.getRms();
+      Live2dManager.getInstance().setLastRms(rms);
+      // RMS(0~0.3) × lipFactor(10) × gain(1.5) → mouth 0~1.0
+      value = rms * Live2dManager.getInstance().getLipFactor() * 1.5;
       let audioData = Live2dManager.getInstance().playAudio();
       if (audioData != null) {
         this._wavFileHandler.start(audioData);
       }
-      // 同步声音驱动口型
       if (!Live2dManager.getInstance().isAudioPlaying()) {
         value = 0.0;
       }

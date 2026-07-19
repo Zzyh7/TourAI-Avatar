@@ -15,7 +15,7 @@ PARAMETERS: [
     type: "string",
     required: false,
     choices: [],
-    default: ""
+    default: "tourai-guide"
   },
   {
     name: "base_url",
@@ -23,7 +23,7 @@ PARAMETERS: [
     type: "string",
     required: false,
     choices: [],
-    default: "https://api.openai.com/v1"
+    default: "http://localhost:8000/v1"
   },
   {
     name: "api_key",
@@ -31,6 +31,6 @@ PARAMETERS: [
     type: "string",
     required: false,
     choices: [],
-    default: ""
+    default: "not-needed"
   }
 ]

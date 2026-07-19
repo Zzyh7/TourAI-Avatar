@@ -8,6 +8,7 @@ from .tencentTTS import *
 from .edgeTTS import *
 from .difyTTS import *
 from .cozeTTS import *
+from .tourAI_tts import *
 from .ttsFactory import TTSFactory
 # from .aliNLSTTS import AliNLSTTS
 

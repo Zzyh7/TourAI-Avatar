@@ -1,5 +1,6 @@
 import { LAppDelegate } from '@/lib/live2d/src/lappdelegate';
 import { ResourceModel } from '@/lib/protocol';
+import * as CONSTANTS from '@/lib/constants';
 
 export class Live2dManager {
     // 单例
@@ -31,6 +32,14 @@ export class Live2dManager {
 
     public getLipFactor(): number {
       return this._lipFactor;
+    }
+
+    public setLastRms(rms: number): void {
+      (this as any)._lastRms = rms;
+    }
+
+    public getLastRms(): number {
+      return (this as any)._lastRms || 0;
     }
 
     public pushAudioQueue(audioData: ArrayBuffer): void {
@@ -95,7 +104,7 @@ export class Live2dManager {
       this._audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       this._audioIsPlaying = false;
       this._audioSource = null;
-      this._lipFactor = 1.0;
+      this._lipFactor = CONSTANTS.SENTIO_LIPFACTOR_DEFAULT;
       this._ready = false;
     }
 

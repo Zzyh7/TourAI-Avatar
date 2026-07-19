@@ -34,6 +34,10 @@ function ChatModeSwitch() {
 }
 
 export function Header() {
+    // 嵌入 iframe 时隐藏 logo 和按钮
+    const isEmbedded = typeof window !== 'undefined' && window.parent !== window;
+    if (isEmbedded) return null;
+
     return (
         <div className="flex w-full h-[64px] p-6 justify-between z-10">
             <LogoBar isExternal={true}/>
