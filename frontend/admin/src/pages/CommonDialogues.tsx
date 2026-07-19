@@ -232,13 +232,13 @@ export default function CommonDialogues() {
                       onClick={() => handleToggle(d)}
                       style={{
                         ...styles.toggleBtn,
-                        background: d.enabled ? '#C9A24E' : '#ccc',
+                        background: d.enabled ? '#4CAF50' : '#ccc',
                       }}
                     >
                       {d.enabled ? '启用' : '禁用'}
                     </button>
                   </td>
-                  <td style={{ ...styles.td, fontSize: 12, color: '#8B7355' }}>
+                  <td style={{ ...styles.td, fontSize: 12, color: '#999' }}>
                     {d.updated_at ? new Date(d.updated_at).toLocaleString('zh-CN') : '-'}
                   </td>
                   <td style={styles.td}>
@@ -344,7 +344,7 @@ export default function CommonDialogues() {
         <div style={styles.modalOverlay} onClick={() => setShowImport(false)}>
           <div style={styles.modal} onClick={e => e.stopPropagation()}>
             <h3 style={{ margin: '0 0 16px', fontSize: 18 }}>📥 批量导入常用对话</h3>
-            <p style={{ fontSize: 13, color: '#8B7355', marginBottom: 12 }}>
+            <p style={{ fontSize: 13, color: '#666', marginBottom: 12 }}>
               粘贴 JSON 数组，每项包含 question, answer, keywords, category, priority, enabled 字段：
             </p>
             <textarea
@@ -366,10 +366,10 @@ export default function CommonDialogues() {
         <div style={styles.modalOverlay} onClick={() => setDeleteId(null)}>
           <div style={{ ...styles.modal, maxWidth: 380 }} onClick={e => e.stopPropagation()}>
             <h3 style={{ margin: '0 0 12px', fontSize: 18 }}>确认删除</h3>
-            <p style={{ fontSize: 14, color: '#8B7355', lineHeight: 1.6 }}>确定要删除这条常用对话吗？此操作不可恢复。</p>
+            <p style={{ fontSize: 14, color: '#666', lineHeight: 1.6 }}>确定要删除这条常用对话吗？此操作不可恢复。</p>
             <div style={styles.modalBtns}>
               <button onClick={() => setDeleteId(null)} style={styles.secondaryBtn}>取消</button>
-              <button onClick={() => handleDelete(deleteId)} style={{ ...styles.primaryBtn, background: '#c0392b' }}>
+              <button onClick={() => handleDelete(deleteId)} style={{ ...styles.primaryBtn, background: '#ff4d4f' }}>
                 确认删除
               </button>
             </div>
@@ -385,11 +385,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 22,
     fontWeight: 600,
     marginBottom: 4,
-    color: '#4A3028',
+    color: '#1a1a2e',
   },
   subtitle: {
     fontSize: 13,
-    color: '#8B7355',
+    color: '#999',
     marginBottom: 20,
   },
   toolbar: {
@@ -401,12 +401,12 @@ const styles: Record<string, React.CSSProperties> = {
     background: '#fff',
     padding: '12px 16px',
     borderRadius: 10,
-    boxShadow: '0 1px 4px rgba(74,48,40,0.06)',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
   },
   select: {
     padding: '7px 12px',
     borderRadius: 6,
-    border: '1px solid #E0D3C0',
+    border: '1px solid #ddd',
     fontSize: 13,
     outline: 'none',
     background: '#fff',
@@ -414,7 +414,7 @@ const styles: Record<string, React.CSSProperties> = {
   searchInput: {
     padding: '7px 14px',
     borderRadius: 6,
-    border: '1px solid #E0D3C0',
+    border: '1px solid #ddd',
     fontSize: 13,
     outline: 'none',
     width: 240,
@@ -423,7 +423,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '7px 18px',
     borderRadius: 6,
     border: 'none',
-    background: '#B8860B',
+    background: '#1976D2',
     color: '#fff',
     fontSize: 13,
     cursor: 'pointer',
@@ -432,22 +432,22 @@ const styles: Record<string, React.CSSProperties> = {
   secondaryBtn: {
     padding: '7px 18px',
     borderRadius: 6,
-    border: '1px solid #E0D3C0',
+    border: '1px solid #ddd',
     background: '#fff',
-    color: '#4A3028',
+    color: '#333',
     fontSize: 13,
     cursor: 'pointer',
   },
   tableWrap: {
     background: '#fff',
     borderRadius: 10,
-    boxShadow: '0 1px 4px rgba(74,48,40,0.06)',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
     overflow: 'auto',
   },
   empty: {
     textAlign: 'center',
     padding: 60,
-    color: '#8B7355',
+    color: '#999',
   },
   table: {
     width: '100%',
@@ -456,20 +456,20 @@ const styles: Record<string, React.CSSProperties> = {
   th: {
     textAlign: 'left' as const,
     padding: '12px 14px',
-    borderBottom: '2px solid #E0D3C0',
+    borderBottom: '2px solid #e8e8e8',
     fontSize: 13,
-    color: '#8B7355',
+    color: '#666',
     fontWeight: 600,
-    background: '#FFF9ED',
+    background: '#fafafa',
     whiteSpace: 'nowrap' as const,
   },
   tr: {
-    borderBottom: '1px solid #E0D3C0',
+    borderBottom: '1px solid #f0f0f0',
   },
   td: {
     padding: '12px 14px',
     fontSize: 13,
-    color: '#4A3028',
+    color: '#333',
     verticalAlign: 'middle' as const,
   },
   tag: {
@@ -477,7 +477,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '2px 10px',
     borderRadius: 4,
     background: '#e3f2fd',
-    color: '#B8860B',
+    color: '#1976D2',
     fontSize: 12,
     fontWeight: 500,
   },
@@ -501,7 +501,7 @@ const styles: Record<string, React.CSSProperties> = {
   footer: {
     marginTop: 12,
     fontSize: 13,
-    color: '#8B7355',
+    color: '#999',
   },
   // 弹窗
   modalOverlay: {
@@ -511,7 +511,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'rgba(74,48,40,0.35)',
+    background: 'rgba(0,0,0,0.35)',
   },
   modal: {
     width: '90%',
@@ -519,7 +519,7 @@ const styles: Record<string, React.CSSProperties> = {
     background: '#fff',
     borderRadius: 12,
     padding: 28,
-    boxShadow: '0 12px 48px rgba(74,48,40,0.18)',
+    boxShadow: '0 12px 48px rgba(0,0,0,0.18)',
   },
   formGroup: {
     marginBottom: 14,
@@ -540,7 +540,7 @@ const styles: Record<string, React.CSSProperties> = {
     width: '100%',
     padding: '9px 14px',
     borderRadius: 6,
-    border: '1px solid #E0D3C0',
+    border: '1px solid #ddd',
     fontSize: 14,
     outline: 'none',
     boxSizing: 'border-box' as any,

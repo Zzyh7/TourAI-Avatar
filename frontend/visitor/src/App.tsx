@@ -123,7 +123,7 @@ export default function App() {
       {/* ===== MAIN 3-COLUMN ===== */}
       <div style={s.main}>
         {/* ===== LEFT: RECOMMENDATIONS ===== */}
-        <div style={{...s.rightPanel,borderRight:'1px solid #E0D3C0',borderLeft:'none'}}>
+        <div style={{...s.rightPanel,borderRight:'1px solid #E0D3C0',borderLeft:'none',overflowY:'visible'}}>
           <h4 style={{color:'#B8860B',fontSize:15,marginBottom:12,letterSpacing:1,textAlign:'center'}}>今日推荐</h4>
           {RECOMMENDATIONS.map((r,i) => (
             <div key={i} style={s.recCard} onClick={()=>{
@@ -168,6 +168,18 @@ export default function App() {
               color:gpsEnabled?'#fff':'#8B7355',
               cursor:'pointer',textAlign:'center',fontSize:14,fontWeight:600,transition:'.3s'}}>
             📍 {gpsEnabled?'GPS 功能已开启':'开启 GPS 功能'}
+          </div>
+          {/* 手机体验提示 */}
+          <div style={{
+            marginTop: 'auto', paddingTop: 16, textAlign: 'center',
+            fontSize: 12, color: '#B8860B', letterSpacing: 1, lineHeight: 1.6,
+          }}>
+            <img src="/qrcode.png" alt="手机扫码体验" style={{
+              width: 140, height: 140, borderRadius: 10,
+              border: '1px solid #E0D3C0', marginBottom: 10,
+            }} />
+            <div>扫描上方二维码</div>
+            <div>即可在手机上体验</div>
           </div>
         </div>
 

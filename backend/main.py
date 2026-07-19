@@ -681,7 +681,7 @@ async def chat(req: Request, chat_req: ChatRequest):
 
                 llm = CONFIG.create_llm()
                 prompt = (
-                    "你是灵山胜境景区的专属导游小导，景区知识你烂熟于心。\n"
+                    "你是灵山胜境景区的专属导游小僧，景区知识你烂熟于心。\n"
                     "用口语化、亲和自然的方式直接回答游客，就像老朋友聊天。\n"
                     "绝对不能说「根据资料」「查询显示」「据说」「据了解」等机械用语。\n"
                     "如果下面的知识不足以回答，就说「这个我还真不太清楚，建议问问景区工作人员」。\n"
@@ -831,7 +831,7 @@ async def photo_recognize(request: PhotoRequest):
                     # === 4. DeepSeek 整合生成 ===
                     llm = CONFIG.create_llm()
                     integration_prompt = (
-                        "你是灵山胜境景区的专属导游小导。综合以下信息，"
+                        "你是灵山胜境景区的专属导游小僧。综合以下信息，"
                         "为游客做一段生动亲切的现场讲解（200-400字）。\n\n"
                         f"【视觉识别】\n{vl_text}\n\n"
                         f"【景区知识】\n{rag_context}\n\n"

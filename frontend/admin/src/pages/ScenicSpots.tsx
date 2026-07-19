@@ -164,7 +164,7 @@ export default function ScenicSpots() {
                     {s.category ? <span style={styles.tag}>{s.category}</span> : '-'}
                   </td>
                   <td style={styles.td}>{s.visit_duration} 分钟</td>
-                  <td style={{ ...styles.td, fontSize: 12, color: '#8B7355' }}>
+                  <td style={{ ...styles.td, fontSize: 12, color: '#999' }}>
                     {s.created_at ? new Date(s.created_at).toLocaleString('zh-CN') : '-'}
                   </td>
                   <td style={styles.td}>
@@ -276,7 +276,7 @@ export default function ScenicSpots() {
         <div style={styles.modalOverlay} onClick={() => setDeleteId(null)}>
           <div style={{ ...styles.modal, maxWidth: 380 }} onClick={e => e.stopPropagation()}>
             <h3 style={{ margin: '0 0 12px', fontSize: 18 }}>确认删除</h3>
-            <p style={{ fontSize: 14, color: '#8B7355', lineHeight: 1.6 }}>确定要删除此景点吗？此操作不可恢复。</p>
+            <p style={{ fontSize: 14, color: '#666', lineHeight: 1.6 }}>确定要删除此景点吗？此操作不可恢复。</p>
             <div style={styles.modalBtns}>
               <button onClick={() => setDeleteId(null)} style={styles.secondaryBtn}>取消</button>
               <button onClick={() => handleDelete(deleteId)} style={{ ...styles.primaryBtn, background: '#ff4d4f' }}>
@@ -295,11 +295,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 22,
     fontWeight: 600,
     marginBottom: 4,
-    color: '#4A3028',
+    color: '#1a1a2e',
   },
   subtitle: {
     fontSize: 13,
-    color: '#8B7355',
+    color: '#999',
     marginBottom: 20,
   },
   toolbar: {
@@ -307,23 +307,23 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 10,
     marginBottom: 16,
     alignItems: 'center',
-    background: '#FFFDF5',
+    background: '#fff',
     padding: '12px 16px',
     borderRadius: 10,
-    boxShadow: '0 1px 8px rgba(74,48,40,0.06)',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
   },
   select: {
     padding: '7px 12px',
     borderRadius: 6,
-    border: '1px solid #E0D3C0',
+    border: '1px solid #ddd',
     fontSize: 13,
     outline: 'none',
-    background: '#FFF9ED',
+    background: '#fff',
   },
   searchInput: {
     padding: '7px 14px',
     borderRadius: 6,
-    border: '1px solid #E0D3C0',
+    border: '1px solid #ddd',
     fontSize: 13,
     outline: 'none',
     width: 200,
@@ -332,7 +332,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '7px 18px',
     borderRadius: 6,
     border: 'none',
-    background: 'linear-gradient(135deg, #C9A24E, #8B6914)',
+    background: '#1976D2',
     color: '#fff',
     fontSize: 13,
     cursor: 'pointer',
@@ -341,22 +341,22 @@ const styles: Record<string, React.CSSProperties> = {
   secondaryBtn: {
     padding: '7px 18px',
     borderRadius: 6,
-    border: '1px solid #E0D3C0',
-    background: '#FFF9ED',
-    color: '#4A3028',
+    border: '1px solid #ddd',
+    background: '#fff',
+    color: '#333',
     fontSize: 13,
     cursor: 'pointer',
   },
   tableWrap: {
-    background: '#FFFDF5',
+    background: '#fff',
     borderRadius: 10,
-    boxShadow: '0 1px 8px rgba(74,48,40,0.06)',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
     overflow: 'auto',
   },
   empty: {
     textAlign: 'center',
     padding: 60,
-    color: '#8B7355',
+    color: '#999',
   },
   table: {
     width: '100%',
@@ -365,27 +365,27 @@ const styles: Record<string, React.CSSProperties> = {
   th: {
     textAlign: 'left' as const,
     padding: '12px 14px',
-    borderBottom: '2px solid #E0D3C0',
+    borderBottom: '2px solid #e8e8e8',
     fontSize: 13,
-    color: '#4A3028',
+    color: '#666',
     fontWeight: 600,
-    background: '#FFF9ED',
+    background: '#fafafa',
   },
   tr: {
-    borderBottom: '1px solid #E0D3C0',
+    borderBottom: '1px solid #f0f0f0',
   },
   td: {
     padding: '10px 14px',
     fontSize: 13,
-    color: '#4A3028',
+    color: '#333',
     verticalAlign: 'middle' as const,
   },
   tag: {
     display: 'inline-block',
     padding: '2px 10px',
     borderRadius: 4,
-    background: '#FFF5E0',
-    color: '#8B6914',
+    background: '#fff3e0',
+    color: '#E65100',
     fontSize: 12,
     fontWeight: 500,
   },
@@ -405,15 +405,15 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'rgba(74,48,40,0.35)',
+    background: 'rgba(0,0,0,0.35)',
   },
   modal: {
     width: '90%',
     maxWidth: 560,
-    background: '#FFFDF5',
+    background: '#fff',
     borderRadius: 12,
     padding: 28,
-    boxShadow: '0 12px 48px rgba(74,48,40,0.18)',
+    boxShadow: '0 12px 48px rgba(0,0,0,0.18)',
   },
   formGroup: {
     marginBottom: 14,
@@ -426,7 +426,7 @@ const styles: Record<string, React.CSSProperties> = {
   label: {
     display: 'block',
     fontSize: 13,
-    color: '#4A3028',
+    color: '#555',
     marginBottom: 5,
     fontWeight: 500,
   },
@@ -434,11 +434,10 @@ const styles: Record<string, React.CSSProperties> = {
     width: '100%',
     padding: '9px 14px',
     borderRadius: 6,
-    border: '1px solid #E0D3C0',
+    border: '1px solid #ddd',
     fontSize: 14,
     outline: 'none',
     boxSizing: 'border-box' as any,
-    background: '#FFF9ED',
   },
   modalBtns: {
     display: 'flex',

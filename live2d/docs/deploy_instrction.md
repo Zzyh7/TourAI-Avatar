@@ -50,6 +50,16 @@ pnpm run start
 docker-compose -f docker-compose-quickStart.yaml up -d
 ```
 
+> **🐳 镜像拉取问题？**
+> 本项目的 FunASR 等镜像托管在阿里云容器镜像仓库（`registry.cn-hangzhou.aliyuncs.com`）。如果拉取失败或速度慢，请配置 Docker 镜像加速器：
+> ```json
+> // /etc/docker/daemon.json（Linux） 或 Docker Desktop Settings → Docker Engine（Win/Mac）
+> {
+>   "registry-mirrors": ["https://registry.cn-hangzhou.aliyuncs.com"]
+> }
+> ```
+> 然后重启 Docker：`sudo systemctl restart docker`（Linux）或右键重启 Docker Desktop。
+
 ### 容器部署（容器开发首选）
 > 基础环境
 * 安装[docker-compose](https://docs.docker.com/compose/install/)

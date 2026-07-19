@@ -103,9 +103,9 @@ export default function Sessions() {
   };
 
   const sentimentColor = (s: string) => {
-    if (s === '正面') return '#C9A24E';
-    if (s === '负面') return '#c0392b';
-    return '#D4943A';
+    if (s === '正面') return '#4CAF50';
+    if (s === '负面') return '#f44336';
+    return '#FF9800';
   };
 
   return (
@@ -134,7 +134,7 @@ export default function Sessions() {
           <option value="休闲游">休闲游</option>
         </select>
         <div style={{ flex: 1 }} />
-        <span style={{ fontSize: 13, color: '#8B7355' }}>共 {total} 个会话</span>
+        <span style={{ fontSize: 13, color: '#999' }}>共 {total} 个会话</span>
       </div>
 
       {/* 列表 */}
@@ -167,7 +167,7 @@ export default function Sessions() {
                     <span style={styles.tag}>{tagLabel(s.visitor_tag)}</span>
                   </td>
                   <td style={styles.td}>{s.conversation_count}</td>
-                  <td style={{ ...styles.td, fontSize: 12, color: '#8B7355' }}>
+                  <td style={{ ...styles.td, fontSize: 12, color: '#999' }}>
                     {new Date(s.created_at).toLocaleString('zh-CN')}
                   </td>
                   <td style={styles.td}>
@@ -191,7 +191,7 @@ export default function Sessions() {
           >
             上一页
           </button>
-          <span style={{ fontSize: 13, color: '#8B7355' }}>第 {page} / {totalPages} 页</span>
+          <span style={{ fontSize: 13, color: '#666' }}>第 {page} / {totalPages} 页</span>
           <button
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages}
@@ -211,7 +211,7 @@ export default function Sessions() {
               <button onClick={closeDetail} style={styles.closeBtn}>✕</button>
             </div>
             {detailLoading ? (
-              <div style={{ textAlign: 'center', padding: 40, color: '#8B7355' }}>加载中...</div>
+              <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>加载中...</div>
             ) : detail ? (
               <>
                 <div style={styles.detailMeta}>
@@ -222,18 +222,18 @@ export default function Sessions() {
                 </div>
                 <div style={{ maxHeight: 400, overflow: 'auto' }}>
                   {detail.conversations.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: 30, color: '#E0D3C0' }}>暂无对话记录</div>
+                    <div style={{ textAlign: 'center', padding: 30, color: '#ccc' }}>暂无对话记录</div>
                   ) : (
                     detail.conversations.map(c => (
                       <div key={c.id} style={{
                         ...styles.convItem,
-                        background: c.role === 'user' ? '#FFF5E0' : '#FFF9ED',
-                        borderLeftColor: c.role === 'user' ? '#B8860B' : '#C9A24E',
+                        background: c.role === 'user' ? '#f5f9ff' : '#f9fdf9',
+                        borderLeftColor: c.role === 'user' ? '#1976D2' : '#4CAF50',
                       }}>
                         <div style={styles.convMeta}>
                           <span style={{
                             ...styles.convRole,
-                            color: c.role === 'user' ? '#B8860B' : '#C9A24E',
+                            color: c.role === 'user' ? '#1976D2' : '#4CAF50',
                           }}>
                             {c.role === 'user' ? '👤 用户' : '🤖 助手'}
                           </span>
@@ -242,11 +242,11 @@ export default function Sessions() {
                               {c.sentiment}
                             </span>
                           )}
-                          <span style={{ fontSize: 11, color: '#8B7355' }}>
+                          <span style={{ fontSize: 11, color: '#bbb' }}>
                             {new Date(c.created_at).toLocaleString('zh-CN')}
                           </span>
                           {c.latency_ms > 0 && (
-                            <span style={{ fontSize: 11, color: '#8B7355' }}>⏱ {c.latency_ms}ms</span>
+                            <span style={{ fontSize: 11, color: '#bbb' }}>⏱ {c.latency_ms}ms</span>
                           )}
                           <div style={{ flex: 1 }} />
                           <button
@@ -264,7 +264,7 @@ export default function Sessions() {
                 </div>
               </>
             ) : (
-              <div style={{ textAlign: 'center', padding: 40, color: '#8B7355' }}>加载失败</div>
+              <div style={{ textAlign: 'center', padding: 40, color: '#999' }}>加载失败</div>
             )}
           </div>
         </div>
@@ -275,7 +275,7 @@ export default function Sessions() {
         <div style={styles.modalOverlay} onClick={() => setDeleteTarget(null)}>
           <div style={{ ...styles.modal, maxWidth: 380 }} onClick={e => e.stopPropagation()}>
             <h3 style={{ margin: '0 0 12px', fontSize: 18 }}>确认删除</h3>
-            <p style={{ fontSize: 14, color: '#8B7355', lineHeight: 1.6 }}>
+            <p style={{ fontSize: 14, color: '#666', lineHeight: 1.6 }}>
               {deleteTarget.type === 'session'
                 ? '确定要删除此会话及其所有对话记录吗？此操作不可恢复。'
                 : '确定要删除此条对话记录吗？此操作不可恢复。'}
@@ -287,7 +287,7 @@ export default function Sessions() {
                   if (deleteTarget.type === 'session') handleDeleteSession(deleteTarget.id as string);
                   else handleDeleteConv(deleteTarget.id as number);
                 }}
-                style={{ ...styles.primaryBtn, background: '#c0392b' }}
+                style={{ ...styles.primaryBtn, background: '#ff4d4f' }}
               >
                 确认删除
               </button>
@@ -304,11 +304,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 22,
     fontWeight: 600,
     marginBottom: 4,
-    color: '#4A3028',
+    color: '#1a1a2e',
   },
   subtitle: {
     fontSize: 13,
-    color: '#8B7355',
+    color: '#999',
     marginBottom: 20,
   },
   toolbar: {
@@ -316,23 +316,23 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 10,
     marginBottom: 16,
     alignItems: 'center',
-    background: '#FFFDF5',
+    background: '#fff',
     padding: '12px 16px',
     borderRadius: 10,
-    boxShadow: '0 1px 8px rgba(74,48,40,0.06)',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
   },
   select: {
     padding: '7px 12px',
     borderRadius: 6,
-    border: '1px solid #E0D3C0',
+    border: '1px solid #ddd',
     fontSize: 13,
     outline: 'none',
-    background: '#FFF9ED',
+    background: '#fff',
   },
   searchInput: {
     padding: '7px 14px',
     borderRadius: 6,
-    border: '1px solid #E0D3C0',
+    border: '1px solid #ddd',
     fontSize: 13,
     outline: 'none',
     width: 220,
@@ -341,7 +341,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '7px 18px',
     borderRadius: 6,
     border: 'none',
-    background: 'linear-gradient(135deg, #C9A24E, #8B6914)',
+    background: '#1976D2',
     color: '#fff',
     fontSize: 13,
     cursor: 'pointer',
@@ -350,22 +350,22 @@ const styles: Record<string, React.CSSProperties> = {
   secondaryBtn: {
     padding: '7px 18px',
     borderRadius: 6,
-    border: '1px solid #E0D3C0',
-    background: '#FFF9ED',
-    color: '#4A3028',
+    border: '1px solid #ddd',
+    background: '#fff',
+    color: '#333',
     fontSize: 13,
     cursor: 'pointer',
   },
   tableWrap: {
-    background: '#FFFDF5',
+    background: '#fff',
     borderRadius: 10,
-    boxShadow: '0 1px 8px rgba(74,48,40,0.06)',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
     overflow: 'auto',
   },
   empty: {
     textAlign: 'center',
     padding: 60,
-    color: '#8B7355',
+    color: '#999',
   },
   table: {
     width: '100%',
@@ -374,27 +374,27 @@ const styles: Record<string, React.CSSProperties> = {
   th: {
     textAlign: 'left' as const,
     padding: '12px 14px',
-    borderBottom: '2px solid #E0D3C0',
+    borderBottom: '2px solid #e8e8e8',
     fontSize: 13,
-    color: '#4A3028',
+    color: '#666',
     fontWeight: 600,
-    background: '#FFF9ED',
+    background: '#fafafa',
   },
   tr: {
-    borderBottom: '1px solid #E0D3C0',
+    borderBottom: '1px solid #f0f0f0',
   },
   td: {
     padding: '10px 14px',
     fontSize: 13,
-    color: '#4A3028',
+    color: '#333',
     verticalAlign: 'middle' as const,
   },
   tag: {
     display: 'inline-block',
     padding: '2px 10px',
     borderRadius: 4,
-    background: '#FFF5E0',
-    color: '#8B6914',
+    background: '#f3e5f5',
+    color: '#7B1FA2',
     fontSize: 12,
     fontWeight: 500,
   },
@@ -416,11 +416,10 @@ const styles: Record<string, React.CSSProperties> = {
   pageBtn: {
     padding: '6px 16px',
     borderRadius: 6,
-    border: '1px solid #E0D3C0',
-    background: '#FFF9ED',
+    border: '1px solid #ddd',
+    background: '#fff',
     fontSize: 13,
     cursor: 'pointer',
-    color: '#4A3028',
   },
   // 弹窗
   modalOverlay: {
@@ -430,17 +429,17 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'rgba(74,48,40,0.35)',
+    background: 'rgba(0,0,0,0.35)',
   },
   modal: {
     width: '90%',
     maxWidth: 800,
     maxHeight: '85vh',
     overflow: 'auto',
-    background: '#FFFDF5',
+    background: '#fff',
     borderRadius: 12,
     padding: 24,
-    boxShadow: '0 12px 48px rgba(74,48,40,0.18)',
+    boxShadow: '0 12px 48px rgba(0,0,0,0.18)',
   },
   modalHeader: {
     display: 'flex',
@@ -448,20 +447,19 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     marginBottom: 16,
     paddingBottom: 12,
-    borderBottom: '1px solid #E0D3C0',
+    borderBottom: '1px solid #eee',
   },
   closeBtn: {
     width: 32,
     height: 32,
     borderRadius: '50%',
     border: 'none',
-    background: '#E0D3C0',
+    background: '#f0f0f0',
     cursor: 'pointer',
     fontSize: 16,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: '#4A3028',
   },
   detailMeta: {
     display: 'flex',
@@ -469,13 +467,13 @@ const styles: Record<string, React.CSSProperties> = {
     flexWrap: 'wrap' as const,
     marginBottom: 16,
     fontSize: 13,
-    color: '#8B7355',
+    color: '#666',
   },
   convItem: {
     padding: '12px 14px',
     borderRadius: 8,
     marginBottom: 10,
-    borderLeft: '3px solid #B8860B',
+    borderLeft: '3px solid #1976D2',
   },
   convMeta: {
     display: 'flex',
@@ -492,11 +490,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 500,
     padding: '1px 6px',
     borderRadius: 3,
-    background: '#FFF9ED',
+    background: '#f5f5f5',
   },
   convContent: {
     fontSize: 14,
-    color: '#4A3028',
+    color: '#333',
     lineHeight: 1.7,
     whiteSpace: 'pre-wrap' as const,
   },

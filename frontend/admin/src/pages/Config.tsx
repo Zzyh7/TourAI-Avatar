@@ -83,7 +83,7 @@ export default function Config() {
   };
 
   if (loading) {
-    return <div style={{ textAlign: 'center', padding: 80, color: '#8B7355' }}>加载中...</div>;
+    return <div style={{ textAlign: 'center', padding: 80, color: '#999' }}>加载中...</div>;
   }
 
   return (
@@ -125,7 +125,7 @@ export default function Config() {
         <div style={styles.formGroup}>
           <label style={styles.label}>语速: {voiceSpeed.toFixed(1)}x</label>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 12, color: '#8B7355' }}>0.5x</span>
+            <span style={{ fontSize: 12, color: '#999' }}>0.5x</span>
             <input
               type="range"
               min="0.5"
@@ -135,7 +135,7 @@ export default function Config() {
               onChange={e => setVoiceSpeed(Number(e.target.value))}
               style={styles.range}
             />
-            <span style={{ fontSize: 12, color: '#8B7355' }}>2.0x</span>
+            <span style={{ fontSize: 12, color: '#999' }}>2.0x</span>
           </div>
           <span style={styles.hint}>调整语音播放速度，1.0 为正常速度</span>
         </div>
@@ -147,7 +147,7 @@ export default function Config() {
           {msg && (
             <span style={{
               fontSize: 14,
-              color: msg.startsWith('✅') ? '#C9A24E' : '#c0392b',
+              color: msg.startsWith('✅') ? '#4CAF50' : '#f44336',
               fontWeight: 500,
             }}>
               {msg}
@@ -191,25 +191,25 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 22,
     fontWeight: 600,
     marginBottom: 4,
-    color: '#4A3028',
+    color: '#1a1a2e',
   },
   subtitle: {
     fontSize: 13,
-    color: '#8B7355',
+    color: '#999',
     marginBottom: 20,
   },
   card: {
-    background: '#FFFDF5',
+    background: '#fff',
     borderRadius: 10,
     padding: 24,
-    boxShadow: '0 1px 8px rgba(74,48,40,0.06)',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
     maxWidth: 680,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: 600,
     marginBottom: 16,
-    color: '#4A3028',
+    color: '#333',
   },
   formGroup: {
     marginBottom: 18,
@@ -217,7 +217,7 @@ const styles: Record<string, React.CSSProperties> = {
   label: {
     display: 'block',
     fontSize: 14,
-    color: '#4A3028',
+    color: '#444',
     marginBottom: 6,
     fontWeight: 500,
   },
@@ -226,21 +226,21 @@ const styles: Record<string, React.CSSProperties> = {
     maxWidth: 400,
     padding: '9px 14px',
     borderRadius: 6,
-    border: '1px solid #E0D3C0',
+    border: '1px solid #ddd',
     fontSize: 14,
     outline: 'none',
-    background: '#FFF9ED',
+    background: '#fff',
     marginBottom: 6,
   },
   hint: {
     display: 'block',
     fontSize: 12,
-    color: '#8B7355',
+    color: '#aaa',
   },
   range: {
     flex: 1,
     maxWidth: 300,
-    accentColor: '#B8860B',
+    accentColor: '#1976D2',
   },
   actions: {
     display: 'flex',
@@ -248,13 +248,13 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 16,
     marginTop: 24,
     paddingTop: 20,
-    borderTop: '1px solid #E0D3C0',
+    borderTop: '1px solid #f0f0f0',
   },
   primaryBtn: {
     padding: '10px 24px',
     borderRadius: 6,
     border: 'none',
-    background: 'linear-gradient(135deg, #C9A24E, #8B6914)',
+    background: '#1976D2',
     color: '#fff',
     fontSize: 14,
     cursor: 'pointer',
@@ -268,16 +268,16 @@ const styles: Record<string, React.CSSProperties> = {
   configItem: {
     padding: '12px 16px',
     borderRadius: 8,
-    background: '#FFF9ED',
+    background: '#f9fafb',
   },
   configLabel: {
     fontSize: 12,
-    color: '#8B7355',
+    color: '#999',
     marginBottom: 4,
   },
   configValue: {
     fontSize: 14,
-    color: '#4A3028',
+    color: '#333',
     fontWeight: 500,
     fontFamily: 'monospace',
   },

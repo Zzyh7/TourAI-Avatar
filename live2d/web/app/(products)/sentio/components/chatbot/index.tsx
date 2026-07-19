@@ -11,7 +11,7 @@ import {
 
 function FreedomChatBot() {
     const { infer_type } = useSentioAsrStore();
-    const [voiceMode, setVoiceMode] = useState(true);
+    const [voiceMode, setVoiceMode] = useState(false);
 
     return (
         <div className="flex flex-col full-height-minus-64px pb-6 md:px-6 gap-6 justify-between items-center z-10">

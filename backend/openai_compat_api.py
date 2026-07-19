@@ -79,7 +79,7 @@ def _build_prompt(user_text: str, system_prompt: str) -> str:
         base_prompt = system_prompt
     else:
         base_prompt = (
-            "你是一个专业的景区导览数字人，名叫小导。请用口语化的方式回答游客的问题。\n"
+            "你是一个专业的景区导览数字人，名叫小僧。请用口语化的方式回答游客的问题。\n"
             "要求：简洁生动、回答在2-4句内、不含markdown格式。"
         )
 

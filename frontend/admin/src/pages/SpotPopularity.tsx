@@ -30,7 +30,7 @@ export default function SpotPopularity() {
         type: 'bar', data: ranking.map(r => r.count),
         itemStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-            { offset: 0, color: '#B8860B' }, { offset: 1, color: '#64b5f6' },
+            { offset: 0, color: '#1976d2' }, { offset: 1, color: '#64b5f6' },
           ]),
           borderRadius: [0, 4, 4, 0],
         },
@@ -65,7 +65,7 @@ export default function SpotPopularity() {
               <div>
                 {data!.top5.map((spot, i) => (
                   <div key={spot.name} style={s.topRow}>
-                    <span style={{ ...s.rank, color: i < 3 ? ['#FFD700', '#C0C0C0', '#CD7F32'][i] : '#8B7355' }}>
+                    <span style={{ ...s.rank, color: i < 3 ? ['#FFD700', '#C0C0C0', '#CD7F32'][i] : '#999' }}>
                       #{i + 1}
                     </span>
                     <span style={s.spotName}>{spot.name}</span>
@@ -98,25 +98,25 @@ export default function SpotPopularity() {
 }
 
 const s: Record<string, React.CSSProperties> = {
-  title: { fontSize: 22, fontWeight: 600, marginBottom: 4, color: '#4A3028' },
-  subtitle: { fontSize: 13, color: '#8B7355', marginBottom: 20 },
-  loading: { textAlign: 'center', padding: 80, color: '#8B7355', fontSize: 15 },
+  title: { fontSize: 22, fontWeight: 600, marginBottom: 4, color: '#1a1a2e' },
+  subtitle: { fontSize: 13, color: '#999', marginBottom: 20 },
+  loading: { textAlign: 'center', padding: 80, color: '#999', fontSize: 15 },
   empty: { textAlign: 'center', padding: 40, color: '#ccc' },
   grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 },
   chartBox: {
     background: '#fff', borderRadius: 10, padding: 20,
-    boxShadow: '0 1px 4px rgba(74,48,40,0.06)',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
   },
-  chartTitle: { fontSize: 15, fontWeight: 600, marginBottom: 16, color: '#4A3028' },
+  chartTitle: { fontSize: 15, fontWeight: 600, marginBottom: 16, color: '#333' },
   topRow: {
     display: 'flex', alignItems: 'center', gap: 12,
-    padding: '12px 0', borderBottom: '1px solid #FFF9ED',
+    padding: '12px 0', borderBottom: '1px solid #f5f5f5',
   },
   rank: { fontSize: 16, fontWeight: 700, width: 36, flexShrink: 0 },
-  spotName: { flex: 1, fontSize: 14, color: '#4A3028' },
-  count: { fontSize: 13, color: '#B8860B', fontWeight: 500 },
+  spotName: { flex: 1, fontSize: 14, color: '#333' },
+  count: { fontSize: 13, color: '#1976d2', fontWeight: 500 },
   coldTag: {
     display: 'inline-block', padding: '4px 12px', borderRadius: 4,
-    background: '#FFF9ED', color: '#8B7355', fontSize: 12,
+    background: '#f5f5f5', color: '#999', fontSize: 12,
   },
 };

@@ -49,12 +49,12 @@ export default function Dashboard() {
       {
         name: '对话数', type: 'bar',
         data: (data?.time_comparison?.week_daily || []).map((d: any) => d.conversations),
-        itemStyle: { color: '#D4A853', borderRadius: 4 }, barWidth: '40%',
+        itemStyle: { color: '#90caf9', borderRadius: 4 }, barWidth: '40%',
       },
       {
         name: '满意度%', type: 'line', yAxisIndex: 1,
         data: (data?.time_comparison?.week_daily || []).map((d: any) => d.rate),
-        smooth: true, itemStyle: { color: '#8B6914' }, lineStyle: { width: 3 },
+        smooth: true, itemStyle: { color: '#66bb6a' }, lineStyle: { width: 3 },
       },
     ],
   }, [data]);
@@ -66,9 +66,9 @@ export default function Dashboard() {
     series: [{
       type: 'pie', radius: ['50%', '70%'], center: ['50%', '43%'],
       data: [
-        { value: data?.qa_quality?.sentiment?.positive || 0, name: '正面', itemStyle: { color: '#C9A24E' } },
-        { value: data?.qa_quality?.sentiment?.neutral || 0, name: '中性', itemStyle: { color: '#D4A853' } },
-        { value: data?.qa_quality?.sentiment?.negative || 0, name: '负面', itemStyle: { color: '#c0392b' } },
+        { value: data?.qa_quality?.sentiment?.positive || 0, name: '正面', itemStyle: { color: '#66bb6a' } },
+        { value: data?.qa_quality?.sentiment?.neutral || 0, name: '中性', itemStyle: { color: '#42a5f5' } },
+        { value: data?.qa_quality?.sentiment?.negative || 0, name: '负面', itemStyle: { color: '#ef5350' } },
       ],
     }],
   }, [data]);
@@ -86,7 +86,7 @@ export default function Dashboard() {
     series: [{
       type: 'bar',
       data: (data?.interaction?.hourly_distribution || []).map((h: any) => h.count),
-      itemStyle: { color: '#B8860B', borderRadius: 2 },
+      itemStyle: { color: '#1976d2', borderRadius: 2 },
     }],
   }, [data]);
 
@@ -105,24 +105,24 @@ export default function Dashboard() {
 
       {/* 核心指标卡片 */}
       <div style={s.cards}>
-        <div style={{ ...s.card, borderTopColor: '#B8860B' }}>
+        <div style={{ ...s.card, borderTopColor: '#1976D2' }}>
           <div style={s.cardLabel}>今日服务人次</div>
-          <div style={{ ...s.cardValue, color: '#B8860B' }}>{inter?.today?.sessions || 0}</div>
+          <div style={{ ...s.cardValue, color: '#1976d2' }}>{inter?.today?.sessions || 0}</div>
           <div style={s.cardSub}>昨日 {inter?.yesterday?.sessions || 0}</div>
         </div>
-        <div style={{ ...s.card, borderTopColor: '#C9A24E' }}>
+        <div style={{ ...s.card, borderTopColor: '#43a047' }}>
           <div style={s.cardLabel}>今日对话数</div>
-          <div style={{ ...s.cardValue, color: '#C9A24E' }}>{inter?.today?.conversations || 0}</div>
+          <div style={{ ...s.cardValue, color: '#43a047' }}>{inter?.today?.conversations || 0}</div>
           <div style={s.cardSub}>昨日 {inter?.yesterday?.conversations || 0}</div>
         </div>
-        <div style={{ ...s.card, borderTopColor: '#D4943A' }}>
+        <div style={{ ...s.card, borderTopColor: '#ff8f00' }}>
           <div style={s.cardLabel}>本周服务人次</div>
-          <div style={{ ...s.cardValue, color: '#D4943A' }}>{inter?.week?.sessions || 0}</div>
+          <div style={{ ...s.cardValue, color: '#ff8f00' }}>{inter?.week?.sessions || 0}</div>
           <div style={s.cardSub}>月度 {inter?.month?.sessions || 0}</div>
         </div>
-        <div style={{ ...s.card, borderTopColor: '#8B6914' }}>
+        <div style={{ ...s.card, borderTopColor: '#7e57c2' }}>
           <div style={s.cardLabel}>回访游客(周)</div>
-          <div style={{ ...s.cardValue, color: '#8B6914' }}>{inter?.repeat_visitors_week || 0}</div>
+          <div style={{ ...s.cardValue, color: '#7e57c2' }}>{inter?.repeat_visitors_week || 0}</div>
           <div style={s.cardSub}>满意度 {qa?.satisfaction_rate || 0}%</div>
         </div>
       </div>
@@ -149,21 +149,21 @@ export default function Dashboard() {
           <h3 style={s.chartTitle}>AI 服务质量</h3>
           <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center', padding: 30 }}>
             <div>
-              <div style={{ fontSize: 32, fontWeight: 700, color: '#C9A24E' }}>{qa?.satisfaction_rate || 0}%</div>
-              <div style={{ fontSize: 13, color: '#8B7355', marginTop: 4 }}>满意度</div>
+              <div style={{ fontSize: 32, fontWeight: 700, color: '#43a047' }}>{qa?.satisfaction_rate || 0}%</div>
+              <div style={{ fontSize: 13, color: '#999', marginTop: 4 }}>满意度</div>
             </div>
             <div>
-              <div style={{ fontSize: 32, fontWeight: 700, color: '#c0392b' }}>{qa?.unable_rate || 0}%</div>
-              <div style={{ fontSize: 13, color: '#8B7355', marginTop: 4 }}>答不上率</div>
+              <div style={{ fontSize: 32, fontWeight: 700, color: '#ef5350' }}>{qa?.unable_rate || 0}%</div>
+              <div style={{ fontSize: 13, color: '#999', marginTop: 4 }}>答不上率</div>
             </div>
             <div>
-              <div style={{ fontSize: 32, fontWeight: 700, color: '#B8860B' }}>{qa?.total_answers || 0}</div>
-              <div style={{ fontSize: 13, color: '#8B7355', marginTop: 4 }}>总回答数</div>
+              <div style={{ fontSize: 32, fontWeight: 700, color: '#1976d2' }}>{qa?.total_answers || 0}</div>
+              <div style={{ fontSize: 13, color: '#999', marginTop: 4 }}>总回答数</div>
             </div>
             <div>
               <div style={{
                 fontSize: 32, fontWeight: 700,
-                color: (comp?.week_change || 0) >= 0 ? '#C9A24E' : '#c0392b'
+                color: (comp?.week_change || 0) >= 0 ? '#43a047' : '#ef5350'
               }}>
                 {(comp?.week_change || 0) >= 0 ? '↑' : '↓'}{Math.abs(comp?.week_change || 0)}%
               </div>
@@ -177,21 +177,21 @@ export default function Dashboard() {
 }
 
 const s: Record<string, React.CSSProperties> = {
-  title: { fontSize: 22, fontWeight: 600, marginBottom: 4, color: '#4A3028' },
-  subtitle: { fontSize: 13, color: '#8B7355', marginBottom: 20 },
-  loading: { textAlign: 'center', padding: 80, color: '#8B7355', fontSize: 15 },
+  title: { fontSize: 22, fontWeight: 600, marginBottom: 4, color: '#1a1a2e' },
+  subtitle: { fontSize: 13, color: '#999', marginBottom: 20 },
+  loading: { textAlign: 'center', padding: 80, color: '#999', fontSize: 15 },
   cards: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 20 },
   card: {
-    background: '#FFFDF5', borderRadius: 10, padding: '20px 24px',
-    borderTop: '3px solid #B8860B', boxShadow: '0 1px 8px rgba(74,48,40,0.06)',
+    background: '#fff', borderRadius: 10, padding: '20px 24px',
+    borderTop: '3px solid #1976D2', boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
   },
-  cardLabel: { fontSize: 13, color: '#8B7355', marginBottom: 8 },
+  cardLabel: { fontSize: 13, color: '#999', marginBottom: 8 },
   cardValue: { fontSize: 28, fontWeight: 700 },
-  cardSub: { fontSize: 12, color: '#8B7355', marginTop: 4 },
+  cardSub: { fontSize: 12, color: '#bbb', marginTop: 4 },
   grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 },
   chartBox: {
-    background: '#FFFDF5', borderRadius: 10, padding: 20,
-    boxShadow: '0 1px 8px rgba(74,48,40,0.06)',
+    background: '#fff', borderRadius: 10, padding: 20,
+    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
   },
-  chartTitle: { fontSize: 15, fontWeight: 600, marginBottom: 16, color: '#4A3028' },
+  chartTitle: { fontSize: 15, fontWeight: 600, marginBottom: 16, color: '#333' },
 };

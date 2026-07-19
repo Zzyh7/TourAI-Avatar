@@ -38,7 +38,7 @@ export default function VisitorProfile() {
         label: { show: false },
         emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold' } },
         data: data.attribute_tags.map(t => ({ name: t.name, value: t.value })),
-        color: ['#c0392b', '#D4A853', '#C9A24E', '#ffa726', '#ab47bc', '#26c6da'],
+        color: ['#ef5350', '#42a5f5', '#66bb6a', '#ffa726', '#ab47bc', '#26c6da'],
       }],
     }, true);
     const onResize = () => c.resize();
@@ -62,7 +62,7 @@ export default function VisitorProfile() {
         label: { show: false },
         emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold' } },
         data: data.preference_stats.map(p => ({ name: p.name, value: p.value })),
-        color: ['#C9A24E', '#D4943A', '#1e88e5', '#8e24aa'],
+        color: ['#43a047', '#ff8f00', '#1e88e5', '#8e24aa'],
       }],
     }, true);
     const onResize = () => c.resize();
@@ -86,7 +86,7 @@ export default function VisitorProfile() {
         barWidth: 28,
         itemStyle: {
           borderRadius: 4,
-          color: (p: any) => ['#1e88e5', '#ffa726', '#C9A24E'][p.dataIndex] || '#D4A853',
+          color: (p: any) => ['#1e88e5', '#ffa726', '#66bb6a'][p.dataIndex] || '#90caf9',
         },
         label: { show: true, position: 'right', formatter: '{c}人' },
       }],
@@ -142,24 +142,24 @@ export default function VisitorProfile() {
 
       {/* 摘要卡片 */}
       <div style={s.cards}>
-        <div style={{ ...s.card, borderTopColor: '#B8860B' }}>
+        <div style={{ ...s.card, borderTopColor: '#1976D2' }}>
           <div style={s.cardLabel}>游客总量（本月）</div>
-          <div style={{ ...s.cardValue, color: '#B8860B' }}>{data?.total_visitors || 0}</div>
+          <div style={{ ...s.cardValue, color: '#1976d2' }}>{data?.total_visitors || 0}</div>
           <div style={s.cardSub}>活跃会话数</div>
         </div>
-        <div style={{ ...s.card, borderTopColor: '#c0392b' }}>
+        <div style={{ ...s.card, borderTopColor: '#ef5350' }}>
           <div style={s.cardLabel}>最多属性标签</div>
-          <div style={{ ...s.cardValue, color: '#c0392b', fontSize: 22 }}>{topTag}</div>
+          <div style={{ ...s.cardValue, color: '#ef5350', fontSize: 22 }}>{topTag}</div>
           <div style={s.cardSub}>共 {tags.length} 类标签</div>
         </div>
-        <div style={{ ...s.card, borderTopColor: '#C9A24E' }}>
+        <div style={{ ...s.card, borderTopColor: '#43a047' }}>
           <div style={s.cardLabel}>最多游玩偏好</div>
-          <div style={{ ...s.cardValue, color: '#C9A24E', fontSize: 22 }}>{topPref}</div>
+          <div style={{ ...s.cardValue, color: '#43a047', fontSize: 22 }}>{topPref}</div>
           <div style={s.cardSub}>共 {prefs.length} 类偏好</div>
         </div>
-        <div style={{ ...s.card, borderTopColor: '#8B6914' }}>
+        <div style={{ ...s.card, borderTopColor: '#7e57c2' }}>
           <div style={s.cardLabel}>有效分层段</div>
-          <div style={{ ...s.cardValue, color: '#8B6914' }}>{totalSeg}</div>
+          <div style={{ ...s.cardValue, color: '#7e57c2' }}>{totalSeg}</div>
           <div style={s.cardSub}>3 个分层维度</div>
         </div>
       </div>
@@ -189,7 +189,7 @@ export default function VisitorProfile() {
                 <tr key={t.name}>
                   <td style={s.td}><span style={s.tagBadge}>{t.name}</span></td>
                   <td style={s.td}>{t.value}人</td>
-                  <td style={{ ...s.td, color: '#8B7355', fontSize: 12 }}>
+                  <td style={{ ...s.td, color: '#999', fontSize: 12 }}>
                     {tagDesc[t.name] || '—'}
                   </td>
                 </tr>
@@ -225,7 +225,7 @@ export default function VisitorProfile() {
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 8 }}>
                     {(route?.spots || []).length > 0
                       ? route!.spots.map(sp => <span key={sp} style={s.spotPill}>{sp}</span>)
-                      : <span style={{ color: '#8B7355', fontSize: 12 }}>暂无景点推荐</span>}
+                      : <span style={{ color: '#bbb', fontSize: 12 }}>暂无景点推荐</span>}
                   </div>
                   <div style={s.routeCount}>{p.value}人偏好</div>
                 </div>
@@ -254,7 +254,7 @@ export default function VisitorProfile() {
             <div style={s.emptyChart}>
               <div style={{ fontSize: 28, marginBottom: 8 }}>📭</div>
               <div>暂无足够客源地数据</div>
-              <div style={{ fontSize: 12, color: '#8B7355', marginTop: 4 }}>数据通过对话关键词推测</div>
+              <div style={{ fontSize: 12, color: '#bbb', marginTop: 4 }}>数据通过对话关键词推测</div>
             </div>
           )}
         </div>
@@ -296,15 +296,15 @@ export default function VisitorProfile() {
       {strat?.feasibility && (
         <div style={{
           ...s.feasibilityBox,
-          borderLeftColor: strat.feasibility.score === 'high' ? '#C9A24E'
-            : strat.feasibility.score === 'medium' ? '#D4943A' : '#c0392b',
+          borderLeftColor: strat.feasibility.score === 'high' ? '#43a047'
+            : strat.feasibility.score === 'medium' ? '#ff8f00' : '#ef5350',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <strong style={{ fontSize: 15 }}>🔍 可行性分析</strong>
             <span style={{
               ...s.feasibilityBadge,
               background: strat.feasibility.score === 'high' ? '#e8f5e9'
-                : strat.feasibility.score === 'medium' ? '#FFF5E0' : '#ffebee',
+                : strat.feasibility.score === 'medium' ? '#fff3e0' : '#ffebee',
               color: strat.feasibility.score === 'high' ? '#2e7d32'
                 : strat.feasibility.score === 'medium' ? '#e65100' : '#c62828',
             }}>
@@ -333,7 +333,7 @@ export default function VisitorProfile() {
                     <strong style={{ fontSize: 13 }}>{seg.label}</strong>
                     <span style={{
                       fontSize: 11, padding: '2px 8px', borderRadius: 10, fontWeight: 600,
-                      background: seg.confidence === 'high' ? '#e8f5e9' : seg.confidence === 'medium' ? '#FFF5E0' : '#ffebee',
+                      background: seg.confidence === 'high' ? '#e8f5e9' : seg.confidence === 'medium' ? '#fff3e0' : '#ffebee',
                       color: seg.confidence === 'high' ? '#2e7d32' : seg.confidence === 'medium' ? '#e65100' : '#c62828',
                     }}>
                       {seg.confidence === 'high' ? '高置信度' : seg.confidence === 'medium' ? '中置信度' : '低置信度'}
@@ -346,7 +346,7 @@ export default function VisitorProfile() {
                       opacity: seg.confidence === 'high' ? 1 : seg.confidence === 'medium' ? 0.6 : 0.35,
                     }} />
                   </div>
-                  <div style={{ fontSize: 12, color: '#8B7355', marginTop: 2 }}>{seg.count}人</div>
+                  <div style={{ fontSize: 12, color: '#999', marginTop: 2 }}>{seg.count}人</div>
                 </div>
               ))}
             </div>
@@ -371,62 +371,62 @@ const tagDesc: Record<string, string> = {
 
 /* ========== 内联样式 ========== */
 const s: Record<string, React.CSSProperties> = {
-  title: { fontSize: 22, fontWeight: 600, marginBottom: 4, color: '#4A3028' },
-  subtitle: { fontSize: 13, color: '#8B7355', marginBottom: 20 },
-  loading: { textAlign: 'center', padding: 80, color: '#8B7355', fontSize: 15 },
+  title: { fontSize: 22, fontWeight: 600, marginBottom: 4, color: '#1a1a2e' },
+  subtitle: { fontSize: 13, color: '#999', marginBottom: 20 },
+  loading: { textAlign: 'center', padding: 80, color: '#999', fontSize: 15 },
   cards: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 4 },
   card: {
     background: '#fff', borderRadius: 10, padding: '20px 24px',
-    borderTop: '3px solid #B8860B', boxShadow: '0 1px 4px rgba(74,48,40,0.06)',
+    borderTop: '3px solid #1976D2', boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
   },
-  cardLabel: { fontSize: 13, color: '#8B7355', marginBottom: 8 },
+  cardLabel: { fontSize: 13, color: '#999', marginBottom: 8 },
   cardValue: { fontSize: 28, fontWeight: 700 },
-  cardSub: { fontSize: 12, color: '#8B7355', marginTop: 4 },
+  cardSub: { fontSize: 12, color: '#bbb', marginTop: 4 },
 
   // Sections
   sectionHeader: { marginTop: 28, marginBottom: 12 },
-  sectionTitle: { fontSize: 17, fontWeight: 600, color: '#4A3028', margin: 0 },
-  sectionDesc: { fontSize: 12, color: '#8B7355', margin: '4px 0 0 0' },
+  sectionTitle: { fontSize: 17, fontWeight: 600, color: '#1a1a2e', margin: 0 },
+  sectionDesc: { fontSize: 12, color: '#999', margin: '4px 0 0 0' },
 
   // Grid + chart
   grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 8 },
   chartBox: {
     background: '#fff', borderRadius: 10, padding: 20,
-    boxShadow: '0 1px 4px rgba(74,48,40,0.06)',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
   },
-  chartTitle: { fontSize: 14, fontWeight: 600, marginBottom: 12, color: '#4A3028' },
-  emptyChart: { textAlign: 'center', padding: 60, color: '#8B7355', fontSize: 14 },
+  chartTitle: { fontSize: 14, fontWeight: 600, marginBottom: 12, color: '#333' },
+  emptyChart: { textAlign: 'center', padding: 60, color: '#bbb', fontSize: 14 },
 
   // Tag table
   tagTable: { width: '100%', borderCollapse: 'collapse', fontSize: 13 } as any,
-  th: { textAlign: 'left', padding: '6px 10px', borderBottom: '2px solid #E0D3C0', color: '#8B7355', fontSize: 12, fontWeight: 600 },
-  td: { padding: '7px 10px', borderBottom: '1px solid #FFF9ED' },
+  th: { textAlign: 'left', padding: '6px 10px', borderBottom: '2px solid #eee', color: '#999', fontSize: 12, fontWeight: 600 },
+  td: { padding: '7px 10px', borderBottom: '1px solid #f5f5f5' },
   tagBadge: { display: 'inline-block', padding: '2px 10px', borderRadius: 12, fontSize: 12, background: '#e3f2fd', color: '#1565c0' },
 
   // Route cards
   routeCard: {
-    flex: '1 1 45%', minWidth: 180, background: '#FFF9ED', borderRadius: 10, padding: 14,
-    border: '1px solid #E0D3C0', position: 'relative',
+    flex: '1 1 45%', minWidth: 180, background: '#fafafa', borderRadius: 10, padding: 14,
+    border: '1px solid #eee', position: 'relative',
   },
-  routeLabel: { fontWeight: 600, fontSize: 13, color: '#4A3028', marginBottom: 4 },
-  routeDesc: { fontSize: 11, color: '#8B7355', lineHeight: 1.5 },
+  routeLabel: { fontWeight: 600, fontSize: 13, color: '#333', marginBottom: 4 },
+  routeDesc: { fontSize: 11, color: '#999', lineHeight: 1.5 },
   spotPill: { display: 'inline-block', padding: '2px 8px', background: '#e3f2fd', color: '#1565c0', borderRadius: 10, fontSize: 11 },
-  routeCount: { marginTop: 8, fontSize: 11, color: '#8B7355' },
+  routeCount: { marginTop: 8, fontSize: 11, color: '#bbb' },
 
   // Origin warning
   warningBanner: {
-    background: '#fff8e1', borderLeft: '4px solid #D4943A', borderRadius: 6,
+    background: '#fff8e1', borderLeft: '4px solid #ff8f00', borderRadius: 6,
     padding: '10px 16px', fontSize: 12, color: '#795548', marginBottom: 14, lineHeight: 1.6,
   },
 
   // Origin advice
   adviceItem: { display: 'flex', gap: 10, marginBottom: 14, alignItems: 'flex-start' },
   adviceIcon: { fontSize: 20, marginTop: 2 },
-  adviceText: { margin: '4px 0 0', fontSize: 12, color: '#8B7355' },
+  adviceText: { margin: '4px 0 0', fontSize: 12, color: '#999' },
 
   // Stratification
   feasibilityBox: {
-    background: '#e3f2fd', borderLeft: '4px solid #D4943A', borderRadius: 8,
+    background: '#e3f2fd', borderLeft: '4px solid #ff8f00', borderRadius: 8,
     padding: '16px 20px', marginBottom: 16,
   },
   feasibilityBadge: {
@@ -436,6 +436,6 @@ const s: Record<string, React.CSSProperties> = {
   feasibilityRecommendation: { fontSize: 12, color: '#78909c', fontStyle: 'italic', lineHeight: 1.6 },
 
   segItem: { marginBottom: 16 },
-  segBar: { height: 10, background: '#E0D3C0', borderRadius: 5, overflow: 'hidden' },
+  segBar: { height: 10, background: '#f0f0f0', borderRadius: 5, overflow: 'hidden' },
   segFill: { height: '100%', background: '#1e88e5', borderRadius: 5, transition: 'width 0.6s ease' },
 };
