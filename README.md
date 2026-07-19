@@ -2,7 +2,7 @@
 
 > **A5竞赛项目** | 基于 Multi-Agent + RAG + MCP 的智能景区导览数字人系统
 >
-> 支持 **语音对话** · **拍照识景** · **个性化推荐** · **地图服务**
+> 支持 **Live2D小和尚数字人** · **语音对话** · **拍照识景** · **个性化推荐** · **地图服务**
 
 ---
 
@@ -143,12 +143,14 @@ TravelAgent/
 
 | 能力 | 说明 |
 |------|------|
-| 🗣️ **智能问答** | RAG 知识库检索 + DeepSeek 大模型生成，回答景区相关问题 |
-| 🎤 **语音对话** | 前端 Web Speech API 识别 → 后端 TTS 合成，自然语音交互 |
-| 📷 **拍照识景** | 通义千问-VL 多模态模型识别景点照片，实时讲解 |
-| 📍 **地图服务** | 高德 MCP 集成，支持景点搜索、周边 POI、天气、路线规划 |
-| 🧭 **个性化推荐** | 根据游客标签（家庭/情侣/文化/休闲）推荐定制路线 |
-| 🔧 **管理后台** | 知识库管理、景区数据配置、对话模板管理、统计分析 |
+| 👤 **Live2D 数字人** | 小和尚角色，4 表情状态，语音交互，沉浸式 AI 导览 |
+| 🗣️ **智能问答** | RAG (FAISS+BM25+RRF) + DeepSeek，275条FAQ+景区知识库 |
+| 🎤 **语音对话** | 豆包 Seed-TTS-2.0 语音合成 + DashScope Paraformer 语音识别 |
+| 📷 **拍照识景** | 通义千问-VL 多模态识别 + RAG 知识增强，实时讲解 |
+| 📍 **地图服务** | 高德 MCP 15 工具，POI搜索/天气/路线/GPS触发讲解 |
+| 🧭 **个性化推荐** | 家庭游/文化深度游/休闲游/祈福游，千人千面 |
+| 📊 **管理后台** | 12 模块数据大屏，满意度+答不上率统计，员工管理 |
+| 🔧 **知识库管理** | 文档上传(PDF/Word/TXT/MD)，自动分块+向量化+混合检索 |
 
 ---
 
@@ -164,6 +166,70 @@ TravelAgent/
 | **前端** | React 18 + TypeScript + Vite 5 |
 | **地图服务** | 高德 MCP (Model Context Protocol) |
 | **多模态** | 通义千问-VL (DashScope) |
+
+---
+
+## 开发历程
+
+### Phase 1 — 核心引擎搭建
+- 基于 **FastAPI + LangChain + LangGraph** 搭建 Multi-Agent 导览系统
+- GuideAgent 总控 + 3 个 SpecialistAgent（天气/景点/路线），最小权限原则
+- **RAG 混合检索**：FAISS 向量 + BM25 关键词 + RRF 排名融合，BGE-small-zh 本地嵌入
+- **MCP 协议集成**：高德地图 15 个工具标准化接入，单例管理器懒加载
+- DeepSeek 大模型对话 + 通义千问-VL 多模态拍照识景
+- SQLite 数据库：会话/对话/文档/景点/数字人配置/员工账号
+
+### Phase 2 — 前端与语音
+- React 18 + Vite + TypeScript 游客端 & 管理后台
+- **暗黑电影级首页** + 移动端 H5 适配 + PWA 支持
+- 豆包 TTS (火山引擎) → 升级到 **Seed-TTS-2.0 WebSocket V3** 协议
+- Edge-TTS 作为免费备选方案
+- 双语音识别：浏览器 Web Speech API + DashScope Paraformer 服务端 STT
+- SSE 流式对话 + **句级 TTS 并行合成**（边生成边播报，首音延迟<2s）
+- 回答中断机制：客户端断开自动取消 LLM + TTS
+
+### Phase 3 — 数字人集成
+- 集成 **AWESOME-DIGITAL-HUMAN Live2D** (v3.0.0)
+- 小和尚 Live2D 角色：4 种表情状态（中性/开心/思考/播报）
+- OpenAI 兼容 API (`/v1/chat/completions`) 桥接 Live2D ↔ TourAI
+- TTS 引擎对接：Live2D → TourAI 代理 → 豆包/Edge 语音合成
+- STT 引擎对接：Live2D → TourAI 代理 → DashScope Paraformer 语音识别
+- 暗色三栏布局 + 推荐卡片 + GPS 景点触发
+
+### Phase 4 — 数据与管理
+- **管理后台 12 个模块**：数据大屏/景点热度/时间对比/问答分析/游客画像/游客分层/负面反馈/常用对话/会话记录/知识库文档/景点管理/系统配置
+- **员工账号系统**：登录/权限/增删改查
+- 275 条 FAQ 精标 + 30 条常用对话 + 34 条无关问题处理
+- **满意度追踪**：显式关键词识别（"我很满意"/"我不满意"）+ LLM 情感分析
+- **答不上率统计**：自动检测系统无法回答的问题并量化
+- 精细化 Prompt 工程：禁用"根据资料"等机械用语，拟人口语风格
+
+### 系统架构速览
+
+```
+浏览器 / 手机
+    ├─ http://localhost:3000/sentio  →  Live2D 小和尚数字人 (Next.js)
+    │     ├─ /adh/agent/v0/engine    →  Live2D API :8880 → TourAI :8000/v1
+    │     ├─ /adh/tts/v0/engine      →  Live2D API :8880 → TourAI :8000/api/tts
+    │     └─ /adh/asr/v0/engine/file →  Live2D API :8880 → TourAI :8000/api/stt
+    │
+    ├─ http://localhost:5173  →  游客端 (React + Vite)
+    └─ http://localhost:5174  →  管理后台 (React + Vite)
+                   │
+                   ▼
+          TourAI Backend :8000 (FastAPI)
+          ├─ /api/chat          SSE 流式问答 + RAG + TTS
+          ├─ /api/stt           语音识别 (DashScope Paraformer)
+          ├─ /api/tts           语音合成 (豆包/Edge)
+          ├─ /api/photo-recognize  多模态拍照识景
+          ├─ /v1/chat/completions  OpenAI 兼容 (供 Live2D)
+          └─ /api/admin/*       管理后台 API
+                   │
+          ┌────────┼────────┐
+          ▼        ▼        ▼
+      DeepSeek  阿里百炼   高德MCP
+       (LLM)   (多模态+STT)  (地图)</pre>
+```
 
 ---
 
