@@ -162,6 +162,18 @@ async def serve_manifest():
 async def serve_sw():
     return FileResponse("../web/sw.js", media_type="application/javascript")
 
+@app.get("/QQ20260719-221027.png")
+async def serve_ai_banner():
+    return FileResponse("../web/QQ20260719-221027.png")
+
+@app.get("/22f29e6d-9b17-4f0a-86a4-971358cab24e.png")
+async def serve_show_icon():
+    return FileResponse("../web/22f29e6d-9b17-4f0a-86a4-971358cab24e.png")
+
+@app.get("/QQ20260719-222656.png")
+async def serve_map_icon():
+    return FileResponse("../web/QQ20260719-222656.png")
+
 @app.get("/logo.png")
 async def serve_logo():
     return FileResponse("../web/logo.png")

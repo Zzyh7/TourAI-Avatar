@@ -28,7 +28,7 @@ DOUBAO_VOICES = [
 ]
 
 # TourAI 后端 TTS 接口
-TOURAI_TTS_URL = "http://localhost:8000/api/tts"
+TOURAI_TTS_URL = "http://localhost:8001/api/tts"
 
 
 @TTSEngines.register("TourAITTS")
