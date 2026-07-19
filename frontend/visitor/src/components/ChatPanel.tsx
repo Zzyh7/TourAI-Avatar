@@ -49,7 +49,7 @@ export default function ChatPanel({ messages, onSend, disabled, streamingText, o
         {messages.length === 0 && (
           <div style={styles.welcome}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>👋</div>
-            <div style={{ fontSize: 16, color: '#666', marginBottom: 4 }}>您好！我是景区导览数字人 <b>小导</b></div>
+            <div style={{ fontSize: 16, color: '#666', marginBottom: 4 }}>您好！我是景区导览数字人 <b>小僧</b></div>
             <div style={{ fontSize: 13, color: '#999' }}>
               您可以问我景点历史、文化故事、路线推荐<br />
               也可以点击麦克风按钮语音提问

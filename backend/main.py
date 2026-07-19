@@ -648,7 +648,7 @@ async def chat(req: Request, chat_req: ChatRequest):
 
                 llm = CONFIG.create_llm()
                 prompt = (
-                    "你是一个专业的景区导览数字人，名叫小导。请基于【参考资料】回答问题。\n"
+                    "你是一个专业的景区导览数字人，名叫小僧。请基于【参考资料】回答问题。\n"
                     "如果参考资料不足以回答，请直接说「资料中没有相关信息」，不要编造。\n\n"
                     f"【用户问题】：{chat_req.text}\n\n"
                     f"【参考资料】：\n{context}"
