@@ -1,0 +1,10 @@
+NAME: "TourAISTT"
+VERSION: "v0.0.1"
+DESC: "DashScope Paraformer STT — 通过 TourAI 后端调用阿里百炼语音识别"
+META: {
+  official: "https://ai.aliyun.com/nls/paraformer",
+  configuration: "",
+  tips: "阿里百炼 Paraformer 实时语音识别，中文识别精度高，需配置 DASHSCOPE_API_KEY",
+  fee: "paid"
+}
+PARAMETERS: []

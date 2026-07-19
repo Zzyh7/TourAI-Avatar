@@ -7,9 +7,9 @@ SERVER:
   PORT: 8880
   WORKSPACE_PATH: "./outputs"
   ENGINES:
-    ASR: 
-      SUPPORT_LIST: [ "difyAPI.yaml", "cozeAPI.yaml", "tencentAPI.yaml", "funasrStreamingAPI.yaml"]
-      DEFAULT: "difyAPI.yaml"
+    ASR:
+      SUPPORT_LIST: [ "tourAI_stt.yaml", "difyAPI.yaml", "cozeAPI.yaml", "tencentAPI.yaml", "funasrStreamingAPI.yaml"]
+      DEFAULT: "tourAI_stt.yaml"
     TTS:
       SUPPORT_LIST: [ "tourAI_tts.yaml", "edgeAPI.yaml", "tencentAPI.yaml", "difyAPI.yaml", "cozeAPI.yaml" ]
       DEFAULT: "tourAI_tts.yaml"

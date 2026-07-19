@@ -99,9 +99,10 @@ def _build_prompt(user_text: str, system_prompt: str) -> str:
 @router.post("/chat/completions")
 async def chat_completions(request: ChatCompletionRequest, req: Request):
     """
-    OpenAI-compatible chat completions with SSE streaming.
+    OpenAI-compatible chat completions.
+    Supports both streaming (stream=true) and non-streaming (stream=false).
 
-    Used by OpenAvatarChat's LLMOpenAICompatible handler to connect to TourAI.
+    Used by Live2D/OpenAvatarChat's LLMOpenAICompatible handler to connect to TourAI.
     """
     user_text, history = _extract_user_text(request.messages)
 
@@ -120,6 +121,30 @@ async def chat_completions(request: ChatCompletionRequest, req: Request):
 
     llm = CONFIG.create_llm()
 
+    # ---- Non-streaming mode (Live2D Web expects plain JSON) ----
+    if not request.stream:
+        full_text = ""
+        async for chunk in llm.astream(prompt):
+            token = chunk.content if hasattr(chunk, 'content') else str(chunk)
+            if token:
+                full_text += token
+
+        return {
+            "id": request_id,
+            "object": "chat.completion",
+            "created": int(time.time()),
+            "model": model_name,
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {"role": "assistant", "content": full_text},
+                    "finish_reason": "stop",
+                }
+            ],
+            "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+        }
+
+    # ---- Streaming mode (SSE) ----
     async def event_generator():
         full_text = ""
         created = int(time.time())

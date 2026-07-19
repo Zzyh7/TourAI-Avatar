@@ -24,10 +24,9 @@ function checkWebSpeechSupport(): boolean {
 
 export default function VoiceButton({ onResult, onInterrupt }: VoiceButtonProps) {
   // 首次渲染时检测浏览器是否支持 Web Speech API
+  // v2: 默认服务端识别，中国大陆无需 VPN
   const [webSpeechAvailable] = useState(() => checkWebSpeechSupport());
-  // 当前使用模式: 'web-speech' | 'dashscope'
-  const [mode, setMode] = useState<'web-speech' | 'dashscope'>(webSpeechAvailable ? 'web-speech' : 'dashscope');
-  // 标记 Web Speech 是否因网络问题不可用（被墙）
+  const [mode, setMode] = useState<'web-speech' | 'dashscope'>('dashscope');
   const [webSpeechBlocked, setWebSpeechBlocked] = useState(false);
 
   // Web Speech API hook

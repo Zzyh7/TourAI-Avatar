@@ -23,7 +23,7 @@ PARAMETERS: [
     type: "string",
     required: false,
     choices: [],
-    default: "http://localhost:8000/v1"
+    default: "http://localhost:8001/v1"
   },
   {
     name: "api_key",
