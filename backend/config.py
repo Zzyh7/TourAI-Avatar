@@ -46,18 +46,20 @@ class Config:
         "geo":     ["maps_geo", "maps_regeocode"],
     })
 
-    # ==================== 豆包 TTS (Doubao / 火山引擎) ====================
+    # ==================== 豆包 TTS (Seed-TTS-2.0 / 火山引擎 WebSocket V3) ====================
     doubao_tts_api_key: str = field(
         default_factory=lambda: os.getenv("DOUBAO_TTS_API_KEY", "")
     )
     doubao_tts_appid: str = field(
         default_factory=lambda: os.getenv("DOUBAO_TTS_APPID", "default")
     )
-    doubao_tts_endpoint: str = "https://openspeech.bytedance.com/api/v1/tts"
+    doubao_tts_v1_api_key: str = field(
+        default_factory=lambda: os.getenv("DOUBAO_TTS_V1_API_KEY", "")
+    )  # V1 HTTP fallback 专用 Key（支持 mars_bigtts 中文音色）
     doubao_tts_voice: str = field(
-        default_factory=lambda: os.getenv("DOUBAO_TTS_VOICE", "zh-CN-XiaoxiaoNeural")
-    )
-    doubao_tts_speed_ratio: float = 1.0
+        default_factory=lambda: os.getenv("DOUBAO_TTS_VOICE", "zh_male_tiancaitongsheng_mars_bigtts")
+    )  # 天才童声 (男)
+    doubao_tts_speed_ratio: float = 1.0              # 语速 1.0=正常，会自动转为 speech_rate (-50~100)
 
     # Edge-TTS 配置（当前使用）
     tts_voice: str = field(
@@ -79,8 +81,13 @@ class Config:
 
     # ==================== 自动校验 ====================
     def __post_init__(self):
+        """启动时校验关键配置 + 注入环境变量"""
         if not self.deepseek_api_key:
             raise ValueError("请配置 DEEPSEEK_API_KEY")
+        if self.dashscope_api_key:
+            os.environ["DASHSCOPE_API_KEY"] = self.dashscope_api_key
+        if self.deepseek_api_key:
+            os.environ["DEEPSEEK_API_KEY"] = self.deepseek_api_key
 
     def create_llm(self):
         """创建 DeepSeek 对话模型实例 (OpenAI 兼容接口)"""
@@ -92,13 +99,6 @@ class Config:
             temperature=self.deepseek_temperature,
             streaming=True,
         )
-
-    def __post_init__(self):
-        """确保所有 API Key 都注入到环境变量（STT 等 SDK 依赖环境变量）"""
-        if self.dashscope_api_key:
-            os.environ["DASHSCOPE_API_KEY"] = self.dashscope_api_key
-        if self.deepseek_api_key:
-            os.environ["DEEPSEEK_API_KEY"] = self.deepseek_api_key
 
     def create_multimodal_llm(self):
         """创建通义千问-VL 多模态模型实例"""

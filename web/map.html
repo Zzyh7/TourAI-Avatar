@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="manifest" href="/manifest.json"><meta name="theme-color" content="#C9A24E">
+<title>景区地图 — 灵山胜境</title><style>
+:root{--gold:#C9A24E;--bg:#F7F4ED;--text:#3A3226;--text2:#8B7E6B}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"SimSun","STSong","Songti SC",serif;background:var(--bg);color:var(--text);overflow:hidden;width:100vw;height:100vh;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 24px;background:#fff;border-bottom:1px solid #e8e4dc}
+.topbar-left{display:flex;align-items:center;gap:8px}.topbar-left img{height:36px}
+.topbar-title{font-size:15px;font-weight:700;color:var(--gold)}
+.btn{font-family:inherit;padding:8px 18px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;border:none}
+.btn-outline{background:transparent;border:1px solid #d4cbb8;color:var(--text2);text-decoration:none}
+.main{flex:1;display:flex;min-height:0}
+.left-panel{width:280px;background:#fff;border-right:1px solid #e8e4dc;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.left-panel h4{font-size:12px;color:var(--text2);letter-spacing:1px;margin-bottom:6px}
+.route-card{padding:12px;border-radius:10px;border:2px solid transparent;background:#faf8f4;cursor:pointer;margin-bottom:6px}
+.route-card:hover{border-color:var(--gold)}.route-title{font-size:13px;font-weight:700;margin-bottom:4px}
+.route-spots{font-size:11px;color:var(--text2);line-height:1.6}
+.route-tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600}
+.route-tag.rec{background:rgba(201,162,78,.15);color:var(--gold)}
+.route-tag.easy{background:rgba(46,125,91,.1);color:#2E7D5B}
+.map-area{flex:1;cursor:grab;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;background:linear-gradient(135deg,#f7f4ed 0%,#ede6d8 100%)}
+.map-area img{max-width:100%;max-height:100%;object-fit:contain;user-select:none}.map-area:active{cursor:grabbing}
+.right-panel{width:260px;background:#fff;border-left:1px solid #e8e4dc;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.spot-detail{padding:14px;border-radius:12px;background:#faf8f4;border:1px solid #e8e4dc}
+.spot-detail h5{font-size:15px;color:var(--gold);margin-bottom:6px}.spot-detail .info{font-size:12px;color:var(--text2);line-height:1.6}
+.spot-detail .actions{display:flex;gap:6px;margin-top:10px}
+.info-pill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:12px;background:rgba(201,162,78,.08);font-size:11px;color:var(--gold)}
+.dh-fixed{position:fixed;bottom:12px;left:12px;z-index:999;width:260px;height:360px;overflow:hidden;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.1)}
+.controls{position:fixed;bottom:20px;right:20px;display:flex;gap:6px;z-index:10}
+.controls button{width:36px;height:36px;border-radius:50%;border:1px solid #d4cbb8;background:rgba(255,255,255,.9);color:var(--text2);font-size:18px;cursor:pointer}
+@media(max-width:768px){
+  body{flex-direction:column;overflow-y:auto}
+  .topbar{padding:8px 12px}.topbar-title{font-size:13px}
+  .main{flex-direction:column;overflow-y:visible}
+  .left-panel{width:100%;max-height:200px;flex-shrink:0}
+  .right-panel{width:100%;max-height:200px;flex-shrink:0}
+  .map-area{height:50vh;min-height:300px;flex-shrink:0}
+  .dh-fixed{width:160px;height:220px;bottom:8px;left:8px}
+  .controls{bottom:8px;right:8px}.controls button{width:30px;height:30px;font-size:14px}
+}
+</style></head><body>
+<div class="topbar"><div class="topbar-left"><img src="/logo.png?v=20260616" alt="灵山"><span class="topbar-title">灵山景区地图</span></div><div><a href="/" class="btn btn-outline">← 返回首页</a></div></div>
+<div class="main">
+<div class="left-panel"><h4>🌟 推荐路线</h4>
+<div class="route-card" data-chat="请介绍灵山经典一日游路线"><span class="route-tag rec">推荐</span><div class="route-title">🌄 经典一日游</div><div class="route-spots">灵山大佛→梵宫→九龙灌浴→祥符禅寺</div></div>
+<div class="route-card" data-chat="请介绍灵山文化深度游"><span class="route-tag easy">轻松</span><div class="route-title">🎭 文化深度游</div><div class="route-spots">梵宫→佛教博物馆→藏经楼→素食体验</div></div>
+<div class="route-card" data-chat="请介绍灵山休闲漫步路线"><span class="route-tag easy">悠闲</span><div class="route-title">🌿 休闲漫步线</div><div class="route-spots">放生池→湖心亭→禅修径→茶园</div></div></div>
+<div class="map-area" id="viewer"><img src="/carousel/map.png" id="mapImg" draggable="false"></div>
+<div class="right-panel"><h4 style="font-size:12px;color:var(--text2);letter-spacing:1px">📍 景点详情</h4>
+<div class="spot-detail"><h5>灵山大佛</h5><div class="info">88米青铜释迦牟尼立像，面朝太湖，背倚灵山，祈福圣地。</div><div style="display:flex;gap:6px;marginTop:6px"><div class="info-pill">🕒40分钟</div><div class="info-pill">⭐必看</div></div><div class="actions"><button class="btn btn-outline" style="padding:6px 14px;font-size:12px">🗺导航前往</button></div></div>
+<div class="spot-detail"><h5>梵宫</h5><div class="info">金色穹顶佛教艺术殿堂，汇集木雕壁画琉璃等世界级精品。</div><div style="display:flex;gap:6px;marginTop:6px"><div class="info-pill">🕒50分钟</div></div><div class="actions"><button class="btn btn-outline" style="padding:6px 14px;font-size:12px">🗺导航前往</button></div></div>
+<div class="spot-detail"><h5>九龙灌浴</h5><div class="info">再现佛祖诞生场景，九龙喷水，莲花开合，天地祥瑞。</div><div style="display:flex;gap:6px;marginTop:6px"><div class="info-pill">🕒20分钟</div><div class="info-pill">🎭表演</div></div><div class="actions"><button class="btn btn-outline" style="padding:6px 14px;font-size:12px">🗺导航前往</button></div></div></div></div>
+<div class="dh-fixed"><iframe id="dhIframe" src="http://localhost:3000/sentio" allow="camera;microphone;autoplay" style="width:100%;height:100%;border:none"></iframe></div>
+<div class="controls"><button onclick="zoomMap(1)">+</button><button onclick="zoomMap(-1)">-</button><button onclick="resetMap()" style="font-size:14px">⟲</button></div>
+<script>
+// 拉取管理后台配置的音色，传给 Live2D 数字人
+(async function(){
+  try{var r=await fetch('/api/public-config');var c=await r.json();var f=document.getElementById('dhIframe');var s=function(){if(f&&f.contentWindow)f.contentWindow.postMessage({type:'config',voice:'zh_male_tiancaitongsheng_mars_bigtts'},'*');};f.addEventListener('load',s);try{s()}catch(e){}}catch(e){console.warn('加载数字人配置失败:',e);}
+})();
+document.addEventListener("click",function(e){var el=e.target.closest("[data-chat]");if(!el)return;var t=el.dataset.chat,f=document.getElementById("dhIframe");if(f&&f.contentWindow)f.contentWindow.postMessage({type:"chat",text:t},"*")});
+var s=1,px=0,py=0;function zoomMap(d){s=Math.max(.3,Math.min(5,s+d*.3));apply()}function resetMap(){s=1;px=0;py=0;apply()}function apply(){var i=document.getElementById("mapImg");if(i)i.style.transform="scale("+s+") translate("+px+"px,"+py+"px)"}
+(function(){var v=document.getElementById("viewer"),dr=false,sx=0,sy=0;v.addEventListener("wheel",function(e){e.preventDefault();zoomMap(e.deltaY<0?1:-1)});v.addEventListener("mousedown",function(e){dr=true;sx=e.clientX-px;sy=e.clientY-py;v.style.cursor="grabbing"});window.addEventListener("mousemove",function(e){if(!dr)return;px=(e.clientX-sx)/s;py=(e.clientY-sy)/s;apply()});window.addEventListener("mouseup",function(){dr=false;v.style.cursor="grab"})})();
+</script></body></html>

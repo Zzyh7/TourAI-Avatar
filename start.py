@@ -113,7 +113,10 @@ def find_python() -> str | None:
 # ============================================================
 def build_services(python_exe: str) -> list[dict]:
     is_win = platform.system() == "Windows"
-    return [
+    live2d_dir = PROJECT_ROOT / "live2d"
+    has_live2d = live2d_dir.exists() and (live2d_dir / "main.py").exists()
+
+    services = [
         {
             "name": "Backend API",
             "color": CYAN,
@@ -126,31 +129,63 @@ def build_services(python_exe: str) -> list[dict]:
             "url": "http://localhost:8000",
             "extra_urls": ["http://localhost:8000/docs"],
         },
-        {
-            "name": "Visitor",
-            "color": GREEN,
-            "cwd": PROJECT_ROOT / "frontend" / "visitor",
-            "cmd": "npm run dev -- --host 0.0.0.0" if is_win
-                   else ["npm", "run", "dev", "--", "--host", "0.0.0.0"],
-            "shell": is_win,
-            "url": "http://localhost:5173",
-        },
-        {
-            "name": "Admin",
-            "color": YELLOW,
-            "cwd": PROJECT_ROOT / "frontend" / "admin",
-            "cmd": "npm run dev -- --host 0.0.0.0" if is_win
-                   else ["npm", "run", "dev", "--", "--host", "0.0.0.0"],
-            "shell": is_win,
-            "url": "http://localhost:5174",
-        },
     ]
+
+    # Live2D 数字人后端 (端口 8880)
+    if has_live2d:
+        services.append({
+            "name": "Live2D Backend",
+            "color": CYAN,
+            "cwd": live2d_dir,
+            "cmd": [
+                python_exe, "main.py",
+            ],
+            "shell": False,
+            "url": "http://localhost:8880",
+            "extra_urls": ["http://localhost:8880/docs"],
+        })
+
+    # Live2D 数字人前端 (Next.js, 端口 3000)
+    live2d_web = live2d_dir / "web"
+    if has_live2d and (live2d_web / "node_modules").exists():
+        services.append({
+            "name": "Live2D Web",
+            "color": GREEN,
+            "cwd": live2d_web,
+            "cmd": "npx next dev --port 3000" if is_win
+                   else ["npx", "next", "dev", "--port", "3000"],
+            "shell": is_win,
+            "url": "http://localhost:3000",
+            "extra_urls": ["http://localhost:3000/sentio"],
+        })
+
+    services.append({
+        "name": "Visitor",
+        "color": GREEN,
+        "cwd": PROJECT_ROOT / "frontend" / "visitor",
+        "cmd": "npm run dev -- --host 0.0.0.0" if is_win
+               else ["npm", "run", "dev", "--", "--host", "0.0.0.0"],
+        "shell": is_win,
+        "url": "http://localhost:5173",
+    })
+
+    services.append({
+        "name": "Admin",
+        "color": YELLOW,
+        "cwd": PROJECT_ROOT / "frontend" / "admin",
+        "cmd": "npm run dev -- --host 0.0.0.0" if is_win
+               else ["npm", "run", "dev", "--", "--host", "0.0.0.0"],
+        "shell": is_win,
+        "url": "http://localhost:5174",
+    })
+
+    return services
 
 
 # ============================================================
 # 端口冲突处理
 # ============================================================
-SERVICE_PORTS = [8000, 5173, 5174]
+SERVICE_PORTS = [8000, 8880, 3000, 5173, 5174]
 
 
 def free_ports() -> int:
@@ -234,6 +269,19 @@ def preflight(python_exe: str) -> bool:
             print(f"       (Backend + static web pages are still available)")
 
     (PROJECT_ROOT / "backend" / "data").mkdir(exist_ok=True)
+
+    # Live2D 配置初始化
+    live2d_dir = PROJECT_ROOT / "live2d"
+    if live2d_dir.exists():
+        config_yaml = live2d_dir / "configs" / "config.yaml"
+        config_tpl = live2d_dir / "configs" / "config_template.yaml"
+        if not config_yaml.exists() and config_tpl.exists():
+            import shutil
+            shutil.copy(config_tpl, config_yaml)
+            print(f"  {GREEN}[OK]{NC} Created live2d/configs/config.yaml from template")
+        elif not config_yaml.exists():
+            print(f"  {YELLOW}[WARN]{NC} live2d/configs/config.yaml missing, Live2D backend may fail")
+
     return ok
 
 

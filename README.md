@@ -51,6 +51,7 @@ AMAP_API_KEY=your-amap-api-key-here
 | `DEEPSEEK_API_KEY` | 大模型对话（DeepSeek） | https://platform.deepseek.com/ |
 | `DASHSCOPE_API_KEY` | 多模态拍照识景（通义千问-VL） | https://dashscope.console.aliyun.com/ |
 | `AMAP_API_KEY` | 地图服务（高德 MCP） | https://lbs.amap.com/ |
+| `DOUBAO_TTS_API_KEY` | 豆包语音合成（火山引擎） | https://console.volcengine.com/speech |
 
 ### 第四步：启动所有服务
 
@@ -70,6 +71,7 @@ bash start.sh
 |------|------|
 | 后端 API | http://localhost:8000 |
 | API 文档 (Swagger) | http://localhost:8000/docs |
+| Live2D 数字人 | http://localhost:3000/sentio |
 | 游客端 | http://localhost:5173 |
 | 管理后台 | http://localhost:5174 |
 
@@ -157,7 +159,7 @@ TravelAgent/
 | **后端框架** | FastAPI + Uvicorn |
 | **AI/Agent** | LangChain + LangGraph + DeepSeek |
 | **RAG 检索** | FAISS + BM25 + RRF 混合检索 |
-| **语音合成** | Edge-TTS |
+| **语音合成** | 豆包 TTS (Seed-TTS-2.0 WebSocket) |
 | **数据库** | SQLite + SQLAlchemy |
 | **前端** | React 18 + TypeScript + Vite 5 |
 | **地图服务** | 高德 MCP (Model Context Protocol) |

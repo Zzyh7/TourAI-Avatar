@@ -17,7 +17,9 @@ faiss-cpu>=1.8.0
 sentence-transformers>=3.0.0
 
 # ==================== 语音合成 ====================
-edge-tts>=6.1.0                  # Edge-TTS (微软免费 TTS)
+websockets>=14.0                  # 豆包 TTS (WebSocket V3 协议)
+httpx>=0.28.0                     # 豆包 TTS (V1 HTTP fallback)
+# edge-tts>=6.1.0                # 已切换为豆包 TTS，如需回退取消注释
 
 # ==================== 数据库 ====================
 sqlalchemy>=2.0.0

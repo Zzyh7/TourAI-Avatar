@@ -28,7 +28,7 @@ from datetime import datetime
 
 from fastapi import FastAPI, Depends, Request, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, JSONResponse, FileResponse, Response
+from fastapi.responses import RedirectResponse,  StreamingResponse, JSONResponse, FileResponse, Response
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
@@ -70,6 +70,7 @@ from admin.common_dialogue_router import router as common_dialogue_router
 from admin.scenic_spots_router import router as scenic_spots_router
 from admin.data_router import router as data_router
 from admin.analytics import router as analytics_router
+from admin.staff_router import router as staff_router
 from rag_system import rag_router, init_rag, get_retriever
 from services.common_dialogue import CommonDialogueService
 from services.stt import transcribe
@@ -115,7 +116,12 @@ app = FastAPI(
 # CORS — 允许前端跨域
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",  # 游客端
+        "http://localhost:5174",  # 管理后台
+        "http://localhost:3000",  # Live2D 数字人 Web
+        "http://localhost:8000",  # 后端自身 (web 静态页面)
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -129,6 +135,7 @@ app.include_router(common_dialogue_router)
 app.include_router(scenic_spots_router)
 app.include_router(data_router)
 app.include_router(analytics_router)
+app.include_router(staff_router)
 
 # 注册 RAG 增强知识库路由 (独立 /api/rag/query + /api/rag/admin/upload/faq)
 app.include_router(rag_router, prefix="/api/rag")
@@ -147,13 +154,50 @@ async def carousel_img(fname: str):
     return Response(status_code=404)
 
 # 静态资源
+@app.get("/manifest.json")
+async def serve_manifest():
+    return FileResponse("../web/manifest.json", media_type="application/json")
+
+@app.get("/sw.js")
+async def serve_sw():
+    return FileResponse("../web/sw.js", media_type="application/javascript")
+
 @app.get("/logo.png")
 async def serve_logo():
     return FileResponse("../web/logo.png")
 
+@app.get("/map")
+async def serve_map():
+    return FileResponse("../web/map.html")
+
+@app.get("/login")
+async def serve_login():
+    return FileResponse("../web/login.html")
+
 @app.get("/web")
 async def serve_competition_web():
     return FileResponse("../web/index.html")
+
+class StaffLoginRequest(BaseModel):
+    account: str
+    password: str
+
+@app.post("/staff-login")
+async def staff_login(req: StaffLoginRequest):
+    import hashlib, secrets
+    try:
+        from models.schema import StaffAccount
+        db = SessionLocal()
+        s = db.query(StaffAccount).filter(StaffAccount.account == req.account, StaffAccount.active == 1).first()
+        db.close()
+        if s and hashlib.sha256((req.password + s.salt).encode()).hexdigest() == s.password_hash:
+            return {"success": True, "redirect": "http://localhost:5174"}
+    except Exception:
+        default_account = os.getenv("ADMIN_DEFAULT_ACCOUNT", "id123456")
+        default_password = os.getenv("ADMIN_DEFAULT_PASSWORD", "123456")
+        if req.account == default_account and req.password == default_password:
+            return {"success": True, "redirect": "http://localhost:5174"}
+    return {"success": False}
 
 @app.get("/api/public-config")
 async def public_config():
@@ -171,6 +215,24 @@ async def public_config():
     except Exception:
         pass
     return {"voice": "BV700_streaming", "character": "Haru"}
+
+
+# 移动端代理跳转 —— 通过8000端口访问前端服务
+@app.get("/visitor")
+async def redirect_visitor():
+    return RedirectResponse(url="http://localhost:5173")
+
+@app.get("/guide")
+async def serve_guide():
+    return FileResponse("../web/guide.html")
+
+@app.get("/admin-panel")
+async def redirect_admin():
+    return RedirectResponse(url="http://localhost:5174")
+
+@app.get("/debug")
+async def serve_debug():
+    return FileResponse("../web/debug.html")
 
 @app.get("/")
 async def serve_root():
@@ -1011,32 +1073,19 @@ class TTSRequest(BaseModel):
 
 @app.post("/api/tts")
 async def text_to_speech(req: TTSRequest):
-    """豆包 TTS — 文本转语音，返回 MP3 音频"""
-    import base64 as b64, httpx as _httpx, uuid as _uuid
+    """豆包 TTS (Seed-TTS-2.0 WebSocket) — 文本转语音，返回 MP3 音频"""
+    import base64 as b64
+    from services.tts.doubao_tts import doubao_tts_service
     try:
         text = req.text.strip()
         if not text:
             return JSONResponse({"error": "empty text"}, status_code=400)
         voice = req.voice or _get_db_voice()
-        payload = {
-            "app": {"appid": CONFIG.doubao_tts_appid, "token": CONFIG.doubao_tts_api_key, "cluster": "volcano_tts"},
-            "user": {"uid": "live2d_user"},
-            "audio": {"voice_type": voice, "encoding": "mp3"},
-            "request": {"reqid": _uuid.uuid4().hex, "text": text, "text_type": "plain", "operation": "query", "with_frontend": 1},
-        }
-        headers = {"Authorization": f"Bearer;{CONFIG.doubao_tts_api_key}", "Content-Type": "application/json"}
-        async with _httpx.AsyncClient(timeout=30.0) as client:
-            resp = await client.post(CONFIG.doubao_tts_endpoint, json=payload, headers=headers)
-            if resp.status_code != 200:
-                return JSONResponse({"error": f"Doubao HTTP {resp.status_code}: {resp.text[:200]}"}, status_code=500)
-            result = resp.json()
-            if result.get("code") != 3000:
-                return JSONResponse({"error": result.get("message", str(result))}, status_code=500)
-            audio_b64 = result.get("data", "")
-            if not audio_b64:
-                return JSONResponse({"error": "empty audio"}, status_code=500)
-            audio_bytes = b64.b64decode(audio_b64)
-            return Response(content=audio_bytes, media_type="audio/mp3")
+        audio_b64 = await doubao_tts_service.synthesize(text, voice)
+        if not audio_b64:
+            return JSONResponse({"error": "empty audio"}, status_code=500)
+        audio_bytes = b64.b64decode(audio_b64)
+        return Response(content=audio_bytes, media_type="audio/mp3")
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 

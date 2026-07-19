@@ -1,0 +1,28 @@
+{
+	"Version": 3,
+	"FileReferences": {
+		"Moc": "xiaomonk.moc3",
+		"Textures": [
+			"xiaomonk.1024/texture_00.png"
+		],
+		"Physics": "xiaomonk.physics3.json",
+		"DisplayInfo": "xiaomonk.cdi3.json"
+	},
+	"Groups": [
+		{
+			"Target": "Parameter",
+			"Name": "EyeBlink",
+			"Ids": [
+				"ParamEyeLOpen",
+				"ParamEyeROpen"
+			]
+		},
+		{
+			"Target": "Parameter",
+			"Name": "LipSync",
+			"Ids": [
+				"ParamMouthOpenY"
+			]
+		}
+	]
+}

@@ -13,6 +13,7 @@ import CommonDialogues from './pages/CommonDialogues';
 import Sessions from './pages/Sessions';
 import Documents from './pages/Documents';
 import ScenicSpots from './pages/ScenicSpots';
+import StaffManagement from './pages/StaffManagement';
 import Config from './pages/Config';
 
 export default function App() {
@@ -42,6 +43,8 @@ export default function App() {
         return <ScenicSpots />;
       case 'config':
         return <Config />;
+      case 'staff':
+        return <StaffManagement />;
       default:
         return <Dashboard />;
     }

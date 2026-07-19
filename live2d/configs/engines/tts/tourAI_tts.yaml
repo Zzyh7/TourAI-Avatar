@@ -1,0 +1,20 @@
+NAME: "TourAITTS"
+VERSION: "v0.0.1"
+DESC: "豆包TTS (火山引擎) — 通过TourAI后端调用"
+META: {
+  official: "https://www.volcengine.com/product/tts",
+  configuration: "",
+  tips: "火山引擎豆包语音合成，11种音色可选，音质优秀",
+  fee: "paid"
+}
+# 需求参数
+PARAMETERS: [
+  {
+    name: "voice",
+    description: "豆包TTS音色",
+    type: "string",
+    required: false,
+    choices: ["Getting from voice api..."],
+    default: "zh_male_shaonianzixin_uranus_bigtts"
+  }
+]

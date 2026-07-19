@@ -8,15 +8,16 @@ import {
   type DigitalHumanConfig,
 } from '../services/api';
 
-// Edge-TTS (微软免费) 中文音色
+// 豆包 TTS (Seed-TTS-2.0 WebSocket) — 已实测可用
 const VOICE_OPTIONS = [
-  { value: 'zh-CN-XiaoxiaoNeural', label: '晓晓（女，活泼）' },
-  { value: 'zh-CN-YunxiNeural', label: '云希（男，青春）' },
-  { value: 'zh-CN-XiaoyiNeural', label: '晓伊（女，温柔）' },
-  { value: 'zh-CN-YunjianNeural', label: '云健（男，知性）' },
-  { value: 'zh-CN-YunyangNeural', label: '云扬（男，新闻）' },
-  { value: 'zh-CN-XiaochenNeural', label: '晓晨（女，甜美）' },
-  { value: 'zh-CN-XiaohanNeural', label: '晓涵（女，自然）' },
+  { value: 'zh_male_tiancaitongsheng_mars_bigtts', label: '天才童声（男，默认）' },
+  { value: 'zh_male_shaonianzixin_uranus_bigtts', label: '少年自信（男）' },
+  { value: 'zh_female_vv_uranus_bigtts', label: 'Vivi 2.0（女，温暖对话）' },
+  { value: 'zh_female_xiaohe_uranus_bigtts', label: 'Mindy（女，甜美）' },
+  { value: 'zh_male_m191_uranus_bigtts', label: 'Kian（男，清爽）' },
+  { value: 'zh_male_taocheng_uranus_bigtts', label: 'Cedric（男，沉稳）' },
+  { value: 'zh_female_shuangkuaisisi_moon_bigtts', label: '新闻播报（女，干脆）' },
+  { value: 'zh_male_yuanboxiaoshu_moon_bigtts', label: '温暖男主播（男，叙事）' },
 ];
 
 const LIVE2D_OPTIONS = [
@@ -35,7 +36,7 @@ export default function Config() {
 
   // 表单
   const [live2dModel, setLive2dModel] = useState('default');
-  const [voiceName, setVoiceName] = useState('zh-CN-XiaoxiaoNeural');
+  const [voiceName, setVoiceName] = useState('zh_male_shaonianzixin_uranus_bigtts');
   const [voiceSpeed, setVoiceSpeed] = useState(1.0);
 
   useEffect(() => {

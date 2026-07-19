@@ -94,3 +94,13 @@ class CommonDialogue(Base):
     enabled = Column(Integer, default=1)                 # 是否启用 0/1
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class StaffAccount(Base):
+    """员工登录账号"""
+    __tablename__ = "staff_accounts"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    account = Column(String(50), unique=True, nullable=False)
+    password_hash = Column(String(128), nullable=False)
+    salt = Column(String(32), nullable=False)
+    active = Column(Integer, default=1)

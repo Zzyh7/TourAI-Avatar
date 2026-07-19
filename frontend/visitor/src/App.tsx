@@ -1,318 +1,205 @@
 /**
- * 景区导览AI数字人 — 游客端主应用。
- *
- * 布局:
- * ┌─────────────────┬──────────────────┐
- * │   数字人区域     │   聊天面板        │
- * │   (Live2D)      │   (对话+输入)     │
- * │                 │                  │
- * ├─────────────────┴──────────────────┤
- * │  推荐标签栏 + 拍照按钮              │
- * └────────────────────────────────────┘
+ * 灵山胜境 — AI景区导览对话式操作系统
+ * Layout: TopNav | Left(AI角色+快捷意图) | Center(对话主舞台) | Right(推荐卡片)
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
-import DigitalHuman from './components/DigitalHuman';
-import ChatPanel from './components/ChatPanel';
-import VoiceButton from './components/VoiceButton';
-import RecommendationBar from './components/RecommendationBar';
-import PhotoRecognition from './components/PhotoRecognition';
-import LocationTrigger from './components/LocationTrigger';
+const API_BASE = '/api';
+import { streamChat, createSession } from './services/api';
 import { useAudioPlayer } from './hooks/useAudioPlayer';
 import { useGeolocation } from './hooks/useGeolocation';
-import { streamChat, createSession } from './services/api';
 
-interface Message {
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-}
+interface Message { role: 'user'|'assistant'|'system'; content: string; cards?: {title:string;time:string;spots:string[]} }
+
+const QUICK_INTENTS = ['帮我规划路线','推荐必看景点','听九龙灌浴介绍','一日游方案'];
+const RECOMMENDATIONS = [
+  {icon:'🌄',title:'灵山经典路线',desc:'3小时精华游览',spots:'大佛→梵宫→九龙灌浴'},
+  {icon:'🎭',title:'九龙灌浴',desc:'14:00 / 16:30 表演',spots:'音乐喷泉+莲花开合'},
+  {icon:'🏛️',title:'梵宫探秘',desc:'佛教艺术殿堂',spots:'木雕·壁画·琉璃'},
+  {icon:'📿',title:'祥符禅寺',desc:'千年古刹',spots:'祈福·素斋体验'},
+];
 
 export default function App() {
-  const [messages, setMessages] = useState<Message[]>([]);
   const [streamingText, setStreamingText] = useState('');
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [currentText, setCurrentText] = useState('');
-  const [emotion, setEmotion] = useState<'neutral' | 'happy' | 'thinking'>('neutral');
+  const [messages, setMessages] = useState<Message[]>([]);
   const [sessionId, setSessionId] = useState('');
-  const [selectedTag, setSelectedTag] = useState('');
   const [loading, setLoading] = useState(false);
   const [gpsEnabled, setGpsEnabled] = useState(false);
+  const [aiStatus, setAiStatus] = useState('🟢 正在待命，为您提供导览服务');
+  const [inputText, setInputText] = useState('');
+  const abortRef = useRef<AbortController|null>(null);
+  const streamingTextRef = useRef('');
+  const generationRef = useRef(0);
+  const msgsEndRef = useRef<HTMLDivElement>(null);
+  const dhIframeRef = useRef<HTMLIFrameElement>(null);
 
+  const { enqueue, stop: stopAudio } = useAudioPlayer(() => {});
   const { position } = useGeolocation({ interval: 5000, enabled: gpsEnabled });
 
-  const abortRef = useRef<AbortController | null>(null);
-  // 用 ref 追踪 streamingText，供 abortGeneration 读取最新值
-  const streamingTextRef = useRef('');
-  // generation 计数器：打断时递增，旧流中的 audio/token 事件会被丢弃，避免语音残留
-  const generationRef = useRef(0);
+  useEffect(() => { createSession().then(setSessionId); }, []);
+  useEffect(() => { streamingTextRef.current = streamingText; }, [streamingText]);
+  useEffect(() => { msgsEndRef.current?.scrollIntoView({behavior:'smooth'}); }, [messages, streamingText]);
 
-  const { enqueue, stop: stopAudio } = useAudioPlayer((text) => {
-    setCurrentText(text);
-    setIsSpeaking(true);
-  });
-
-  // 初始化会话
+  // 拉取管理后台音色配置，传给 Live2D 数字人 iframe
   useEffect(() => {
-    createSession().then(setSessionId);
+    const sendConfig = () => {
+      fetch(`${API_BASE}/public-config`)
+        .then(r => r.json())
+        .then(cfg => {
+          const iframe = dhIframeRef.current;
+          if (iframe?.contentWindow) {
+            iframe.contentWindow.postMessage(
+              { type: 'config', voice: cfg.voice, character: cfg.character },
+              '*'
+            );
+          }
+        })
+        .catch(() => {});
+    };
+    // 立即发送一次
+    sendConfig();
+    // iframe 加载完成后补发一次
+    const iframe = dhIframeRef.current;
+    iframe?.addEventListener('load', sendConfig);
+    return () => { iframe?.removeEventListener('load', sendConfig); };
   }, []);
 
-  // 同步 streamingText 到 ref
-  useEffect(() => {
-    streamingTextRef.current = streamingText;
-  }, [streamingText]);
-
-  // 打断当前生成：中止请求 + 停止音频，保存部分回复
-  const abortGeneration = useCallback((savePartial = true) => {
-    // 递增 generation，让旧流中尚未处理的 audio/token 事件全部丢弃
+  const abortGeneration = useCallback((save = true) => {
     generationRef.current += 1;
-    if (abortRef.current) {
-      abortRef.current.abort();
-      abortRef.current = null;
-    }
+    abortRef.current?.abort(); abortRef.current = null;
     stopAudio();
-    // 保存已生成的部分回复到聊天记录，避免内容丢失（类似 ChatGPT 的打断行为）
-    if (savePartial) {
-      const partial = streamingTextRef.current;
-      if (partial.trim()) {
-        setMessages(prev => [
-          ...prev,
-          { role: 'assistant', content: partial },
-        ]);
-      }
+    if (save && streamingTextRef.current.trim()) {
+      setMessages(p => [...p, {role:'assistant',content:streamingTextRef.current}]);
     }
-    setStreamingText('');
-    setIsSpeaking(false);
-    setEmotion('neutral');
-    setLoading(false);
+    setStreamingText(''); setLoading(false);
+    setAiStatus('🟢 正在待命');
   }, [stopAudio]);
 
-  // 发送消息（或打断当前）
   const handleSend = useCallback(async (text: string) => {
-    if (!text.trim()) return;
-
-    // 如果正在生成，打断当前，开始新问题
-    if (loading) {
-      abortGeneration();
-      // 小延迟让 abort 生效，然后继续发送新问题
-      await new Promise(r => setTimeout(r, 50));
-    }
-
-    setMessages(prev => [...prev, { role: 'user', content: text }]);
-    setStreamingText('');
-    setEmotion('thinking');
-    setLoading(true);
-
-    // 创建新的 AbortController
-    const controller = new AbortController();
-    abortRef.current = controller;
-
-    // 记录当前 generation，流循环中每次检查，被打断后旧事件自动丢弃
+    if (!text.trim() || loading) return;
+    setMessages(p => [...p, {role:'user',content:text}]);
+    setStreamingText(''); setLoading(true); setAiStatus('💭 正在为您规划...');
+    const controller = new AbortController(); abortRef.current = controller;
     const gen = generationRef.current;
-
-    let fullAnswer = '';
-    let lastUiUpdate = 0;  // 节流用：上次UI更新时间戳
-    let firstToken = true; // 首个 token 标记，只做一次 emotion 过渡
-
+    let full = '';
     try {
       for await (const event of streamChat(text, sessionId, controller.signal)) {
-        // 检查 generation：如果被打断（generation 已递增），丢弃旧流剩余事件
         if (generationRef.current !== gen) break;
-
-        switch (event.type) {
-          case 'token':
-            fullAnswer += event.data.text;
-            streamingTextRef.current = fullAnswer;  // ref 始终实时，供打断读取
-            // 首个 token：从 thinking 切到 neutral（只做一次）
-            if (firstToken) {
-              firstToken = false;
-              setEmotion('neutral');
-            }
-            // 节流 UI 更新：最多每 50ms 更新一次，减少重渲染卡顿
-            const now = Date.now();
-            if (now - lastUiUpdate >= 50) {
-              lastUiUpdate = now;
-              setStreamingText(fullAnswer);
-            }
-            break;
-
-          case 'audio':
-            if (generationRef.current === gen) {
-              enqueue(event.data.base64, event.data.text);
-            }
-            break;
-
-          case 'tool':
-            // 工具调用状态可在状态栏显示
-            break;
-
-          case 'done':
-            setMessages(prev => [
-              ...prev,
-              { role: 'assistant', content: fullAnswer },
-            ]);
-            setStreamingText('');
-            setEmotion('happy');
-            setIsSpeaking(false);
-            break;
-
-          case 'error':
-            setMessages(prev => [
-              ...prev,
-              { role: 'system', content: `抱歉，出了点问题：${event.data.error}` },
-            ]);
-            setStreamingText('');
-            setEmotion('neutral');
-            break;
+        if (event.type === 'token') {
+          full += event.data.text;
+          streamingTextRef.current = full;
+          setStreamingText(full);
+        } else if (event.type === 'audio') {
+          if (generationRef.current === gen) enqueue(event.data.base64, event.data.text);
+        } else if (event.type === 'done') {
+          setMessages(p => [...p, {role:'assistant',content:full}]);
+          setStreamingText(''); setAiStatus('🟢 正在待命');
+        } else if (event.type === 'error') {
+          setMessages(p => [...p, {role:'system',content:`抱歉：${event.data.error}`}]);
         }
       }
-    } catch (err: any) {
-      // AbortError 是用户主动打断，不需要显示错误
-      if (err instanceof DOMException && err.name === 'AbortError') {
-        return;
-      }
-      setMessages(prev => [
-        ...prev,
-        { role: 'system', content: `连接失败：${err.message}` },
-      ]);
-    } finally {
-      setLoading(false);
-      if (abortRef.current === controller) {
-        abortRef.current = null;
-      }
-    }
-  }, [sessionId, loading, enqueue, abortGeneration]);
+    } catch (e: any) {
+      if (e.name !== 'AbortError') setMessages(p => [...p, {role:'system',content:'连接失败'}]);
+    } finally { setLoading(false); abortRef.current = null; }
+  }, [sessionId, loading, enqueue]);
 
-  // 语音识别结果
-  const handleVoiceResult = useCallback((text: string) => {
-    if (text.trim()) {
-      handleSend(text);
-    }
-  }, [handleSend]);
-
-  // 拍照识景结果
-  const handlePhotoResult = useCallback((description: string) => {
-    setMessages(prev => [
-      ...prev,
-      { role: 'user', content: '📷 [拍照识景]' },
-      { role: 'assistant', content: description },
-    ]);
-  }, []);
-
-  // 标签切换
-  const handleTagSelect = useCallback((tag: string) => {
-    setSelectedTag(tag);
-    if (tag) {
-      handleSend(`我对${tag}感兴趣，请推荐适合的路线和讲解重点`);
-    }
-  }, [handleSend]);
-
-  // GPS 触发讲解
-  const handleGpsTrigger = useCallback((message: string) => {
-    handleSend(message);
-  }, [handleSend]);
+  const handleQuickIntent = (intent: string) => {
+    setInputText(intent);
+    handleSend(intent);
+  };
 
   return (
-    <>
-      <LocationTrigger
-        position={position}
-        onTrigger={handleGpsTrigger}
-        enabled={gpsEnabled}
-      />
-    <div style={styles.app}>
-      {/* 标题栏 */}
-      <header style={styles.header}>
-        <h1 style={styles.title}>🏛️ 景区导览AI数字人</h1>
-        <div style={styles.headerRight}>
-          <button
-            onClick={() => setGpsEnabled(!gpsEnabled)}
-            title={gpsEnabled ? 'GPS讲解已开启' : 'GPS讲解已关闭'}
-            style={{
-              width: 40, height: 40, borderRadius: '50%', border: 'none',
-              background: gpsEnabled ? '#4CAF50' : '#ddd',
-              color: '#fff', fontSize: 18, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'background 0.3s',
-            }}
-          >
-            📍
-          </button>
-          <PhotoRecognition disabled={loading} onResult={handlePhotoResult} />
-          <VoiceButton onResult={handleVoiceResult} onInterrupt={() => abortGeneration()} />
+    <div style={s.app}>
+      {/* ===== TOP NAV ===== */}
+      <div style={s.topNav}>
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          <img src="/logo.png?v=20260616" alt="灵山" style={{height:36}} />
+          <span style={{fontSize:13,fontWeight:600,color:'#C9A24E',letterSpacing:1}}>AI景区导览系统</span>
         </div>
-      </header>
+        <div style={{display:'flex',gap:8,alignItems:'center'}}>
+          <a href="/" style={s.backLink}>← 首页</a>
+        </div>
+      </div>
 
-      {/* 推荐标签 */}
-      <RecommendationBar onSelect={handleTagSelect} selected={selectedTag} />
-
-      {/* 主区域 */}
-      <div style={styles.main}>
-        {/* 左侧：数字人 */}
-        <div style={styles.leftPanel}>
-          <DigitalHuman
-            isSpeaking={isSpeaking}
-            currentText={currentText}
-            emotion={emotion}
-            onStop={() => abortGeneration()}
-          />
+      {/* ===== MAIN 3-COLUMN ===== */}
+      <div style={s.main}>
+        {/* ===== LEFT: RECOMMENDATIONS ===== */}
+        <div style={{...s.rightPanel,borderRight:'1px solid rgba(255,255,255,.06)',borderLeft:'none'}}>
+          <h4 style={{color:'#C9A24E',fontSize:13,marginBottom:12,letterSpacing:1}}>📌 今日推荐</h4>
+          {RECOMMENDATIONS.map((r,i) => (
+            <div key={i} style={s.recCard} onClick={()=>{
+              const text=`介绍一下${r.title}`;
+              // 调 TourAI 对话 API
+              fetch(`${API_BASE}/chat`, {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({text, session_id:'rec_'+Date.now()})
+              });
+              // 通过 postMessage 发送到 Live2D iframe
+              const iframe = document.querySelector('iframe') as HTMLIFrameElement;
+              if (iframe?.contentWindow) {
+                iframe.contentWindow.postMessage({type:'chat',text}, '*');
+              }
+            }}>
+              <div style={{fontSize:24}}>{r.icon}</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:13,fontWeight:600,color:'#fff'}}>{r.title}</div>
+                <div style={{fontSize:11,color:'rgba(255,255,255,.4)',margin:'2px 0'}}>{r.desc}</div>
+                <div style={{fontSize:11,color:'#C9A24E'}}>{r.spots}</div>
+              </div>
+            </div>
+          ))}
+          {/* 游览偏好 */}
+          <h4 style={{color:'#C9A24E',fontSize:13,marginTop:8,letterSpacing:1}}>🧭 游览偏好</h4>
+          {['👨‍👩‍👧 家庭游','🏛️ 文化深度游','🌿 休闲游','📿 祈福游'].map(tag=>(
+            <div key={tag} style={{...s.recCard,padding:'8px 12px'}}
+              onClick={()=>{
+                const text=`我对${tag.replace(/[^一-龥]/g,'')}感兴趣，请推荐适合的路线和讲解重点`;
+                fetch(`${API_BASE}/chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,session_id:'pref_'+Date.now()})});
+                const iframe=document.querySelector('iframe') as HTMLIFrameElement;
+                if(iframe?.contentWindow){iframe.contentWindow.postMessage({type:'chat',text},'*')}
+              }}>
+              <span style={{fontSize:13,color:'rgba(255,255,255,.7)'}}>{tag}</span>
+            </div>
+          ))}
+          {/* GPS 定位 */}
+          <div onClick={() => setGpsEnabled(!gpsEnabled)}
+            style={{marginTop:8,padding:'14px 16px',borderRadius:12,
+              background:gpsEnabled?'linear-gradient(135deg,#4DA3FF,#2563EB)':'rgba(255,255,255,.04)',
+              border:gpsEnabled?'none':'1px solid rgba(255,255,255,.08)',
+              color:gpsEnabled?'#fff':'rgba(255,255,255,.5)',
+              cursor:'pointer',textAlign:'center',fontSize:14,fontWeight:600,transition:'.3s'}}>
+            📍 {gpsEnabled?'GPS 功能已开启':'开启 GPS 功能'}
+          </div>
         </div>
 
-        {/* 右侧：聊天面板 */}
-        <div style={styles.rightPanel}>
-          <ChatPanel
-            messages={messages}
-            onSend={handleSend}
-            disabled={loading}
-            streamingText={streamingText}
-            onStop={abortGeneration}
-          />
+        {/* ===== CENTER: LIVE2D CHARACTER ===== */}
+        <div style={s.centerPanel}>
+          <iframe ref={dhIframeRef} src="http://localhost:3000/sentio" allow="camera;microphone;autoplay"
+            // Live2D 数字人服务 (live2d/web Next.js, 端口 3000)
+            style={{width:'100%',height:'100%',border:'none'}} />
         </div>
       </div>
     </div>
-    </>
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  app: {
-    display: 'flex',
-    flexDirection: 'column',
-    height: '100vh',
-    background: 'linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%)',
-    fontFamily: "'PingFang SC', 'Microsoft YaHei', sans-serif",
-  },
-  header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '12px 24px',
-    background: '#fff',
-    borderBottom: '1px solid #e8e8e8',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 700,
-    color: '#333',
-    margin: 0,
-  },
-  headerRight: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 12,
-  },
-  main: {
-    display: 'flex',
-    flex: 1,
-    gap: 16,
-    padding: '16px 24px',
-    minHeight: 0,
-  },
-  leftPanel: {
-    width: '40%',
-    minWidth: 300,
-    display: 'flex',
-  },
-  rightPanel: {
-    flex: 1,
-    minWidth: 400,
-    display: 'flex',
-  },
+const s: Record<string, React.CSSProperties> = {
+  app:{width:'100vw',height:'100vh',background:'#0B0D10',color:'#fff',display:'flex',flexDirection:'column',fontFamily:"'SimSun','STSong','Songti SC',serif",overflow:'hidden'},
+  topNav:{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 24px',background:'rgba(11,13,16,.9)',backdropFilter:'blur(14px)',borderBottom:'1px solid rgba(255,255,255,.06)',zIndex:10},
+  navBtn:{padding:'5px 12px',borderRadius:12,border:'none',background:'transparent',color:'rgba(255,255,255,.5)',fontSize:12,cursor:'pointer',fontFamily:'inherit'},
+  backLink:{fontSize:12,color:'rgba(255,255,255,.4)',textDecoration:'none'},
+  main:{flex:1,display:'flex',minHeight:0},
+  leftPanel:{width:260,display:'flex',flexDirection:'column',padding:16,gap:12,borderRight:'1px solid rgba(255,255,255,.06)'},
+  aiCharWrap:{width:'100%',aspectRatio:'1',borderRadius:16,overflow:'hidden',background:'radial-gradient(ellipse at center, #1a1f2a 0%, #0B0D10 100%)',border:'1px solid rgba(255,255,255,.06)'},
+  aiStatus:{padding:'8px 12px',borderRadius:10,background:'rgba(255,255,255,.04)',fontSize:11,color:'rgba(255,255,255,.5)',textAlign:'center'},
+  quickIntents:{display:'flex',flexDirection:'column',gap:6},
+  intentBtn:{padding:'10px 14px',borderRadius:10,border:'1px solid rgba(255,255,255,.08)',background:'rgba(255,255,255,.03)',color:'rgba(255,255,255,.6)',fontSize:12,cursor:'pointer',textAlign:'left',fontFamily:'inherit',transition:'.2s'},
+  centerPanel:{flex:1,display:'flex',flexDirection:'column',minWidth:0},
+  chatArea:{flex:1,overflowY:'auto',padding:'20px 24px',display:'flex',flexDirection:'column',gap:10},
+  welcomeMsg:{padding:'20px',borderRadius:14,background:'rgba(255,255,255,.03)',border:'1px solid rgba(255,255,255,.04)',marginBottom:8},
+  msgBubble:{maxWidth:'80%',padding:'12px 16px',borderRadius:14,fontSize:13,lineHeight:1.7,wordBreak:'break-word'},
+  inputRow:{display:'flex',gap:8,padding:'12px 20px',borderTop:'1px solid rgba(255,255,255,.06)'},
+  chatInput:{flex:1,padding:'12px 18px',borderRadius:22,border:'1px solid rgba(255,255,255,.1)',background:'rgba(255,255,255,.04)',color:'#fff',fontSize:13,outline:'none',fontFamily:'inherit'},
+  sendBtn:{width:40,height:40,borderRadius:'50%',border:'none',background:'linear-gradient(135deg,#C9A24E,#8B5E34)',color:'#fff',fontSize:16,cursor:'pointer'},
+  rightPanel:{width:280,padding:16,borderLeft:'1px solid rgba(255,255,255,.06)',display:'flex',flexDirection:'column',gap:10,overflowY:'auto'},
+  recCard:{display:'flex',gap:10,padding:12,borderRadius:12,background:'rgba(255,255,255,.03)',border:'1px solid rgba(255,255,255,.05)',cursor:'pointer',transition:'.2s',alignItems:'center'},
 };

@@ -1,0 +1,51 @@
+version: '3'
+services:
+  adh-nginx:
+    image: registry.cn-hangzhou.aliyuncs.com/awesome-digital-human/nginx:latest
+    ports:
+      - "8880:80"
+      # - "8443:443"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: always
+  adh-web:
+    image: "registry.cn-hangzhou.aliyuncs.com/awesome-digital-human/adh-web:main-latest"
+    restart: always
+    pull_policy: always
+    networks:
+      - shared_network
+      - default
+    # ports:
+    #   - "3000:3000"
+    volumes:
+      - ./web/.env:/workspace/.env
+  # awesome digital human server
+  adh-api:
+    image: "registry.cn-hangzhou.aliyuncs.com/awesome-digital-human/adh-api:main-latest"
+    restart: always
+    pull_policy: always
+    networks:
+      - shared_network
+      - default
+    # ports:
+    #   - "8000:8000"
+    volumes:
+      - ./configs:/workspace/configs
+  adh-funasr:
+    image: "registry.cn-hangzhou.aliyuncs.com/funasr_repo/funasr:funasr-runtime-sdk-online-cpu-0.1.12"
+    ports:
+      - "10095:10095"
+    volumes:
+      - ./docker/volumes/funasr-runtime-resources/models:/workspace/models
+      - ./docker/volumes/funasr-runtime-resources/sh/run_server_2pass.sh:/workspace/FunASR/runtime/run_server_2pass.sh
+      - ./docker/volumes/funasr-runtime-resources/sh/hotwords.txt:/workspace/FunASR/runtime/websocket/hotwords.txt
+    restart: always
+    networks:
+      - shared_network
+      - default
+    command: "bash /workspace/FunASR/runtime/run_server_2pass.sh"
+# network
+networks:
+  shared_network:
+    driver: bridge
+    internal: true
