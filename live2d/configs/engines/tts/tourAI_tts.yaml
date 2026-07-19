@@ -1,29 +1,20 @@
 NAME: "TourAITTS"
 VERSION: "v0.0.1"
-DESC: "豆包 TTS 引擎 (通过 TourAI 后端代理)"
+DESC: "豆包TTS (火山引擎) — 通过TourAI后端调用"
 META: {
-  official: "",
+  official: "https://www.volcengine.com/product/tts",
   configuration: "",
-  tips: "使用火山引擎豆包 Seed-TTS-2.0，通过 TourAI 后端 API 代理调用",
-  fee: "按量付费"
+  tips: "火山引擎豆包语音合成，11种音色可选，音质优秀",
+  fee: "paid"
 }
-# 暴露给前端的参数选项以及默认值
+# 需求参数
 PARAMETERS: [
   {
     name: "voice",
-    description: "Person's Voice",
+    description: "豆包TTS音色",
     type: "string",
     required: false,
-    choices: [
-      "zh_male_shaonianzixin_uranus_bigtts",
-      "zh_male_tiancaitongsheng_mars_bigtts",
-      "zh_female_vv_uranus_bigtts",
-      "zh_female_xiaohe_uranus_bigtts",
-      "zh_male_m191_uranus_bigtts",
-      "zh_male_taocheng_uranus_bigtts",
-      "zh_female_shuangkuaisisi_moon_bigtts",
-      "zh_male_yuanboxiaoshu_moon_bigtts"
-    ],
+    choices: ["Getting from voice api..."],
     default: "zh_male_shaonianzixin_uranus_bigtts"
   }
 ]
