@@ -35,6 +35,8 @@ cleanup() {
     [ -n "${BACKEND_PID:-}" ] && kill "$BACKEND_PID" 2>/dev/null
     [ -n "${VISITOR_PID:-}" ] && kill "$VISITOR_PID" 2>/dev/null
     [ -n "${ADMIN_PID:-}" ] && kill "$ADMIN_PID" 2>/dev/null
+    [ -n "${LIVE2D_API_PID:-}" ] && kill "$LIVE2D_API_PID" 2>/dev/null
+    [ -n "${LIVE2D_WEB_PID:-}" ] && kill "$LIVE2D_WEB_PID" 2>/dev/null
     wait 2>/dev/null
     echo "所有服务已停止"
     exit 0
@@ -73,6 +75,30 @@ ADMIN_PID=$!
 cd "$PROJECT_ROOT"
 echo -e "  ${GREEN}✓${NC} 管理后台 PID: $ADMIN_PID"
 
+# ==================== 4. 启动 Live2D 后端 (FastAPI :8880) ====================
+if [ -f "live2d/main.py" ]; then
+    echo -e "${BOLD}启动 Live2D 后端 (FastAPI :8880)...${NC}"
+    cd live2d
+    "$PROJECT_ROOT/$PYTHON" main.py &
+    LIVE2D_API_PID=$!
+    cd "$PROJECT_ROOT"
+    echo -e "  ${GREEN}✓${NC} Live2D 后端 PID: $LIVE2D_API_PID"
+    LIVE2D_PIDS="$LIVE2D_API_PID"
+else
+    LIVE2D_PIDS=""
+fi
+
+# ==================== 5. 启动 Live2D Web (Next.js :3000) ====================
+if [ -d "live2d/web/node_modules" ]; then
+    echo -e "${BOLD}启动 Live2D Web (Next.js :3000)...${NC}"
+    cd live2d/web
+    npx next dev --port 3000 &
+    LIVE2D_WEB_PID=$!
+    cd "$PROJECT_ROOT"
+    echo -e "  ${GREEN}✓${NC} Live2D Web PID: $LIVE2D_WEB_PID"
+    LIVE2D_PIDS="$LIVE2D_PIDS $LIVE2D_WEB_PID"
+fi
+
 echo ""
 echo -e "${GREEN}${BOLD}============================================================${NC}"
 echo -e "${GREEN}${BOLD}  所有服务已启动${NC}"
@@ -80,6 +106,7 @@ echo -e "${GREEN}${BOLD}========================================================
 echo ""
 echo -e "  ${BOLD}后端 API:${NC}    ${CYAN}http://localhost:8000${NC}"
 echo -e "  ${BOLD}API 文档:${NC}    ${CYAN}http://localhost:8000/docs${NC}"
+echo -e "  ${BOLD}Live2D 数字人:${NC} ${CYAN}http://localhost:3000/sentio${NC}"
 echo -e "  ${BOLD}游客端:${NC}      ${CYAN}http://localhost:5173${NC}"
 echo -e "  ${BOLD}管理后台:${NC}    ${CYAN}http://localhost:5174${NC}"
 echo ""

@@ -1,0 +1,21 @@
+COMMON:
+  NAME: "Awesome-Digital-Human"
+  VERSION: "v3.0.0"
+  LOG_LEVEL: "DEBUG"
+SERVER:
+  IP: "0.0.0.0"
+  PORT: 8880
+  WORKSPACE_PATH: "./outputs"
+  ENGINES:
+    ASR: 
+      SUPPORT_LIST: [ "difyAPI.yaml", "cozeAPI.yaml", "tencentAPI.yaml", "funasrStreamingAPI.yaml"]
+      DEFAULT: "difyAPI.yaml"
+    TTS:
+      SUPPORT_LIST: [ "tourAI_tts.yaml", "edgeAPI.yaml", "tencentAPI.yaml", "difyAPI.yaml", "cozeAPI.yaml" ]
+      DEFAULT: "tourAI_tts.yaml"
+    LLM:
+      SUPPORT_LIST: []
+      DEFAULT: ""
+  AGENTS:
+    SUPPORT_LIST: [ "repeaterAgent.yaml", "openaiAPI.yaml", "difyAgent.yaml", "fastgptAgent.yaml", "cozeAgent.yaml" ]
+    DEFAULT: "openaiAPI.yaml"

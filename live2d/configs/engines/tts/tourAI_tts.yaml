@@ -1,0 +1,29 @@
+NAME: "TourAITTS"
+VERSION: "v0.0.1"
+DESC: "豆包 TTS 引擎 (通过 TourAI 后端代理)"
+META: {
+  official: "",
+  configuration: "",
+  tips: "使用火山引擎豆包 Seed-TTS-2.0，通过 TourAI 后端 API 代理调用",
+  fee: "按量付费"
+}
+# 暴露给前端的参数选项以及默认值
+PARAMETERS: [
+  {
+    name: "voice",
+    description: "Person's Voice",
+    type: "string",
+    required: false,
+    choices: [
+      "zh_male_shaonianzixin_uranus_bigtts",
+      "zh_male_tiancaitongsheng_mars_bigtts",
+      "zh_female_vv_uranus_bigtts",
+      "zh_female_xiaohe_uranus_bigtts",
+      "zh_male_m191_uranus_bigtts",
+      "zh_male_taocheng_uranus_bigtts",
+      "zh_female_shuangkuaisisi_moon_bigtts",
+      "zh_male_yuanboxiaoshu_moon_bigtts"
+    ],
+    default: "zh_male_shaonianzixin_uranus_bigtts"
+  }
+]

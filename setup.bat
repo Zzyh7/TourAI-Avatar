@@ -109,6 +109,18 @@ echo [5/5] 安装前端依赖...
 
 call :install_frontend "frontend\visitor" "游客端 (visitor)"
 call :install_frontend "frontend\admin" "管理后台 (admin)"
+call :install_frontend "live2d\web" "Live2D 数字人前端 (Next.js)"
+
+:: ==================== 6. Live2D 配置 ====================
+echo [6/6] 初始化 Live2D 配置...
+if exist "live2d\configs\config_template.yaml" (
+    if not exist "live2d\configs\config.yaml" (
+        copy live2d\configs\config_template.yaml live2d\configs\config.yaml >nul
+        echo   [OK] live2d\configs\config.yaml 已创建
+    ) else (
+        echo   [OK] live2d\configs\config.yaml 已存在
+    )
+)
 
 :: ==================== 完成 ====================
 echo.
@@ -120,10 +132,11 @@ echo   下一步:
 echo   1. 编辑 .env 填入 API Key (如尚未配置)
 echo   2. 启动所有服务: 双击 start.bat
 echo.
-echo   手动启动方式:
-echo   后端:   cd backend ^&^& ..\venv\Scripts\python -m uvicorn main:app --host 0.0.0.0 --port 8000
-echo   游客端: cd frontend\visitor ^&^& npm run dev
-echo   管理端: cd frontend\admin ^&^& npm run dev
+echo   服务列表:
+echo   后端 API:  http://localhost:8000
+echo   Live2D:   http://localhost:3000/sentio (数字人)
+echo   游客端:   http://localhost:5173
+echo   管理后台: http://localhost:5174
 echo.
 pause
 exit /b 0

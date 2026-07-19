@@ -17,7 +17,8 @@ faiss-cpu>=1.8.0
 sentence-transformers>=3.0.0
 
 # ==================== 语音合成 ====================
-aiohttp>=3.9.0                   # 豆包 TTS (异步 HTTP 请求)
+websockets>=14.0                  # 豆包 TTS (WebSocket V3 协议)
+httpx>=0.28.0                     # 豆包 TTS (V1 HTTP fallback)
 # edge-tts>=6.1.0                # 已切换为豆包 TTS，如需回退取消注释
 
 # ==================== 数据库 ====================

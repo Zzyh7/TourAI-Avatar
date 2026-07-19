@@ -79,8 +79,13 @@ class Config:
 
     # ==================== 自动校验 ====================
     def __post_init__(self):
+        """启动时校验关键配置 + 注入环境变量"""
         if not self.deepseek_api_key:
             raise ValueError("请配置 DEEPSEEK_API_KEY")
+        if self.dashscope_api_key:
+            os.environ["DASHSCOPE_API_KEY"] = self.dashscope_api_key
+        if self.deepseek_api_key:
+            os.environ["DEEPSEEK_API_KEY"] = self.deepseek_api_key
 
     def create_llm(self):
         """创建 DeepSeek 对话模型实例 (OpenAI 兼容接口)"""
@@ -92,13 +97,6 @@ class Config:
             temperature=self.deepseek_temperature,
             streaming=True,
         )
-
-    def __post_init__(self):
-        """确保所有 API Key 都注入到环境变量（STT 等 SDK 依赖环境变量）"""
-        if self.dashscope_api_key:
-            os.environ["DASHSCOPE_API_KEY"] = self.dashscope_api_key
-        if self.deepseek_api_key:
-            os.environ["DEEPSEEK_API_KEY"] = self.deepseek_api_key
 
     def create_multimodal_llm(self):
         """创建通义千问-VL 多模态模型实例"""

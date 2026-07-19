@@ -116,7 +116,7 @@ export default function App() {
           <span style={{fontSize:13,fontWeight:600,color:'#C9A24E',letterSpacing:1}}>AI景区导览系统</span>
         </div>
         <div style={{display:'flex',gap:8,alignItems:'center'}}>
-          <a href="http://localhost:8000" style={s.backLink}>← 首页</a>
+          <a href="/" style={s.backLink}>← 首页</a>
         </div>
       </div>
 
@@ -174,6 +174,7 @@ export default function App() {
         {/* ===== CENTER: LIVE2D CHARACTER ===== */}
         <div style={s.centerPanel}>
           <iframe ref={dhIframeRef} src="http://localhost:3000/sentio" allow="camera;microphone;autoplay"
+            // Live2D 数字人服务 (live2d/web Next.js, 端口 3000)
             style={{width:'100%',height:'100%',border:'none'}} />
         </div>
       </div>

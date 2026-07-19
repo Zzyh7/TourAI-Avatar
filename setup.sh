@@ -138,6 +138,19 @@ install_frontend() {
 
 install_frontend "frontend/visitor" "游客端 (visitor)"
 install_frontend "frontend/admin" "管理后台 (admin)"
+install_frontend "live2d/web" "Live2D 数字人前端 (Next.js)"
+
+# ==================== 6. Live2D 配置 ====================
+echo -e "${BOLD}[6/6] 初始化 Live2D 配置...${NC}"
+
+if [ -f "live2d/configs/config_template.yaml" ]; then
+    if [ ! -f "live2d/configs/config.yaml" ]; then
+        cp live2d/configs/config_template.yaml live2d/configs/config.yaml
+        echo -e "  ${GREEN}✓${NC} live2d/configs/config.yaml 已创建"
+    else
+        echo -e "  ${GREEN}✓${NC} live2d/configs/config.yaml 已存在"
+    fi
+fi
 
 # ==================== 完成 ====================
 echo ""
@@ -149,8 +162,9 @@ echo -e "  下一步:"
 echo -e "  ${BOLD}1.${NC} 编辑 ${CYAN}.env${NC} 填入 API Key (如尚未配置)"
 echo -e "  ${BOLD}2.${NC} 启动所有服务: ${CYAN}bash start.sh${NC}"
 echo ""
-echo -e "  手动启动方式:"
-echo -e "  ${BOLD}后端:${NC}   cd backend && ../venv/bin/python -m uvicorn main:app --host 0.0.0.0 --port 8000"
-echo -e "  ${BOLD}游客端:${NC} cd frontend/visitor && npm run dev"
-echo -e "  ${BOLD}管理端:${NC} cd frontend/admin && npm run dev"
+echo -e "  服务列表:"
+echo -e "  ${BOLD}后端 API:${NC}  http://localhost:8000"
+echo -e "  ${BOLD}Live2D:${NC}   http://localhost:3000/sentio (数字人)"
+echo -e "  ${BOLD}游客端:${NC}   http://localhost:5173"
+echo -e "  ${BOLD}管理后台:${NC} http://localhost:5174"
 echo ""

@@ -1,7 +1,7 @@
 /**
  * 后端 API 调用封装
  */
-const BASE = 'http://localhost:8000/api';
+const BASE = '/api';
 
 export interface ChatEvent {
   type: 'token' | 'audio' | 'tool' | 'done' | 'error';

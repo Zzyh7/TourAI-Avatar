@@ -16,3 +16,13 @@ pywintypes312.dll
 # OS files
 .DS_Store
 Thumbs.db
+# Live2D 数字人服务
+live2d/logs/
+live2d/outputs/
+live2d/data/
+live2d/volumes/
+live2d/web/node_modules/
+live2d/web/dist/
+live2d/configs/config.yaml
+live2d/*.mp3
+live2d/*.wav

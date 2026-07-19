@@ -144,7 +144,12 @@ app = FastAPI(
 # CORS — 允许前端跨域
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174", "http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:5173",  # 游客端
+        "http://localhost:5174",  # 管理后台
+        "http://localhost:3000",  # Live2D 数字人 Web
+        "http://localhost:8000",  # 后端自身 (web 静态页面)
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -216,7 +221,9 @@ async def staff_login(req: StaffLoginRequest):
         if s and hashlib.sha256((req.password + s.salt).encode()).hexdigest() == s.password_hash:
             return {"success": True, "redirect": "http://localhost:5174"}
     except Exception:
-        if req.account == "id123456" and req.password == "123456":
+        default_account = os.getenv("ADMIN_DEFAULT_ACCOUNT", "id123456")
+        default_password = os.getenv("ADMIN_DEFAULT_PASSWORD", "123456")
+        if req.account == default_account and req.password == default_password:
             return {"success": True, "redirect": "http://localhost:5174"}
     return {"success": False}
 
@@ -241,7 +248,7 @@ async def public_config():
 # 移动端代理跳转 —— 通过8000端口访问前端服务
 @app.get("/visitor")
 async def redirect_visitor():
-    return RedirectResponse(url="http://10.40.0.157:5173")
+    return RedirectResponse(url="http://localhost:5173")
 
 @app.get("/guide")
 async def serve_guide():
@@ -249,7 +256,7 @@ async def serve_guide():
 
 @app.get("/admin-panel")
 async def redirect_admin():
-    return RedirectResponse(url="http://10.40.0.157:5174")
+    return RedirectResponse(url="http://localhost:5174")
 
 @app.get("/debug")
 async def serve_debug():
