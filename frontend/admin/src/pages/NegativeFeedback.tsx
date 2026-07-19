@@ -30,7 +30,7 @@ export default function NegativeFeedback() {
         type: 'bar', data: cats.map(c => c.count),
         itemStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-            { offset: 0, color: '#ef5350' }, { offset: 1, color: '#ffcdd2' },
+            { offset: 0, color: '#c0392b' }, { offset: 1, color: '#ffcdd2' },
           ]),
           borderRadius: [0, 4, 4, 0],
         },
@@ -82,7 +82,7 @@ export default function NegativeFeedback() {
             )}
           </div>
 
-          <div style={{ ...s.chartBox, marginTop: 16, borderLeft: '4px solid #1976d2' }}>
+          <div style={{ ...s.chartBox, marginTop: 16, borderLeft: '4px solid #B8860B' }}>
             <h3 style={s.chartTitle}>🤖 AI 优化建议</h3>
             <div style={{ fontSize: 14, color: '#555', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
               {data?.ai_suggestion || '暂无优化建议'}
@@ -95,19 +95,19 @@ export default function NegativeFeedback() {
 }
 
 const s: Record<string, React.CSSProperties> = {
-  title: { fontSize: 22, fontWeight: 600, marginBottom: 4, color: '#1a1a2e' },
-  subtitle: { fontSize: 13, color: '#999', marginBottom: 20 },
-  loading: { textAlign: 'center', padding: 80, color: '#999', fontSize: 15 },
+  title: { fontSize: 22, fontWeight: 600, marginBottom: 4, color: '#4A3028' },
+  subtitle: { fontSize: 13, color: '#8B7355', marginBottom: 20 },
+  loading: { textAlign: 'center', padding: 80, color: '#8B7355', fontSize: 15 },
   empty: { textAlign: 'center', padding: 40, color: '#ccc' },
   grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 },
   chartBox: {
     background: '#fff', borderRadius: 10, padding: 20,
-    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+    boxShadow: '0 1px 4px rgba(74,48,40,0.06)',
   },
-  chartTitle: { fontSize: 15, fontWeight: 600, marginBottom: 16, color: '#333' },
+  chartTitle: { fontSize: 15, fontWeight: 600, marginBottom: 16, color: '#4A3028' },
   sampleRow: {
     display: 'flex', alignItems: 'center', gap: 8,
-    padding: '10px 0', borderBottom: '1px solid #f5f5f5',
+    padding: '10px 0', borderBottom: '1px solid #FFF9ED',
   },
   sampleQ: { flex: 1, fontSize: 13, color: '#555' },
   sampleTag: {

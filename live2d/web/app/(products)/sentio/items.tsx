@@ -9,11 +9,11 @@ import {
     Button
 } from "@heroui/react";
 import { GithubIcon } from '@/components/icons/github';
-import { 
-    Cog8ToothIcon, 
-    ChevronDownIcon, 
-    Bars3Icon, 
-    PhotoIcon, 
+import {
+    Cog8ToothIcon,
+    ChevronDownIcon,
+    Bars3Icon,
+    PhotoIcon,
     AcademicCapIcon
 } from "@heroicons/react/24/solid";
 import { useTranslations } from 'next-intl';
@@ -44,10 +44,10 @@ export function Items() {
 
                 </DropdownTrigger>
                 <DropdownMenu
-                    aria-label="Items Actions" 
+                    aria-label="Items Actions"
                     variant="flat"
-                >   
-                    <DropdownItem 
+                >
+                    <DropdownItem
                         key="setting"
                         startContent={<Cog8ToothIcon className="size-6"/>}
                         onPress={() => setIsSettingsOpen(true)}

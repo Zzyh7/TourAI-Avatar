@@ -13,6 +13,18 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        buddhist: {
+          gold: '#C9A24E',
+          'gold-dark': '#8B6914',
+          'gold-light': '#D4A853',
+          brown: '#4A3028',
+          'brown-deep': '#3E2723',
+          cream: '#FFF9ED',
+          parchment: '#FFFDF5',
+          beige: '#E0D3C0',
+          taupe: '#8B7355',
+          saffron: '#E8A84C',
+        },
       },
     },
   },

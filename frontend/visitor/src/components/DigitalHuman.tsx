@@ -94,7 +94,7 @@ export default memo(function DigitalHuman({ isSpeaking, currentText, emotion = '
       {/* 状态指示 */}
       <div style={{
         ...styles.status,
-        background: isSpeaking ? '#4CAF50' : '#9E9E9E',
+        background: isSpeaking ? '#C9A24E' : '#8B7355',
         animation: isSpeaking ? 'pulse 0.5s ease-in-out infinite' : 'none',
       }}>
         {isSpeaking ? '🔊 讲解中' : '😊 在线'}
@@ -121,7 +121,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     height: '100%',
-    background: 'linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 100%)',
+    background: 'linear-gradient(180deg, #FFF9ED 0%, #FFF5E0 100%)',
     borderRadius: 20,
     padding: 20,
     position: 'relative',
@@ -132,9 +132,9 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'center',
     width: 220,
     height: 220,
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    background: 'linear-gradient(135deg, #C9A24E 0%, #8B6914 100%)',
     borderRadius: '50%',
-    boxShadow: '0 8px 32px rgba(102,126,234,0.3)',
+    boxShadow: '0 8px 32px rgba(184,134,11,0.3)',
   },
   face: {
     display: 'flex',

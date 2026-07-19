@@ -49,8 +49,8 @@ export default function ChatPanel({ messages, onSend, disabled, streamingText, o
         {messages.length === 0 && (
           <div style={styles.welcome}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>👋</div>
-            <div style={{ fontSize: 16, color: '#666', marginBottom: 4 }}>您好！我是景区导览数字人 <b>小导</b></div>
-            <div style={{ fontSize: 13, color: '#999' }}>
+            <div style={{ fontSize: 16, color: '#4A3028', marginBottom: 4 }}>您好！我是景区导览数字人 <b>小导</b></div>
+            <div style={{ fontSize: 13, color: '#8B7355' }}>
               您可以问我景点历史、文化故事、路线推荐<br />
               也可以点击麦克风按钮语音提问
             </div>
@@ -67,8 +67,8 @@ export default function ChatPanel({ messages, onSend, disabled, streamingText, o
           >
             <div style={{
               ...styles.bubble,
-              background: msg.role === 'user' ? '#1976D2' : msg.role === 'system' ? '#FFF3E0' : '#F5F5F5',
-              color: msg.role === 'user' ? '#fff' : '#333',
+              background: msg.role === 'user' ? 'linear-gradient(135deg, #C9A24E, #8B6914)' : msg.role === 'system' ? '#FFF3E0' : '#FFF9ED',
+              color: msg.role === 'user' ? '#fff' : '#4A3028',
               borderTopRightRadius: msg.role === 'user' ? 4 : 18,
               borderTopLeftRadius: msg.role === 'user' ? 18 : 4,
             }}>
@@ -82,8 +82,8 @@ export default function ChatPanel({ messages, onSend, disabled, streamingText, o
           <div style={{ ...styles.message, justifyContent: 'flex-start' }}>
             <div style={{
               ...styles.bubble,
-              background: '#F5F5F5',
-              color: '#333',
+              background: '#FFF9ED',
+              color: '#4A3028',
               borderTopRightRadius: 18,
               borderTopLeftRadius: 4,
             }}>
@@ -133,10 +133,10 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     height: '100%',
-    background: '#fff',
+    background: '#FFFDF5',
     borderRadius: 12,
     overflow: 'hidden',
-    boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+    boxShadow: '0 2px 12px rgba(74,48,40,0.08)',
   },
   messageList: {
     flex: 1,
@@ -162,14 +162,15 @@ const styles: Record<string, React.CSSProperties> = {
   inputArea: {
     display: 'flex',
     padding: '12px 16px',
-    borderTop: '1px solid #eee',
+    borderTop: '1px solid #E0D3C0',
     gap: 8,
   },
   input: {
     flex: 1,
     padding: '10px 16px',
     borderRadius: 24,
-    border: '1px solid #e0e0e0',
+    border: '1px solid #E0D3C0',
+    background: '#FFF9ED',
     fontSize: 14,
     outline: 'none',
   },
@@ -178,7 +179,7 @@ const styles: Record<string, React.CSSProperties> = {
     height: 44,
     borderRadius: '50%',
     border: 'none',
-    background: '#1976D2',
+    background: 'linear-gradient(135deg, #C9A24E, #8B6914)',
     color: '#fff',
     fontSize: 18,
     cursor: 'pointer',
@@ -191,7 +192,7 @@ const styles: Record<string, React.CSSProperties> = {
     height: 44,
     borderRadius: '50%',
     border: 'none',
-    background: '#ff4d4f',
+    background: '#c0392b',
     color: '#fff',
     fontSize: 18,
     cursor: 'pointer',
@@ -202,6 +203,6 @@ const styles: Record<string, React.CSSProperties> = {
   },
   cursor: {
     animation: 'blink 0.8s infinite',
-    color: '#1976D2',
+    color: '#B8860B',
   },
 };

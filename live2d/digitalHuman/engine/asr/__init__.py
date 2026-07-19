@@ -7,6 +7,7 @@
 from .tencentASR import TencentApiAsr
 from .difyASR import DifyApiAsr
 from .cozeASR import CozeApiAsr
+from .dashscopeASR import DashScopeApiAsr
 from .funasrStreamingASR import FunasrStreamingAsr
 from .asrFactory import ASRFactory
 

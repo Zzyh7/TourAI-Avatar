@@ -14,7 +14,7 @@ function ChatModeSwitch() {
     const onSelect = (isSelected: boolean) => {
         if (enable) {
             setChatMode(isSelected ? CHAT_MODE.IMMSERSIVE : CHAT_MODE.DIALOGUE)
-            clearChatRecord();   
+            clearChatRecord();
         } else {
             addToast({
                 title: t('asrEnableTip'),
@@ -34,7 +34,6 @@ function ChatModeSwitch() {
 }
 
 export function Header() {
-    // 嵌入 iframe 时隐藏 logo 和按钮
     const isEmbedded = typeof window !== 'undefined' && window.parent !== window;
     if (isEmbedded) return null;
 

@@ -8,8 +8,8 @@ SERVER:
   WORKSPACE_PATH: "./outputs"
   ENGINES:
     ASR: 
-      SUPPORT_LIST: [ "difyAPI.yaml", "cozeAPI.yaml", "tencentAPI.yaml", "funasrStreamingAPI.yaml"]
-      DEFAULT: "difyAPI.yaml"
+      SUPPORT_LIST: [ "dashscopeAPI.yaml", "difyAPI.yaml", "cozeAPI.yaml", "tencentAPI.yaml", "funasrStreamingAPI.yaml"]
+      DEFAULT: "dashscopeAPI.yaml"
     TTS:
       SUPPORT_LIST: [ "tourAI_tts.yaml", "edgeAPI.yaml", "tencentAPI.yaml", "difyAPI.yaml", "cozeAPI.yaml" ]
       DEFAULT: "tourAI_tts.yaml"

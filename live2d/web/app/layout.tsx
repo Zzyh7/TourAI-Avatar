@@ -24,7 +24,7 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className='dark'>
+    <html lang={locale} className='light'>
       <head>
         <script src={getSrcPath('sentio/core/live2dcubismcore.min.js')} />
       </head>

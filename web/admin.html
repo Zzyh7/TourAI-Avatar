@@ -6,8 +6,8 @@
 <title>灵山胜境 — 管理后台</title>
 <style>
 :root {
-  --bg: #0f172a; --panel: #1e293b; --border: #334155;
-  --text: #e2e8f0; --text2: #94a3b8; --gold: #d4a853;
+  --bg: #FFFDF5; --panel: #FFF9ED; --border: #E0D3C0;
+  --text: #4A3028; --text2: #8B7355; --gold: #B8860B;
   --radius: 12px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -39,19 +39,19 @@ th{ color:var(--text2); font-weight:600; }
 .form-row{ display:flex; gap:10px; margin-bottom:10px; align-items:center; }
 input,textarea,select{
   padding:8px 12px; border-radius:8px; border:1px solid var(--border);
-  background:rgba(255,255,255,.04); color:var(--text); font-size:13px; outline:none;
+  background:var(--bg); color:var(--text); font-size:13px; outline:none;
 }
 input:focus{ border-color:var(--gold); }
 .btn{
   padding:8px 18px; border-radius:8px; border:none; cursor:pointer; font-size:13px; font-weight:600;
 }
-.btn-gold{ background:linear-gradient(135deg,#d4a853,#b8860b); color:#fff; }
+.btn-gold{ background:linear-gradient(135deg,#C9A24E,#8B6914); color:#fff; }
 .btn-outline{ background:transparent; border:1px solid var(--border); color:var(--text2); }
-.btn-danger{ background:rgba(248,113,113,.15); color:#f87171; border:1px solid rgba(248,113,113,.3); }
+.btn-danger{ background:rgba(192,57,43,.1); color:#c0392b; border:1px solid rgba(192,57,43,.3); }
 .status{ padding:12px; border-radius:8px; margin-bottom:12px; display:none; font-size:13px; }
 .status.show{ display:block; }
-.status.ok{ background:rgba(52,211,153,.1); color:#34d399; }
-.status.err{ background:rgba(248,113,113,.1); color:#f87171; }
+.status.ok{ background:rgba(201,162,78,.1); color:#8B6914; }
+.status.err{ background:rgba(192,57,43,.1); color:#c0392b; }
 </style>
 </head>
 <body>

@@ -5,13 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>灵山胜境 · AI数字人导游</title>
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#0E0F12">
+<meta name="theme-color" content="#FFFDF5">
 <script>if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js');}</script>
 <style>
 /* ===== DESIGN SYSTEM ===== */
 :root{
-  --gold:#C9A24E; --brown:#8B5E34; --dark:#0E0F12; --white:#FFFFFF;
-  --glass:rgba(255,255,255,.06); --glass-border:rgba(255,255,255,.1);
+  --gold:#C9A24E; --gold-dark:#8B6914; --brown:#4A3028; --dark:#FFFDF5; --cream:#FFF9ED;
+  --white:#4A3028; --light-text:#8B7355; --beige:#E0D3C0;
+  --glass:rgba(74,48,40,.04); --glass-border:rgba(74,48,40,.08);
   --font:'SimSun','STSong','Songti SC',serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -26,11 +27,11 @@ body{
   position:fixed; top:0; left:0; right:0; z-index:100;
   display:flex; align-items:center; justify-content:space-between;
   padding:10px 32px;
-  background:rgba(14,15,18,.3); backdrop-filter:blur(14px);
-  border-bottom:1px solid rgba(255,255,255,.06);
+  background:rgba(255,253,245,.85); backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--beige);
   transition:background .4s;
 }
-.topnav.scrolled{ background:rgba(14,15,18,.85); }
+.topnav.scrolled{ background:rgba(255,253,245,.95); }
 .topnav-left{ display:flex; align-items:center; gap:6px; }
 .topnav-left img{ height:40px; }
 .topnav-brand{ font-size:15px; font-weight:700; color:var(--gold); letter-spacing:1px; }
@@ -38,16 +39,16 @@ body{
 .topnav-right{ display:flex; gap:8px; align-items:center; }
 .nv-link{
   padding:6px 14px; border-radius:14px; font-size:13px; font-weight:500;
-  color:rgba(255,255,255,.7); text-decoration:none; cursor:pointer;
+  color:var(--light-text); text-decoration:none; cursor:pointer;
   transition:.25s; border:none; background:transparent;
 }
 .nv-link:hover{ color:var(--gold); }
 .nv-link.gold{
-  background:linear-gradient(135deg,var(--gold),#A07B30); color:#fff;
+  background:linear-gradient(135deg,var(--gold),var(--gold-dark)); color:#fff;
   box-shadow:0 0 18px rgba(201,162,78,.3); font-weight:600;
 }
 .nv-link.gold:hover{ box-shadow:0 0 28px rgba(201,162,78,.5); transform:scale(1.04); }
-.nv-link.login{ border:1px solid rgba(255,255,255,.2); color:rgba(255,255,255,.6); }
+.nv-link.login{ border:1px solid var(--beige); color:var(--light-text); }
 .nv-link.login:hover{ border-color:var(--gold); color:var(--gold); }
 
 /* ===== HERO ===== */
@@ -64,7 +65,7 @@ body{
 .hero-bg-layer.active{ opacity:1; }
 .hero-shadow{
   position:absolute; inset:0; z-index:1;
-  background:linear-gradient(135deg, rgba(14,15,18,.75) 0%, rgba(14,15,18,.35) 40%, rgba(14,15,18,.15) 70%, rgba(14,15,18,.6) 100%);
+  background:linear-gradient(135deg, rgba(255,253,245,.6) 0%, rgba(255,253,245,.2) 40%, rgba(255,253,245,.05) 70%, rgba(255,253,245,.55) 100%);
 }
 .hero-content{
   position:relative; z-index:2; width:40%; min-width:380px;
@@ -84,7 +85,7 @@ body{
   opacity:0; animation:fadeUp .8s .6s forwards;
 }
 .hero .desc{
-  font-size:13px; color:rgba(255,255,255,.45); line-height:1.8; margin-bottom:32px;
+  font-size:13px; color:var(--light-text); line-height:1.8; margin-bottom:32px;
   opacity:0; animation:fadeUp .8s .8s forwards;
 }
 .hero-btns{
@@ -102,18 +103,18 @@ body{
 }
 .btn-glow:hover{ box-shadow:0 0 40px rgba(201,162,78,.55); transform:translateY(-2px); }
 .btn-ghost{
-  background:transparent; border:1px solid rgba(255,255,255,.2); color:rgba(255,255,255,.7);
+  background:transparent; border:1px solid var(--beige); color:var(--brown);
 }
-.btn-ghost:hover{ border-color:var(--gold); color:var(--gold); background:rgba(201,162,78,.06); }
+.btn-ghost:hover{ border-color:var(--gold); color:var(--gold); background:rgba(201,162,78,.08); }
 
 /* Carousel arrows & dots */
 .carousel-arrow{
   position:absolute; top:50%; transform:translateY(-50%); z-index:3;
-  width:40px; height:40px; border-radius:50%; border:1px solid rgba(255,255,255,.15);
-  background:rgba(0,0,0,.3); color:rgba(255,255,255,.6); font-size:18px;
+  width:40px; height:40px; border-radius:50%; border:1px solid var(--beige);
+  background:rgba(255,253,245,.7); color:var(--brown); font-size:18px;
   cursor:pointer; transition:.3s; display:flex; align-items:center; justify-content:center;
 }
-.carousel-arrow:hover{ background:rgba(0,0,0,.5); color:#fff; }
+.carousel-arrow:hover{ background:rgba(255,253,245,.95); color:var(--gold); }
 .carousel-arrow.left{ left:20px; }
 .carousel-arrow.right{ right:20px; }
 .carousel-dots{
@@ -122,20 +123,20 @@ body{
 }
 .carousel-dot{
   width:6px; height:6px; border-radius:50%; border:none;
-  background:rgba(255,255,255,.25); cursor:pointer; transition:.3s;
+  background:rgba(74,48,40,.25); cursor:pointer; transition:.3s;
 }
 .carousel-dot.active{ background:var(--gold); width:20px; border-radius:3px; }
 
 /* Scroll hint */
 .scroll-down{
   position:absolute; bottom:60px; left:50%; transform:translateX(-50%); z-index:3;
-  color:rgba(255,255,255,.35); font-size:11px; letter-spacing:2px;
+  color:var(--light-text); font-size:11px; letter-spacing:2px;
   animation:float 2.5s ease-in-out infinite;
 }
 
 /* ===== AI FEATURE CARDS ===== */
 .features-section{
-  padding:80px 60px; background:linear-gradient(180deg, var(--dark) 0%, #11151a 100%);
+  padding:80px 60px; background:linear-gradient(180deg, var(--dark) 0%, var(--cream) 100%);
 }
 .section-label{
   text-align:center; font-size:12px; color:var(--gold); letter-spacing:3px;
@@ -160,7 +161,7 @@ body{
 }
 .glass-card .card-icon{ font-size:36px; margin-bottom:14px; }
 .glass-card h4{ font-size:16px; color:var(--gold); margin-bottom:8px; }
-.glass-card p{ font-size:12px; color:rgba(255,255,255,.45); line-height:1.6; }
+.glass-card p{ font-size:12px; color:var(--light-text); line-height:1.6; }
 
 /* ===== SCENE NARRATIVE ===== */
 .scene{
@@ -173,7 +174,7 @@ body{
 }
 .scene-overlay{
   position:absolute; inset:0; z-index:1;
-  background:linear-gradient(180deg, rgba(14,15,18,.5) 0%, rgba(14,15,18,.3) 50%, rgba(14,15,18,.7) 100%);
+  background:linear-gradient(180deg, rgba(255,253,245,.4) 0%, rgba(255,253,245,.2) 50%, rgba(255,253,245,.6) 100%);
 }
 .scene:nth-child(odd) .scene-content{ margin-left:8%; }
 .scene:nth-child(even) .scene-content{ margin-left:auto; margin-right:8%; text-align:right; }
@@ -182,45 +183,45 @@ body{
 }
 .scene-content h3{ font-size:32px; color:var(--gold); margin-bottom:12px; font-weight:900; }
 .scene-content p{
-  font-size:14px; color:rgba(255,255,255,.6); line-height:1.8; margin-bottom:20px;
+  font-size:14px; color:var(--light-text); line-height:1.8; margin-bottom:20px;
 }
 .scene-content .btn-ghost{ display:inline-flex; }
 
 /* ===== FOOTER ===== */
 .footer{
-  padding:40px 60px; text-align:center; border-top:1px solid rgba(255,255,255,.06);
-  font-size:12px; color:rgba(255,255,255,.3); background:var(--dark);
+  padding:40px 60px; text-align:center; border-top:1px solid var(--beige);
+  font-size:12px; color:var(--light-text); background:var(--dark);
 }
 
 /* ===== MODALS (keep existing) ===== */
 .modal-overlay{
-  position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:999;
+  position:fixed; inset:0; background:rgba(74,48,40,.6); z-index:999;
   display:none; align-items:center; justify-content:center;
 }
 .modal-overlay.show{ display:flex; }
 .modal{
-  background:#1a1d24; border:1px solid rgba(255,255,255,.1);
+  background:var(--dark); border:1px solid var(--beige);
   border-radius:16px; padding:32px; max-width:520px; width:92%;
   max-height:85vh; overflow-y:auto; color:var(--white);
 }
 .modal.wide{ max-width:800px; }
 .modal h3{ margin-bottom:12px; font-size:20px; color:var(--gold); }
-.modal .hint{ font-size:12px; color:rgba(255,255,255,.4); margin-bottom:12px; }
+.modal .hint{ font-size:12px; color:var(--light-text); margin-bottom:12px; }
 .modal input, .modal textarea{ width:100%; padding:10px 14px; border-radius:10px;
-  border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.04);
+  border:1px solid var(--beige); background:var(--cream);
   color:var(--white); outline:none; font-size:14px; margin:6px 0; resize:vertical; }
 .modal input:focus{ border-color:var(--gold); }
 .modal .btns{ display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
 .result-box{
-  margin-top:12px; padding:14px; background:rgba(255,255,255,.04);
+  margin-top:12px; padding:14px; background:var(--cream);
   border-radius:10px; max-height:240px; overflow-y:auto;
-  display:none; font-size:13px; line-height:1.7; border:1px solid rgba(255,255,255,.06);
+  display:none; font-size:13px; line-height:1.7; border:1px solid var(--beige);
 }
 .result-box.show{ display:block; }
 .chat-box{ max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin:10px 0; }
 .chat-bubble{ padding:10px 14px; border-radius:12px; font-size:14px; line-height:1.6; max-width:88%; }
-.chat-bubble.user{ align-self:flex-end; background:linear-gradient(135deg,var(--gold),#A07B30); color:#fff; }
-.chat-bubble.bot{ align-self:flex-start; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); }
+.chat-bubble.user{ align-self:flex-end; background:linear-gradient(135deg,var(--gold),var(--gold-dark)); color:#fff; }
+.chat-bubble.bot{ align-self:flex-start; background:var(--cream); border:1px solid var(--beige); color:var(--brown); }
 
 /* ===== MAP MODAL ===== */
 #mapModal .modal-overlay{ background:rgba(0,0,0,.9); }
@@ -292,7 +293,7 @@ body{
     <button class="nv-link" onclick="openModal('showModal')">演出</button>
   </div>
   <div class="topnav-right">
-    <a class="nv-link gold" href="http://localhost:3000/sentio" target="_blank">✦ AI导览</a>
+    <a class="nv-link gold" href="http://localhost:5173" target="_blank">✦ AI导览</a>
     <a class="nv-link login" href="/login" target="_blank">登录</a>
   </div>
 </nav>
@@ -315,7 +316,7 @@ body{
     <p class="sub">一山一世界，一境一如来</p>
     <p class="desc">国家5A级景区 · 世界佛教文化体验目的地</p>
     <div class="hero-btns">
-      <a class="btn btn-glow" href="http://localhost:3000/sentio" target="_blank">▶ 开始AI数字人导览</a>
+      <a class="btn btn-glow" href="http://localhost:5173" target="_blank">▶ 开始AI数字人导览</a>
       <a class="btn btn-ghost" href="#features">探索灵山景点 →</a>
     </div>
   </div>

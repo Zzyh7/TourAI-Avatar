@@ -92,9 +92,9 @@ export default function VoiceButton({ onResult, onInterrupt }: VoiceButtonProps)
           onClick={() => setMode(mode === 'web-speech' ? 'dashscope' : 'web-speech')}
           style={{
             fontSize: 10,
-            color: '#999',
+            color: '#8B7355',
             cursor: 'pointer',
-            background: '#f5f5f5',
+            background: '#FFF9ED',
             padding: '2px 8px',
             borderRadius: 10,
             userSelect: 'none',
@@ -109,7 +109,7 @@ export default function VoiceButton({ onResult, onInterrupt }: VoiceButtonProps)
         onClick={isListening ? stop : start}
         style={{
           ...styles.btn,
-          background: isListening ? '#f44336' : mode === 'web-speech' ? '#4CAF50' : '#1976d2',
+          background: isListening ? '#c0392b' : 'linear-gradient(135deg, #C9A24E, #8B6914)',
           animation: isListening ? 'pulse 0.6s ease-in-out infinite' : 'none',
         }}
         title={

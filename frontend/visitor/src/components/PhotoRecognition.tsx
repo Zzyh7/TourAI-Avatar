@@ -99,8 +99,8 @@ const styles: Record<string, React.CSSProperties> = {
   btn: {
     padding: '8px 16px',
     borderRadius: 20,
-    border: '1.5px solid #e0e0e0',
-    background: '#fff',
+    border: '1.5px solid #E0D3C0',
+    background: '#FFF9ED',
     fontSize: 13,
     cursor: 'pointer',
     display: 'flex',

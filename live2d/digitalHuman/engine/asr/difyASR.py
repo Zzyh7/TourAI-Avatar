@@ -23,6 +23,9 @@ class DifyApiAsr(BaseASREngine):
         API_KEY = paramters["api_key"]
         API_USERNAME = paramters["username"]
 
+        if not API_SERVER.startswith("http://") and not API_SERVER.startswith("https://"):
+            raise ValueError(f"Dify ASR api_server 未配置或无效: '{API_SERVER}'，请在设置中填入完整的 Dify API 地址（需包含 http:// 或 https://）")
+
         headers = {
             'Authorization': f'Bearer {API_KEY}'
         }

@@ -135,7 +135,7 @@ export default function Documents() {
         {uploadMsg && (
           <span style={{
             fontSize: 13,
-            color: uploadMsg.startsWith('✅') ? '#4CAF50' : '#f44336',
+            color: uploadMsg.startsWith('✅') ? '#C9A24E' : '#c0392b',
           }}>
             {uploadMsg}
           </span>
@@ -144,7 +144,7 @@ export default function Documents() {
         <button
           onClick={handleImportDialogues}
           disabled={importingDialogues}
-          style={{ ...s.primaryBtn, background: '#4CAF50' }}
+          style={{ ...s.primaryBtn, background: '#C9A24E' }}
           title="将常用对话的问答内容导入知识库，作为 RAG 检索的参考资料"
         >
           {importingDialogues ? '导入中...' : '📥 从常用对话导入'}
@@ -152,12 +152,12 @@ export default function Documents() {
         {importDlgMsg && (
           <span style={{
             fontSize: 13,
-            color: importDlgMsg.startsWith('✅') ? '#4CAF50' : importDlgMsg.startsWith('⚠') ? '#f57c00' : '#f44336',
+            color: importDlgMsg.startsWith('✅') ? '#C9A24E' : importDlgMsg.startsWith('⚠') ? '#f57c00' : '#c0392b',
           }}>
             {importDlgMsg}
           </span>
         )}
-        <span style={{ fontSize: 13, color: '#999' }}>共 {documents.length} 个文档</span>
+        <span style={{ fontSize: 13, color: '#8B7355' }}>共 {documents.length} 个文档</span>
       </div>
 
       {/* 文档列表 */}
@@ -168,7 +168,7 @@ export default function Documents() {
           <div style={s.empty}>
             <div style={{ fontSize: 32, marginBottom: 8 }}>📭</div>
             <div>暂无文档</div>
-            <div style={{ fontSize: 12, color: '#bbb', marginTop: 4 }}>点击「上传文档」添加知识库内容</div>
+            <div style={{ fontSize: 12, color: '#8B7355', marginTop: 4 }}>点击「上传文档」添加知识库内容</div>
           </div>
         ) : (
           <table style={s.table}>
@@ -191,7 +191,7 @@ export default function Documents() {
                   </td>
                   <td style={s.td}>{d.chunk_count} 块</td>
                   <td style={s.td}>{formatSize(d.size_bytes)}</td>
-                  <td style={{ ...s.td, fontSize: 12, color: '#999' }}>
+                  <td style={{ ...s.td, fontSize: 12, color: '#8B7355' }}>
                     {d.uploaded_at ? new Date(d.uploaded_at).toLocaleString('zh-CN') : '-'}
                   </td>
                   <td style={s.td}>
@@ -209,14 +209,14 @@ export default function Documents() {
         <div style={s.modalOverlay} onClick={() => setDeleteId(null)}>
           <div style={{ ...s.modal, maxWidth: 380 }} onClick={e => e.stopPropagation()}>
             <h3 style={{ margin: '0 0 12px', fontSize: 18 }}>确认删除</h3>
-            <p style={{ fontSize: 14, color: '#666', lineHeight: 1.6 }}>
+            <p style={{ fontSize: 14, color: '#8B7355', lineHeight: 1.6 }}>
               确定要删除此文档吗？删除后相关的向量数据也将不可用。此操作不可恢复。
             </p>
             <div style={s.modalBtns}>
               <button onClick={() => setDeleteId(null)} style={s.secondaryBtn}>取消</button>
               <button
                 onClick={() => handleDelete(deleteId)}
-                style={{ ...s.primaryBtn, background: '#ff4d4f' }}
+                style={{ ...s.primaryBtn, background: '#c0392b' }}
               >
                 确认删除
               </button>
@@ -229,38 +229,38 @@ export default function Documents() {
 }
 
 const s: Record<string, React.CSSProperties> = {
-  title: { fontSize: 22, fontWeight: 600, marginBottom: 4, color: '#1a1a2e' },
-  subtitle: { fontSize: 13, color: '#999', marginBottom: 20 },
+  title: { fontSize: 22, fontWeight: 600, marginBottom: 4, color: '#4A3028' },
+  subtitle: { fontSize: 13, color: '#8B7355', marginBottom: 20 },
   toolbar: {
     display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center',
     background: '#fff', padding: '12px 16px', borderRadius: 10,
-    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+    boxShadow: '0 1px 4px rgba(74,48,40,0.06)',
   },
   primaryBtn: {
     padding: '7px 18px', borderRadius: 6, border: 'none',
-    background: '#1976D2', color: '#fff', fontSize: 13, cursor: 'pointer', fontWeight: 500,
+    background: '#B8860B', color: '#fff', fontSize: 13, cursor: 'pointer', fontWeight: 500,
   },
   secondaryBtn: {
-    padding: '7px 18px', borderRadius: 6, border: '1px solid #ddd',
-    background: '#fff', color: '#333', fontSize: 13, cursor: 'pointer',
+    padding: '7px 18px', borderRadius: 6, border: '1px solid #E0D3C0',
+    background: '#fff', color: '#4A3028', fontSize: 13, cursor: 'pointer',
   },
   chartBox: {
     background: '#fff', borderRadius: 10, padding: 20,
-    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+    boxShadow: '0 1px 4px rgba(74,48,40,0.06)',
   },
   tableWrap: {
     background: '#fff', borderRadius: 10,
-    boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'auto',
+    boxShadow: '0 1px 4px rgba(74,48,40,0.06)', overflow: 'auto',
   },
-  empty: { textAlign: 'center', padding: 60, color: '#999' },
+  empty: { textAlign: 'center', padding: 60, color: '#8B7355' },
   table: { width: '100%', borderCollapse: 'collapse' as const },
   th: {
     textAlign: 'left' as const, padding: '12px 14px',
-    borderBottom: '2px solid #e8e8e8', fontSize: 13, color: '#666',
-    fontWeight: 600, background: '#fafafa',
+    borderBottom: '2px solid #E0D3C0', fontSize: 13, color: '#8B7355',
+    fontWeight: 600, background: '#FFF9ED',
   },
-  tr: { borderBottom: '1px solid #f0f0f0' },
-  td: { padding: '12px 14px', fontSize: 13, color: '#333', verticalAlign: 'middle' as const },
+  tr: { borderBottom: '1px solid #E0D3C0' },
+  td: { padding: '12px 14px', fontSize: 13, color: '#4A3028', verticalAlign: 'middle' as const },
   typeTag: {
     display: 'inline-block', padding: '2px 10px', borderRadius: 4,
     background: '#e8f5e9', color: '#388E3C', fontSize: 12, fontWeight: 500,
@@ -272,11 +272,11 @@ const s: Record<string, React.CSSProperties> = {
   modalOverlay: {
     position: 'fixed' as const, inset: 0, zIndex: 1100,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    background: 'rgba(0,0,0,0.35)',
+    background: 'rgba(74,48,40,0.35)',
   },
   modal: {
     width: '90%', maxWidth: 380, background: '#fff', borderRadius: 12,
-    padding: 24, boxShadow: '0 12px 48px rgba(0,0,0,0.18)',
+    padding: 24, boxShadow: '0 12px 48px rgba(74,48,40,0.18)',
   },
   modalBtns: {
     display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 20,

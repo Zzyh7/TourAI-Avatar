@@ -113,18 +113,18 @@ export default function App() {
       <div style={s.topNav}>
         <div style={{display:'flex',alignItems:'center',gap:8}}>
           <img src="/logo.png?v=20260616" alt="灵山" style={{height:36}} />
-          <span style={{fontSize:13,fontWeight:600,color:'#C9A24E',letterSpacing:1}}>AI景区导览系统</span>
+          <span style={{fontSize:13,fontWeight:600,color:'#B8860B',letterSpacing:1}}>AI景区导览系统</span>
         </div>
         <div style={{display:'flex',gap:8,alignItems:'center'}}>
-          <a href="/" style={s.backLink}>← 首页</a>
+          <a href="http://localhost:8000/" style={s.backLink}>← 首页</a>
         </div>
       </div>
 
       {/* ===== MAIN 3-COLUMN ===== */}
       <div style={s.main}>
         {/* ===== LEFT: RECOMMENDATIONS ===== */}
-        <div style={{...s.rightPanel,borderRight:'1px solid rgba(255,255,255,.06)',borderLeft:'none'}}>
-          <h4 style={{color:'#C9A24E',fontSize:13,marginBottom:12,letterSpacing:1}}>📌 今日推荐</h4>
+        <div style={{...s.rightPanel,borderRight:'1px solid #E0D3C0',borderLeft:'none'}}>
+          <h4 style={{color:'#B8860B',fontSize:15,marginBottom:12,letterSpacing:1,textAlign:'center'}}>今日推荐</h4>
           {RECOMMENDATIONS.map((r,i) => (
             <div key={i} style={s.recCard} onClick={()=>{
               const text=`介绍一下${r.title}`;
@@ -141,15 +141,15 @@ export default function App() {
             }}>
               <div style={{fontSize:24}}>{r.icon}</div>
               <div style={{flex:1}}>
-                <div style={{fontSize:13,fontWeight:600,color:'#fff'}}>{r.title}</div>
-                <div style={{fontSize:11,color:'rgba(255,255,255,.4)',margin:'2px 0'}}>{r.desc}</div>
-                <div style={{fontSize:11,color:'#C9A24E'}}>{r.spots}</div>
+                <div style={{fontSize:13,fontWeight:600,color:'#4A3028'}}>{r.title}</div>
+                <div style={{fontSize:11,color:'#8B7355',margin:'2px 0'}}>{r.desc}</div>
+                <div style={{fontSize:11,color:'#B8860B'}}>{r.spots}</div>
               </div>
             </div>
           ))}
           {/* 游览偏好 */}
-          <h4 style={{color:'#C9A24E',fontSize:13,marginTop:8,letterSpacing:1}}>🧭 游览偏好</h4>
-          {['👨‍👩‍👧 家庭游','🏛️ 文化深度游','🌿 休闲游','📿 祈福游'].map(tag=>(
+          <h4 style={{color:'#B8860B',fontSize:15,marginTop:8,letterSpacing:1,textAlign:'center'}}>游览偏好</h4>
+          {['家庭游','文化深度游','休闲游','祈福游'].map(tag=>(
             <div key={tag} style={{...s.recCard,padding:'8px 12px'}}
               onClick={()=>{
                 const text=`我对${tag.replace(/[^一-龥]/g,'')}感兴趣，请推荐适合的路线和讲解重点`;
@@ -157,15 +157,15 @@ export default function App() {
                 const iframe=document.querySelector('iframe') as HTMLIFrameElement;
                 if(iframe?.contentWindow){iframe.contentWindow.postMessage({type:'chat',text},'*')}
               }}>
-              <span style={{fontSize:13,color:'rgba(255,255,255,.7)'}}>{tag}</span>
+              <span style={{fontSize:13,fontWeight:600,color:'#4A3028'}}>{tag}</span>
             </div>
           ))}
           {/* GPS 定位 */}
           <div onClick={() => setGpsEnabled(!gpsEnabled)}
             style={{marginTop:8,padding:'14px 16px',borderRadius:12,
-              background:gpsEnabled?'linear-gradient(135deg,#4DA3FF,#2563EB)':'rgba(255,255,255,.04)',
-              border:gpsEnabled?'none':'1px solid rgba(255,255,255,.08)',
-              color:gpsEnabled?'#fff':'rgba(255,255,255,.5)',
+              background:gpsEnabled?'linear-gradient(135deg,#C9A24E,#8B6914)':'#FFF9ED',
+              border:gpsEnabled?'none':'1px solid #E0D3C0',
+              color:gpsEnabled?'#fff':'#8B7355',
               cursor:'pointer',textAlign:'center',fontSize:14,fontWeight:600,transition:'.3s'}}>
             📍 {gpsEnabled?'GPS 功能已开启':'开启 GPS 功能'}
           </div>
@@ -183,23 +183,23 @@ export default function App() {
 }
 
 const s: Record<string, React.CSSProperties> = {
-  app:{width:'100vw',height:'100vh',background:'#0B0D10',color:'#fff',display:'flex',flexDirection:'column',fontFamily:"'SimSun','STSong','Songti SC',serif",overflow:'hidden'},
-  topNav:{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'10px 24px',background:'rgba(11,13,16,.9)',backdropFilter:'blur(14px)',borderBottom:'1px solid rgba(255,255,255,.06)',zIndex:10},
-  navBtn:{padding:'5px 12px',borderRadius:12,border:'none',background:'transparent',color:'rgba(255,255,255,.5)',fontSize:12,cursor:'pointer',fontFamily:'inherit'},
-  backLink:{fontSize:12,color:'rgba(255,255,255,.4)',textDecoration:'none'},
+  app:{width:'100vw',height:'100vh',background:'#FFFDF5',color:'#4A3028',display:'flex',flexDirection:'column',fontFamily:"'SimSun','STSong','Songti SC',serif",overflow:'hidden'},
+  topNav:{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'18px 48px',minHeight:64,background:'rgba(255,253,245,.92)',backdropFilter:'blur(14px)',borderBottom:'1px solid #E0D3C0',zIndex:10},
+  navBtn:{padding:'5px 12px',borderRadius:12,border:'none',background:'transparent',color:'#8B7355',fontSize:12,cursor:'pointer',fontFamily:'inherit'},
+  backLink:{fontSize:12,color:'#8B7355',textDecoration:'none'},
   main:{flex:1,display:'flex',minHeight:0},
-  leftPanel:{width:260,display:'flex',flexDirection:'column',padding:16,gap:12,borderRight:'1px solid rgba(255,255,255,.06)'},
-  aiCharWrap:{width:'100%',aspectRatio:'1',borderRadius:16,overflow:'hidden',background:'radial-gradient(ellipse at center, #1a1f2a 0%, #0B0D10 100%)',border:'1px solid rgba(255,255,255,.06)'},
-  aiStatus:{padding:'8px 12px',borderRadius:10,background:'rgba(255,255,255,.04)',fontSize:11,color:'rgba(255,255,255,.5)',textAlign:'center'},
+  leftPanel:{width:260,display:'flex',flexDirection:'column',padding:16,gap:12,borderRight:'1px solid #E0D3C0'},
+  aiCharWrap:{width:'100%',aspectRatio:'1',borderRadius:16,overflow:'hidden',background:'linear-gradient(135deg, #FFF9ED 0%, #FFF5E0 100%)',border:'1px solid #E0D3C0'},
+  aiStatus:{padding:'8px 12px',borderRadius:10,background:'#FFF9ED',fontSize:11,color:'#8B7355',textAlign:'center'},
   quickIntents:{display:'flex',flexDirection:'column',gap:6},
-  intentBtn:{padding:'10px 14px',borderRadius:10,border:'1px solid rgba(255,255,255,.08)',background:'rgba(255,255,255,.03)',color:'rgba(255,255,255,.6)',fontSize:12,cursor:'pointer',textAlign:'left',fontFamily:'inherit',transition:'.2s'},
+  intentBtn:{padding:'10px 14px',borderRadius:10,border:'1px solid #E0D3C0',background:'#FFF9ED',color:'#4A3028',fontSize:12,cursor:'pointer',textAlign:'left',fontFamily:'inherit',transition:'.2s'},
   centerPanel:{flex:1,display:'flex',flexDirection:'column',minWidth:0},
   chatArea:{flex:1,overflowY:'auto',padding:'20px 24px',display:'flex',flexDirection:'column',gap:10},
-  welcomeMsg:{padding:'20px',borderRadius:14,background:'rgba(255,255,255,.03)',border:'1px solid rgba(255,255,255,.04)',marginBottom:8},
+  welcomeMsg:{padding:'20px',borderRadius:14,background:'#FFF9ED',border:'1px solid #E0D3C0',marginBottom:8},
   msgBubble:{maxWidth:'80%',padding:'12px 16px',borderRadius:14,fontSize:13,lineHeight:1.7,wordBreak:'break-word'},
-  inputRow:{display:'flex',gap:8,padding:'12px 20px',borderTop:'1px solid rgba(255,255,255,.06)'},
-  chatInput:{flex:1,padding:'12px 18px',borderRadius:22,border:'1px solid rgba(255,255,255,.1)',background:'rgba(255,255,255,.04)',color:'#fff',fontSize:13,outline:'none',fontFamily:'inherit'},
-  sendBtn:{width:40,height:40,borderRadius:'50%',border:'none',background:'linear-gradient(135deg,#C9A24E,#8B5E34)',color:'#fff',fontSize:16,cursor:'pointer'},
-  rightPanel:{width:280,padding:16,borderLeft:'1px solid rgba(255,255,255,.06)',display:'flex',flexDirection:'column',gap:10,overflowY:'auto'},
-  recCard:{display:'flex',gap:10,padding:12,borderRadius:12,background:'rgba(255,255,255,.03)',border:'1px solid rgba(255,255,255,.05)',cursor:'pointer',transition:'.2s',alignItems:'center'},
+  inputRow:{display:'flex',gap:8,padding:'12px 20px',borderTop:'1px solid #E0D3C0'},
+  chatInput:{flex:1,padding:'12px 18px',borderRadius:22,border:'1px solid #E0D3C0',background:'#FFF9ED',color:'#4A3028',fontSize:13,outline:'none',fontFamily:'inherit'},
+  sendBtn:{width:40,height:40,borderRadius:'50%',border:'none',background:'linear-gradient(135deg,#C9A24E,#8B6914)',color:'#fff',fontSize:16,cursor:'pointer'},
+  rightPanel:{width:280,padding:16,borderLeft:'1px solid #E0D3C0',display:'flex',flexDirection:'column',gap:10,overflowY:'auto'},
+  recCard:{display:'flex',gap:10,padding:12,borderRadius:12,background:'#FFF9ED',border:'1px solid #E0D3C0',cursor:'pointer',transition:'.2s',alignItems:'center'},
 };

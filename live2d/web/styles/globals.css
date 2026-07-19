@@ -2,6 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== 佛教棕黄色暖色调主题 ===== */
+:root {
+  --buddhist-gold: #C9A24E;
+  --buddhist-gold-dark: #8B6914;
+  --buddhist-gold-light: #D4A853;
+  --buddhist-brown: #4A3028;
+  --buddhist-brown-deep: #3E2723;
+  --buddhist-cream: #FFF9ED;
+  --buddhist-parchment: #FFFDF5;
+  --buddhist-beige: #E0D3C0;
+  --buddhist-taupe: #8B7355;
+  --buddhist-saffron: #E8A84C;
+}
+
+/* HeroUI overrides — 佛教暖色调 */
+html.light, html.light body {
+  background-color: #FFFDF5;
+}
+
+.dark, .light {
+  --background: #FFFDF5;
+  --foreground: #4A3028;
+}
 
 @layer utilities {
   /* 隐藏 Chrome, Safari 和 Opera 的滚动条 */

@@ -23,9 +23,9 @@ export default function RecommendationBar({ onSelect, selected }: Recommendation
             onClick={() => onSelect(tag.key)}
             style={{
               ...styles.tag,
-              background: selected === tag.key ? '#1976D2' : '#fff',
-              color: selected === tag.key ? '#fff' : '#555',
-              borderColor: selected === tag.key ? '#1976D2' : '#e0e0e0',
+              background: selected === tag.key ? 'linear-gradient(135deg, #C9A24E, #8B6914)' : '#FFF9ED',
+              color: selected === tag.key ? '#fff' : '#4A3028',
+              borderColor: selected === tag.key ? '#B8860B' : '#E0D3C0',
             }}
             title={tag.desc}
           >
@@ -47,7 +47,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   label: {
     fontSize: 13,
-    color: '#888',
+    color: '#8B7355',
     whiteSpace: 'nowrap',
   },
   tags: {
@@ -58,7 +58,7 @@ const styles: Record<string, React.CSSProperties> = {
   tag: {
     padding: '6px 16px',
     borderRadius: 20,
-    border: '1.5px solid #e0e0e0',
+    border: '1.5px solid #E0D3C0',
     fontSize: 13,
     cursor: 'pointer',
     transition: 'all 0.2s',

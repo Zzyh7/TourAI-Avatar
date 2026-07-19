@@ -47,21 +47,21 @@ export default function QAAnalysis() {
 
       {/* 指标卡片 */}
       <div style={s.cards}>
-        <div style={{ ...s.card, borderTopColor: '#43a047' }}>
+        <div style={{ ...s.card, borderTopColor: '#C9A24E' }}>
           <div style={s.cardLabel}>满意度</div>
-          <div style={{ ...s.cardValue, color: '#43a047' }}>{qa?.satisfaction_rate || 0}%</div>
+          <div style={{ ...s.cardValue, color: '#C9A24E' }}>{qa?.satisfaction_rate || 0}%</div>
         </div>
-        <div style={{ ...s.card, borderTopColor: '#ef5350' }}>
+        <div style={{ ...s.card, borderTopColor: '#c0392b' }}>
           <div style={s.cardLabel}>答不上率</div>
-          <div style={{ ...s.cardValue, color: '#ef5350' }}>{qa?.unable_rate || 0}%</div>
+          <div style={{ ...s.cardValue, color: '#c0392b' }}>{qa?.unable_rate || 0}%</div>
         </div>
-        <div style={{ ...s.card, borderTopColor: '#1976D2' }}>
+        <div style={{ ...s.card, borderTopColor: '#B8860B' }}>
           <div style={s.cardLabel}>总回答数</div>
-          <div style={{ ...s.cardValue, color: '#1976d2' }}>{qa?.total_answers || 0}</div>
+          <div style={{ ...s.cardValue, color: '#B8860B' }}>{qa?.total_answers || 0}</div>
         </div>
-        <div style={{ ...s.card, borderTopColor: '#FF9800' }}>
+        <div style={{ ...s.card, borderTopColor: '#D4943A' }}>
           <div style={s.cardLabel}>无法回答</div>
-          <div style={{ ...s.cardValue, color: '#FF9800' }}>{qa?.unable_to_answer || 0}</div>
+          <div style={{ ...s.cardValue, color: '#D4943A' }}>{qa?.unable_to_answer || 0}</div>
           <div style={s.cardSub}>含"抱歉"的回复</div>
         </div>
       </div>
@@ -120,29 +120,29 @@ export default function QAAnalysis() {
 }
 
 const s: Record<string, React.CSSProperties> = {
-  title: { fontSize: 22, fontWeight: 600, marginBottom: 4, color: '#1a1a2e' },
-  subtitle: { fontSize: 13, color: '#999', marginBottom: 20 },
-  loading: { textAlign: 'center', padding: 80, color: '#999', fontSize: 15 },
+  title: { fontSize: 22, fontWeight: 600, marginBottom: 4, color: '#4A3028' },
+  subtitle: { fontSize: 13, color: '#8B7355', marginBottom: 20 },
+  loading: { textAlign: 'center', padding: 80, color: '#8B7355', fontSize: 15 },
   empty: { textAlign: 'center', padding: 40, color: '#ccc' },
   cards: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 20 },
   card: {
     background: '#fff', borderRadius: 10, padding: '20px 24px',
-    borderTop: '3px solid #43a047', boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+    borderTop: '3px solid #C9A24E', boxShadow: '0 1px 4px rgba(74,48,40,0.06)',
   },
-  cardLabel: { fontSize: 13, color: '#999', marginBottom: 8 },
+  cardLabel: { fontSize: 13, color: '#8B7355', marginBottom: 8 },
   cardValue: { fontSize: 28, fontWeight: 700 },
-  cardSub: { fontSize: 12, color: '#bbb', marginTop: 4 },
+  cardSub: { fontSize: 12, color: '#8B7355', marginTop: 4 },
   grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 },
   chartBox: {
     background: '#fff', borderRadius: 10, padding: 20,
-    boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+    boxShadow: '0 1px 4px rgba(74,48,40,0.06)',
   },
-  chartTitle: { fontSize: 15, fontWeight: 600, marginBottom: 16, color: '#333' },
+  chartTitle: { fontSize: 15, fontWeight: 600, marginBottom: 16, color: '#4A3028' },
   qaRow: {
     display: 'flex', alignItems: 'center', gap: 12,
-    padding: '10px 0', borderBottom: '1px solid #f5f5f5',
+    padding: '10px 0', borderBottom: '1px solid #FFF9ED',
   },
-  rank: { fontSize: 12, color: '#999', width: 30, flexShrink: 0 },
-  qaText: { flex: 1, fontSize: 14, color: '#333' },
-  count: { fontSize: 12, color: '#1976d2', fontWeight: 500, flexShrink: 0 },
+  rank: { fontSize: 12, color: '#8B7355', width: 30, flexShrink: 0 },
+  qaText: { flex: 1, fontSize: 14, color: '#4A3028' },
+  count: { fontSize: 12, color: '#B8860B', fontWeight: 500, flexShrink: 0 },
 };

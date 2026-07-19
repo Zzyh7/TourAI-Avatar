@@ -51,7 +51,7 @@ export default function Layout({ active, onNavigate, children }: Props) {
           ))}
         </nav>
         <div style={styles.sidebarFooter}>
-          <span style={{ fontSize: 12, color: '#999' }}>v2.0.0</span>
+          <span style={{ fontSize: 12, color: '#D4A853' }}>v2.0.0</span>
         </div>
       </aside>
 
@@ -71,7 +71,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   sidebar: {
     width: 220,
-    background: '#1a1a2e',
+    background: 'linear-gradient(180deg, #4A3028 0%, #3E2723 100%)',
     color: '#fff',
     display: 'flex',
     flexDirection: 'column',
@@ -82,7 +82,7 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     gap: 10,
     padding: '20px 18px',
-    borderBottom: '1px solid rgba(255,255,255,0.08)',
+    borderBottom: '1px solid rgba(255,255,255,0.1)',
   },
   logoIcon: {
     fontSize: 24,
@@ -91,6 +91,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 16,
     fontWeight: 600,
     letterSpacing: 0.5,
+    color: '#D4A853',
   },
   nav: {
     flex: 1,
@@ -115,8 +116,8 @@ const styles: Record<string, React.CSSProperties> = {
     transition: 'all 0.15s',
   },
   navItemActive: {
-    background: 'rgba(255,255,255,0.12)',
-    color: '#fff',
+    background: 'rgba(201,162,78,0.25)',
+    color: '#D4A853',
     fontWeight: 500,
   },
   navIcon: {
@@ -126,11 +127,12 @@ const styles: Record<string, React.CSSProperties> = {
   },
   sidebarFooter: {
     padding: '12px 18px',
-    borderTop: '1px solid rgba(255,255,255,0.08)',
+    borderTop: '1px solid rgba(255,255,255,0.1)',
   },
   main: {
     flex: 1,
     overflow: 'auto',
     padding: 24,
+    background: '#FFFDF5',
   },
 };
