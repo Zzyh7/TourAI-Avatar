@@ -13,8 +13,8 @@ interface Message { role: 'user'|'assistant'|'system'; content: string; cards?: 
 const QUICK_INTENTS = ['帮我规划路线','推荐必看景点','听九龙灌浴介绍','一日游方案'];
 const RECOMMENDATIONS = [
   {icon:'🌄',title:'灵山经典路线',desc:'3小时精华游览',spots:'大佛→梵宫→九龙灌浴'},
-  {icon:'🎭',title:'九龙灌浴',desc:'14:00 / 16:30 表演',spots:'音乐喷泉+莲花开合'},
-  {icon:'🏛️',title:'梵宫探秘',desc:'佛教艺术殿堂',spots:'木雕·壁画·琉璃'},
+  {icon:'/jiulong.png',title:'九龙灌浴',desc:'14:00 / 16:30 表演',spots:'音乐喷泉+莲花开合'},
+  {icon:'/fangong.png',title:'梵宫探秘',desc:'佛教艺术殿堂',spots:'木雕·壁画·琉璃'},
   {icon:'📿',title:'祥符禅寺',desc:'千年古刹',spots:'祈福·素斋体验'},
 ];
 
@@ -139,7 +139,7 @@ export default function App() {
                 iframe.contentWindow.postMessage({type:'chat',text}, '*');
               }
             }}>
-              <div style={{fontSize:24}}>{r.icon}</div>
+              {r.icon.endsWith('.png') ? <img src={r.icon} alt="" style={{width:40,height:40,borderRadius:8}} /> : <div style={{fontSize:24}}>{r.icon}</div>}
               <div style={{flex:1}}>
                 <div style={{fontSize:13,fontWeight:600,color:'#4A3028'}}>{r.title}</div>
                 <div style={{fontSize:11,color:'#8B7355',margin:'2px 0'}}>{r.desc}</div>

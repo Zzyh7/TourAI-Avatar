@@ -10,16 +10,22 @@
 <style>
 /* ===== DESIGN SYSTEM ===== */
 :root{
-  --gold:#C9A24E; --gold-dark:#8B6914; --brown:#4A3028; --dark:#FFFDF5; --cream:#FFF9ED;
-  --white:#4A3028; --light-text:#8B7355; --beige:#E0D3C0;
-  --glass:rgba(74,48,40,.04); --glass-border:rgba(74,48,40,.08);
+  --gold:#D4A84B; --gold-dark:#A07828; --gold-glow:rgba(212,168,75,.6); --brown:#3A2218; --dark:#FFFDF5; --cream:#FFF9ED;
+  --white:#1A0A00; --light-text:#3A2010; --beige:#C8B898;
+  --glass:rgba(74,48,40,.06); --glass-border:rgba(74,48,40,.12);
   --font:'SimSun','STSong','Songti SC',serif;
+  --text-glow:0 0 8px rgba(212,168,75,.3);
+  --text-glow-strong:0 0 12px rgba(212,168,75,.5);
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth; background:var(--dark)}
 body{
   font-family:var(--font); background:var(--dark); color:var(--white);
-  overflow-x:hidden; font-size:15px;
+  overflow-x:hidden; font-size:18px; font-weight:700;
+}
+h1,h2,h3,h4,.section-title,.hero-badge,.topnav-brand{
+  -webkit-text-stroke:0.6px rgba(0,0,0,.4);
+  paint-order:stroke fill;
 }
 
 /* ===== TOP NAV ===== */
@@ -38,17 +44,17 @@ body{
 .topnav-center{ display:flex; gap:2px; position:absolute; left:50%; transform:translateX(-50%); }
 .topnav-right{ display:flex; gap:8px; align-items:center; }
 .nv-link{
-  padding:6px 14px; border-radius:14px; font-size:13px; font-weight:500;
-  color:var(--light-text); text-decoration:none; cursor:pointer;
+  padding:6px 14px; border-radius:14px; font-size:14px; font-weight:700;
+  color:var(--white); text-decoration:none; cursor:pointer;
   transition:.25s; border:none; background:transparent;
 }
 .nv-link:hover{ color:var(--gold); }
 .nv-link.gold{
   background:linear-gradient(135deg,var(--gold),var(--gold-dark)); color:#fff;
-  box-shadow:0 0 18px rgba(201,162,78,.3); font-weight:600;
+  box-shadow:0 0 20px var(--gold-glow); font-weight:700;
 }
-.nv-link.gold:hover{ box-shadow:0 0 28px rgba(201,162,78,.5); transform:scale(1.04); }
-.nv-link.login{ border:1px solid var(--beige); color:var(--light-text); }
+.nv-link.gold:hover{ box-shadow:0 0 32px var(--gold-glow); transform:scale(1.04); }
+.nv-link.login{ border:1px solid var(--beige); color:var(--light-text); font-weight:600; }
 .nv-link.login:hover{ border-color:var(--gold); color:var(--gold); }
 
 /* ===== HERO ===== */
@@ -72,20 +78,26 @@ body{
   padding:80px 60px;
 }
 .hero-badge{
-  font-size:13px; color:var(--gold); letter-spacing:3px; margin-bottom:16px;
+  font-size:16px; color:#E8C56D; letter-spacing:5px; margin-bottom:16px; font-weight:900;
+  text-shadow:0 0 14px rgba(232,197,109,.7), 0 0 30px rgba(212,168,75,.4);
   opacity:0; animation:fadeUp .8s .2s forwards;
+  -webkit-text-stroke:1px rgba(0,0,0,.6);
 }
 .hero h1{
   font-size:clamp(48px,7vw,72px); font-weight:900; color:var(--white);
   line-height:1.1; margin-bottom:12px; letter-spacing:4px;
+  text-shadow:0 0 20px rgba(212,168,75,.4), 0 2px 4px rgba(0,0,0,.1);
   opacity:0; animation:fadeUp .8s .4s forwards;
 }
 .hero .sub{
-  font-size:18px; color:var(--gold); letter-spacing:2px; margin-bottom:8px;
+  font-size:22px; color:#E8C56D; letter-spacing:4px; margin-bottom:8px; font-weight:800;
+  text-shadow:0 0 12px rgba(232,197,109,.5), 0 0 24px rgba(212,168,75,.3);
+  -webkit-text-stroke:0.8px rgba(0,0,0,.5);
   opacity:0; animation:fadeUp .8s .6s forwards;
 }
 .hero .desc{
-  font-size:13px; color:var(--light-text); line-height:1.8; margin-bottom:32px;
+  font-size:16px; color:var(--light-text); line-height:1.8; margin-bottom:32px; font-weight:700;
+  text-shadow:0 0 2px rgba(0,0,0,.1);
   opacity:0; animation:fadeUp .8s .8s forwards;
 }
 .hero-btns{
@@ -139,29 +151,42 @@ body{
   padding:80px 60px; background:linear-gradient(180deg, var(--dark) 0%, var(--cream) 100%);
 }
 .section-label{
-  text-align:center; font-size:12px; color:var(--gold); letter-spacing:3px;
-  margin-bottom:8px; text-transform:uppercase;
+  text-align:center; font-size:13px; color:var(--gold); letter-spacing:3px;
+  margin-bottom:8px; text-transform:uppercase; font-weight:700;
+  text-shadow:var(--text-glow);
 }
 .section-title{
-  text-align:center; font-size:28px; font-weight:700; margin-bottom:40px; color:var(--white);
+  text-align:center; font-size:34px; font-weight:900; margin-bottom:40px; color:var(--white);
+  text-shadow:var(--text-glow-strong);
 }
 .cards-row{
   display:flex; gap:20px; max-width:1000px; margin:0 auto; flex-wrap:wrap; justify-content:center;
 }
 .glass-card{
-  flex:1; min-width:220px; max-width:300px;
+  flex:1; min-width:180px; max-width:240px;
   background:var(--glass); border:1px solid var(--glass-border);
-  border-radius:16px; padding:32px 24px; text-align:center;
+  border-radius:16px; padding:24px 18px; text-align:center;
   cursor:pointer; transition:.35s; text-decoration:none; color:inherit;
   backdrop-filter:blur(10px);
 }
+.glass-card.big{
+  min-width:280px; max-width:340px; padding:36px 28px;
+  transform:scale(1.06);
+}
+.glass-card.big h4{ font-size:24px !important; }
+.glass-card.big p{ font-size:18px !important; }
+.glass-card.big img{ width:80px !important; height:80px !important; }
+.glass-card.small{ min-width:160px; max-width:200px; padding:20px 14px; }
+.glass-card.small h4{ font-size:18px !important; }
+.glass-card.small p{ font-size:14px !important; }
+.glass-card.small img{ width:44px !important; height:44px !important; }
 .glass-card:hover{
   transform:translateY(-6px); border-color:rgba(201,162,78,.3);
   box-shadow:0 8px 32px rgba(201,162,78,.1);
 }
 .glass-card .card-icon{ font-size:36px; margin-bottom:14px; }
-.glass-card h4{ font-size:16px; color:var(--gold); margin-bottom:8px; }
-.glass-card p{ font-size:12px; color:var(--light-text); line-height:1.6; }
+.glass-card h4{ font-size:22px; color:var(--gold); margin-bottom:8px; font-weight:900; text-shadow:var(--text-glow); }
+.glass-card p{ font-size:17px; color:var(--white); line-height:1.6; font-weight:700; }
 
 /* ===== SCENE NARRATIVE ===== */
 .scene{
@@ -181,16 +206,15 @@ body{
 .scene-content{
   position:relative; z-index:2; max-width:480px; padding:40px;
 }
-.scene-content h3{ font-size:32px; color:var(--gold); margin-bottom:12px; font-weight:900; }
+.scene-content h3{ font-size:34px; color:var(--gold); margin-bottom:12px; font-weight:900; text-shadow:0 0 16px rgba(212,168,75,.5); }
 .scene-content p{
-  font-size:14px; color:var(--light-text); line-height:1.8; margin-bottom:20px;
+  font-size:17px; color:var(--white); line-height:1.8; margin-bottom:20px; font-weight:800;
+  text-shadow:0 0 3px rgba(255,255,255,.3);
 }
-.scene-content .btn-ghost{ display:inline-flex; }
-
 /* ===== FOOTER ===== */
 .footer{
   padding:40px 60px; text-align:center; border-top:1px solid var(--beige);
-  font-size:12px; color:var(--light-text); background:var(--dark);
+  font-size:14px; color:var(--white); background:var(--dark); font-weight:700;
 }
 
 /* ===== MODALS (keep existing) ===== */
@@ -288,7 +312,7 @@ body{
     <span class="topnav-brand">灵山胜境</span>
   </div>
   <div class="topnav-center">
-    <button class="nv-link" onclick="openModal('spotModal')">景点</button>
+    <button class="nv-link" onclick="document.getElementById('scene1').scrollIntoView({behavior:'smooth'})">景点</button>
     <button class="nv-link" onclick="window.open('/map','_blank')">路线</button>
     <button class="nv-link" onclick="openModal('showModal')">演出</button>
   </div>
@@ -327,20 +351,20 @@ body{
 <!-- ===== AI FEATURE CARDS ===== -->
 <section class="features-section" id="features">
   <div class="section-label">AI Smart Guide</div>
-  <div class="section-title">智能导览体验</div>
+  <div class="section-title">智能导览</div>
   <div class="cards-row">
-    <div class="glass-card" onclick="openModal('chatModal')">
-      <div class="card-icon">🎧</div>
+    <div class="glass-card small">
+      <img src="/QQ20260719-221027.png" alt="AI语音导览" style="width:64px;height:64px;border-radius:12px;object-fit:cover;margin:0 auto 14px;display:block">
       <h4>AI语音导览</h4>
       <p>像本地讲解员一样<br>带你游览灵山胜境</p>
     </div>
-    <div class="glass-card" onclick="window.open('/map','_blank')">
-      <div class="card-icon">🗺</div>
+    <div class="glass-card big" onclick="window.open('/map', '_blank')">
+      <img src="/QQ20260719-222656.png" alt="景区地图" style="width:64px;height:64px;border-radius:12px;object-fit:cover;margin:0 auto 14px;display:block">
       <h4>景区地图导航</h4>
       <p>实时路线规划<br>与景点精确定位</p>
     </div>
-    <div class="glass-card" onclick="openModal('showModal')">
-      <div class="card-icon">🎭</div>
+    <div class="glass-card small" onclick="openModal('showModal')">
+      <img src="/22f29e6d-9b17-4f0a-86a4-971358cab24e.png" alt="演出信息" style="width:64px;height:64px;border-radius:12px;object-fit:cover;margin:0 auto 14px;display:block">
       <h4>演出信息</h4>
       <p>九龙灌浴 / 佛教演出<br>时间提醒与介绍</p>
     </div>
@@ -354,7 +378,6 @@ body{
   <div class="scene-content">
     <h3>灵山大佛</h3>
     <p>88米青铜释迦牟尼立像<br>面朝太湖，背倚灵山，慈颜微笑<br>广视众生，祈福圣地</p>
-    <span class="btn btn-ghost" onclick="openModal('spotModal')">了解更多 →</span>
   </div>
 </section>
 
@@ -365,7 +388,6 @@ body{
   <div class="scene-content">
     <h3>灵山梵宫</h3>
     <p>金色穹顶 · 佛教艺术殿堂<br>汇集木雕、壁画、琉璃等<br>世界级佛教艺术精品</p>
-    <span class="btn btn-ghost" onclick="openModal('spotModal')">了解更多 →</span>
   </div>
 </section>
 
@@ -376,7 +398,6 @@ body{
   <div class="scene-content">
     <h3>九龙灌浴</h3>
     <p>再现佛祖诞生场景<br>九条青铜龙口喷圣水<br>莲花开合，天地祥瑞</p>
-    <span class="btn btn-ghost" onclick="openModal('spotModal')">了解更多 →</span>
   </div>
 </section>
 
