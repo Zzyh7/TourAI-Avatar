@@ -54,6 +54,9 @@ export function Live2d() {
     return (
         <div className='absolute top-0 left-0 w-full h-full z-0'>
             {
+                !background && <img src='/sentio-bg.png' alt='bg' style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',objectFit:'cover',zIndex:-10,pointerEvents:'none'}} />
+            }
+            {
                 background && (background.link.endsWith('.mp4') ? 
                 <video 
                     className='absolute top-0 left-0 w-full h-full object-cover z-[-1]' 
